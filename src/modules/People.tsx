@@ -3,6 +3,7 @@ import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton } from '../components/ui'
 import { newId } from '../lib/storage'
 import { formatDateShort } from '../lib/format'
+import { contactsCSV, downloadText, slug } from '../lib/exporters'
 import type { Conflict, Person, PersonGroup } from '../lib/types'
 
 const GROUPS: PersonGroup[] = [
@@ -31,10 +32,16 @@ const BLANK: Omit<Person, 'id'> = {
 export function People() {
   const { production, addPerson, updatePerson, deletePerson } = useStore()
   const [editing, setEditing] = useState<Person | 'new' | null>(null)
+  const [bulk, setBulk] = useState(false)
   const [filter, setFilter] = useState<'All' | PersonGroup>('All')
   const [q, setQ] = useState('')
 
   const people = production?.people ?? []
+
+  const exportCSV = () => {
+    if (!production || people.length === 0) return
+    downloadText(`${slug(production.title)}-contacts.csv`, contactsCSV(people), 'text/csv;charset=utf-8')
+  }
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase()
@@ -62,9 +69,24 @@ export function People() {
         title="People"
         subtitle="Cast & crew contact sheet"
         actions={
-          <button className="btn btn-primary" onClick={() => setEditing('new')}>
-            + Add person
-          </button>
+          <div className="row wrap no-print" style={{ gap: 6 }}>
+            {people.length > 0 && (
+              <>
+                <button className="btn btn-sm" onClick={exportCSV} title="Download contact sheet (CSV)">
+                  ⤓ CSV
+                </button>
+                <button className="btn btn-sm btn-ghost" onClick={() => window.print()} title="Print contact sheet">
+                  🖨 Print
+                </button>
+              </>
+            )}
+            <button className="btn btn-sm" onClick={() => setBulk(true)}>
+              ⧉ Paste list
+            </button>
+            <button className="btn btn-primary" onClick={() => setEditing('new')}>
+              + Add person
+            </button>
+          </div>
         }
       />
 
@@ -74,7 +96,7 @@ export function People() {
         </EmptyState>
       ) : (
         <>
-          <div className="row wrap mb" style={{ gap: 8 }}>
+          <div className="row wrap mb no-print" style={{ gap: 8 }}>
             <input
               placeholder="Search name, role, character…"
               value={q}
@@ -161,7 +183,77 @@ export function People() {
           }}
         />
       )}
+
+      {bulk && (
+        <BulkAddModal
+          onClose={() => setBulk(false)}
+          onAdd={(rows) => {
+            rows.forEach((r) => addPerson(r))
+            setBulk(false)
+          }}
+        />
+      )}
     </>
+  )
+}
+
+function BulkAddModal({
+  onClose,
+  onAdd,
+}: {
+  onClose: () => void
+  onAdd: (rows: Omit<Person, 'id'>[]) => void
+}) {
+  const [group, setGroup] = useState<PersonGroup>('Cast')
+  const [text, setText] = useState('')
+
+  const parsed: Omit<Person, 'id'>[] = text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [name, role, character] = line.split(',').map((s) => s.trim())
+      return { ...BLANK, group, name, role: role || '', character: character || '' }
+    })
+    .filter((p) => p.name)
+
+  return (
+    <Modal title="Paste a cast/crew list" onClose={onClose}>
+      <p className="small muted" style={{ marginTop: 0 }}>
+        One person per line. Optionally add role and character, comma-separated:
+        <br />
+        <code style={{ fontSize: '0.8rem' }}>Name, Role, Character</code> — e.g.{' '}
+        <code style={{ fontSize: '0.8rem' }}>Robin Okafor, Actor, Puck</code>
+      </p>
+      <label className="field">
+        <span className="field-label">Add all as</span>
+        <select value={group} onChange={(e) => setGroup(e.target.value as PersonGroup)}>
+          {GROUPS.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="field">
+        <span className="field-label">Names</span>
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          rows={8}
+          autoFocus
+          placeholder={'Robin Okafor, Actor, Puck\nDaniel Reyes, Actor, Oberon\nGrace Lin'}
+        />
+      </label>
+      <div className="modal-actions">
+        <button className="btn btn-ghost" onClick={onClose}>
+          Cancel
+        </button>
+        <button className="btn btn-primary" disabled={parsed.length === 0} onClick={() => onAdd(parsed)}>
+          Add {parsed.length || ''} {parsed.length === 1 ? 'person' : 'people'}
+        </button>
+      </div>
+    </Modal>
   )
 }
 

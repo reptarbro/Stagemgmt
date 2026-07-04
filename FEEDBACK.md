@@ -74,5 +74,16 @@ understudy/swing track sheets · integrations with existing tools.
 ### In progress
 
 ### Done
+- [x] **Phase 1.5 shipped (client-side):** `.ics` calendar export · report Email/Copy ·
+  offline PWA (installable + service worker) · printable **sign-in sheet** · contact-sheet
+  **CSV** + print · **bulk add** (paste cast list) · **backup reminder** banner ·
+  **Send feedback** button · mobile polish (16px inputs, bigger tap targets)
 - [x] Load-sample-production button for smooth phone demos `[no-backend]`
 - [x] This feedback log + prioritized backlog `[no-backend]`
+
+### Still open (next up)
+- [ ] `[needs-backend]` Shareable read-only link — the true adoption hinge (Phase 2 decision)
+- [ ] `[needs-backend]` Cast self-service availability form
+- [ ] `[no-backend]` Bulk *paste conflicts* per person (only cast-list paste shipped)
+- [ ] `[no-backend]` "Who's-in-it" grid scaling for large casts
+- [ ] `[no-backend]` Accessibility pass

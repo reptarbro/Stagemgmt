@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import { useStore } from '../lib/store'
+import { getLastBackup, markBackedUp } from '../lib/storage'
 import { Welcome } from '../modules/Welcome'
 import { Hub } from '../modules/Hub'
 import { People } from '../modules/People'
@@ -95,6 +96,7 @@ export function App() {
 
         <main className="main">
           <div className="main-inner">
+            <BackupBanner />
             <Routes>
               <Route path="/" element={<Navigate to="/hub" replace />} />
               <Route path="/hub" element={<Hub />} />
@@ -111,6 +113,56 @@ export function App() {
           </div>
         </main>
       </div>
+    </div>
+  )
+}
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+
+/** Gentle reminder to export a backup when data exists and it's overdue. */
+function BackupBanner() {
+  const { data, exportJSON } = useStore()
+  const [dismissed, setDismissed] = useState(false)
+
+  const hasData = data.productions.some(
+    (p) =>
+      p.people.length ||
+      p.events.length ||
+      p.reports.length ||
+      p.scenes.length ||
+      p.props.length ||
+      p.lineNotes.length,
+  )
+  const last = getLastBackup()
+  const overdue = hasData && (last === 0 || Date.now() - last > WEEK_MS)
+  if (!overdue || dismissed) return null
+
+  const doExport = () => {
+    const blob = new Blob([exportJSON()], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `stage-manager-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    markBackedUp()
+    setDismissed(true)
+  }
+
+  return (
+    <div className="backup-banner no-print">
+      <span>
+        💾 Your data lives on this device only.{' '}
+        {last === 0 ? 'Back it up' : "It's been a while — back up again"} so you don't lose it.
+      </span>
+      <span className="row" style={{ gap: 8, flexShrink: 0 }}>
+        <button className="btn btn-sm btn-primary" onClick={doExport}>
+          Export backup
+        </button>
+        <button className="btn btn-sm btn-ghost" onClick={() => setDismissed(true)}>
+          Later
+        </button>
+      </span>
     </div>
   )
 }

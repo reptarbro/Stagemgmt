@@ -65,6 +65,23 @@ export function saveData(data: AppData): void {
   }
 }
 
+const BACKUP_KEY = 'stagemgmt.lastBackup'
+
+/** Epoch ms of the last data export, or 0 if never. */
+export function getLastBackup(): number {
+  const v = localStorage.getItem(BACKUP_KEY)
+  return v ? Number(v) : 0
+}
+
+/** Record that the user just exported a backup. */
+export function markBackedUp(): void {
+  try {
+    localStorage.setItem(BACKUP_KEY, String(Date.now()))
+  } catch {
+    /* ignore quota errors */
+  }
+}
+
 /** Generate a stable-ish unique id without external deps. */
 export function newId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
