@@ -15,6 +15,7 @@ import {
   getScriptFile,
   deleteScriptFile,
 } from './storage'
+import { makeSampleProduction } from './sample'
 import type {
   AppData,
   Attendance,
@@ -33,6 +34,7 @@ interface StoreValue {
   production: Production | null
   // Productions
   createProduction: (fields: Partial<Production> & { title: string }) => Production
+  loadSampleProduction: () => void
   updateProduction: (id: string, patch: Partial<Production>) => void
   deleteProduction: (id: string) => void
   setActiveProduction: (id: string) => void
@@ -128,6 +130,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           activeProductionId: prod.id,
         }))
         return prod
+      },
+
+      loadSampleProduction: () => {
+        const prod = makeSampleProduction()
+        setData((d) => ({
+          ...d,
+          productions: [...d.productions, prod],
+          activeProductionId: prod.id,
+        }))
       },
 
       updateProduction: (id, patch) =>

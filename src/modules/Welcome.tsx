@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useStore } from '../lib/store'
 
 export function Welcome() {
-  const { createProduction } = useStore()
+  const { createProduction, loadSampleProduction } = useStore()
   const [title, setTitle] = useState('')
   const [company, setCompany] = useState('')
   const [venue, setVenue] = useState('')
@@ -62,6 +62,19 @@ export function Welcome() {
           </div>
           <button className="btn btn-primary" style={{ width: '100%' }} disabled={!title.trim()}>
             Create production →
+          </button>
+          <div className="row" style={{ gap: 10, alignItems: 'center', margin: '14px 0' }}>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            <span className="hint">or</span>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+          </div>
+          <button
+            type="button"
+            className="btn"
+            style={{ width: '100%' }}
+            onClick={() => loadSampleProduction()}
+          >
+            ✨ Explore a sample production
           </button>
           <p className="hint" style={{ textAlign: 'center', marginBottom: 0 }}>
             Everything is stored privately in this browser. You can export a backup anytime.

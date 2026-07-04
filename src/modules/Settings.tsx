@@ -3,7 +3,8 @@ import { useStore } from '../lib/store'
 import { PageHead, ConfirmButton } from '../components/ui'
 
 export function Settings() {
-  const { production, data, exportJSON, importJSON, deleteProduction } = useStore()
+  const { production, data, exportJSON, importJSON, deleteProduction, loadSampleProduction } =
+    useStore()
   const [msg, setMsg] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -34,6 +35,30 @@ export function Settings() {
     <>
       <PageHead title="Settings" subtitle="Backup, restore & data" />
 
+      {msg && (
+        <div className="card" style={{ borderColor: 'rgba(95,184,122,.4)', padding: '12px 16px' }}>
+          <span className="small" style={{ color: 'var(--success)' }}>{msg}</span>
+        </div>
+      )}
+
+      <div className="card">
+        <div className="card-title">Demo</div>
+        <p className="small muted">
+          Load a fully-populated sample show — cast &amp; crew, schedule, scenes, props, line notes, and a
+          filed report — so the app looks alive when you show it to someone. It's added as a separate
+          production; delete it anytime in the Danger zone below.
+        </p>
+        <button
+          className="btn"
+          onClick={() => {
+            loadSampleProduction()
+            setMsg('Sample production loaded — see the Production Hub.')
+          }}
+        >
+          ✨ Load sample production
+        </button>
+      </div>
+
       <div className="card">
         <div className="card-title">Backup & restore</div>
         <p className="small muted">
@@ -55,11 +80,6 @@ export function Settings() {
             style={{ display: 'none' }}
           />
         </div>
-        {msg && (
-          <p className="small" style={{ color: 'var(--success)', marginBottom: 0 }}>
-            {msg}
-          </p>
-        )}
       </div>
 
       <div className="card">
