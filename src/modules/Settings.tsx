@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, ConfirmButton } from '../components/ui'
+import { markBackedUp } from '../lib/storage'
 
 export function Settings() {
   const { production, data, exportJSON, importJSON, deleteProduction, loadSampleProduction } =
@@ -16,6 +17,7 @@ export function Settings() {
     a.download = `stage-manager-backup-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
+    markBackedUp()
     setMsg('Backup downloaded.')
   }
 
@@ -80,6 +82,25 @@ export function Settings() {
             style={{ display: 'none' }}
           />
         </div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">Help &amp; feedback</div>
+        <p className="small muted">
+          Testing the app? Send a quick note — what worked, what didn't, and what you wish it did.
+          Opens your mail app with a short template.
+        </p>
+        <button
+          className="btn"
+          onClick={() => {
+            const subject = 'Stage Manager — feedback'
+            const body =
+              'What I was doing:\n\nWhat happened / what I wish it did:\n\nDevice & browser:\n'
+            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+          }}
+        >
+          ✉ Send feedback
+        </button>
       </div>
 
       <div className="card">

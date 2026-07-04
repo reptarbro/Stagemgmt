@@ -657,3 +657,39 @@ tbody tr:hover {
   background: rgba(0, 0, 0, 0.5);
   z-index: 45;
 }
+
+/* ---------- Backup reminder banner ---------- */
+.backup-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: linear-gradient(90deg, rgba(224, 182, 77, 0.16), rgba(224, 182, 77, 0.04));
+  border: 1px solid rgba(224, 182, 77, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+/* ---------- Mobile ergonomics ---------- */
+@media (max-width: 720px) {
+  /* 16px inputs prevent iOS Safari from zooming in on focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  .icon-btn {
+    padding: 8px;
+    font-size: 1.05rem;
+  }
+  .btn {
+    padding: 10px 14px;
+  }
+  .btn-sm {
+    padding: 8px 11px;
+  }
+}

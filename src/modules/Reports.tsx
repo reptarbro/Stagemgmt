@@ -3,6 +3,7 @@ import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton } from '../components/ui'
 import { formatDate, todayISO } from '../lib/format'
 import { newId } from '../lib/storage'
+import { reportToText } from '../lib/exporters'
 import type { Report, ReportSection, ReportType } from '../lib/types'
 
 /** Standard departments a rehearsal report usually addresses. */
@@ -337,16 +338,42 @@ function SectionEditor({
 
 function ReportViewer({ report, onClose }: { report: Report; onClose: () => void }) {
   const { production } = useStore()
+  const [copied, setCopied] = useState(false)
   const sectionsWithNotes = report.sections.filter((s) => s.notes.length > 0)
+
+  const asText = () => (production ? reportToText(report, production) : '')
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(asText())
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+    }
+  }
+
+  const email = () => {
+    const subject = `${production?.title ?? 'Show'} — ${report.type} Report — ${formatDate(report.date)}`
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(asText())}`
+  }
 
   return (
     <Modal title={`${report.type} Report`} onClose={onClose}>
       <div className="report-doc">
-        <div className="row-between no-print mb">
+        <div className="row-between no-print mb wrap" style={{ gap: 8 }}>
           <span className="hint">Ready to distribute</span>
-          <button className="btn btn-sm" onClick={() => window.print()}>
-            🖨 Print / PDF
-          </button>
+          <div className="row wrap" style={{ gap: 6 }}>
+            <button className="btn btn-sm btn-primary" onClick={email}>
+              ✉ Email
+            </button>
+            <button className="btn btn-sm" onClick={copy}>
+              {copied ? '✓ Copied' : '⧉ Copy'}
+            </button>
+            <button className="btn btn-sm" onClick={() => window.print()}>
+              🖨 Print / PDF
+            </button>
+          </div>
         </div>
 
         <div style={{ borderBottom: '2px solid var(--accent)', paddingBottom: 10, marginBottom: 14 }}>

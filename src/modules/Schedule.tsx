@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton } from '../components/ui'
 import { formatDate, formatTime, todayISO, parseISODate } from '../lib/format'
+import { eventsToICS } from '../lib/ics'
+import { downloadText, slug } from '../lib/exporters'
 import type {
   Attendance,
   AttendanceStatus,
@@ -28,10 +30,21 @@ export function Schedule() {
   const { production, addEvent, updateEvent, deleteEvent } = useStore()
   const [editing, setEditing] = useState<ScheduleEvent | 'new' | null>(null)
   const [attendanceFor, setAttendanceFor] = useState<ScheduleEvent | null>(null)
+  const [signInFor, setSignInFor] = useState<ScheduleEvent | null>(null)
   const [view, setView] = useState<'list' | 'calendar'>('list')
 
   const events = production?.events ?? []
   const today = todayISO()
+
+  const nameFor = (id: string) => {
+    const p = production?.people.find((x) => x.id === id)
+    return p ? p.name : ''
+  }
+
+  const exportCalendar = () => {
+    if (!production || events.length === 0) return
+    downloadText(`${slug(production.title)}-schedule.ics`, eventsToICS(events, production, nameFor), 'text/calendar;charset=utf-8')
+  }
 
   const { upcoming, past } = useMemo(() => {
     const sorted = [...events].sort(
@@ -66,6 +79,11 @@ export function Schedule() {
                 </button>
               </div>
             )}
+            {events.length > 0 && (
+              <button className="btn btn-sm" onClick={exportCalendar} title="Download .ics for phone calendars">
+                ⤓ Calendar
+              </button>
+            )}
             <button className="btn btn-primary" onClick={() => setEditing('new')}>
               + Add event
             </button>
@@ -87,6 +105,7 @@ export function Schedule() {
             onEdit={setEditing}
             onDelete={deleteEvent}
             onAttendance={setAttendanceFor}
+            onSignIn={setSignInFor}
             emptyText="No upcoming events."
           />
           {past.length > 0 && (
@@ -96,6 +115,7 @@ export function Schedule() {
               onEdit={setEditing}
               onDelete={deleteEvent}
               onAttendance={setAttendanceFor}
+              onSignIn={setSignInFor}
             />
           )}
         </>
@@ -117,6 +137,8 @@ export function Schedule() {
       {attendanceFor && (
         <AttendanceModal event={attendanceFor} onClose={() => setAttendanceFor(null)} />
       )}
+
+      {signInFor && <SignInSheet event={signInFor} onClose={() => setSignInFor(null)} />}
     </>
   )
 }
@@ -127,6 +149,7 @@ function EventGroup({
   onEdit,
   onDelete,
   onAttendance,
+  onSignIn,
   emptyText,
 }: {
   label: string
@@ -134,6 +157,7 @@ function EventGroup({
   onEdit: (e: ScheduleEvent) => void
   onDelete: (id: string) => void
   onAttendance: (e: ScheduleEvent) => void
+  onSignIn: (e: ScheduleEvent) => void
   emptyText?: string
 }) {
   return (
@@ -150,6 +174,7 @@ function EventGroup({
               onEdit={() => onEdit(e)}
               onDelete={() => onDelete(e.id)}
               onAttendance={() => onAttendance(e)}
+              onSignIn={() => onSignIn(e)}
             />
           ))}
         </div>
@@ -163,11 +188,13 @@ function EventRow({
   onEdit,
   onDelete,
   onAttendance,
+  onSignIn,
 }: {
   event: ScheduleEvent
   onEdit: () => void
   onDelete: () => void
   onAttendance: () => void
+  onSignIn: () => void
 }) {
   const { getAttendance, production } = useStore()
   const att = getAttendance(event.id)
@@ -216,6 +243,9 @@ function EventRow({
           )}
           <button className="btn btn-sm" onClick={onAttendance}>
             ✓ Attendance
+          </button>
+          <button className="btn btn-sm btn-ghost" onClick={onSignIn} title="Printable sign-in sheet">
+            🖊 Sign-in
           </button>
           <button className="icon-btn" onClick={onEdit} aria-label="Edit">
             ✎
@@ -550,6 +580,80 @@ function AttendanceModal({ event, onClose }: { event: ScheduleEvent; onClose: ()
         </button>
         <button className="btn btn-primary" onClick={save}>
           Save attendance
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
+function SignInSheet({ event, onClose }: { event: ScheduleEvent; onClose: () => void }) {
+  const { production } = useStore()
+  const called =
+    event.calledPersonIds.length > 0
+      ? (production?.people ?? []).filter((p) => event.calledPersonIds.includes(p.id))
+      : (production?.people ?? [])
+  const rows = [...called].sort((a, b) => a.name.localeCompare(b.name))
+
+  return (
+    <Modal title={`Sign-in · ${event.title || event.type}`} onClose={onClose}>
+      <div className="row-between no-print mb">
+        <span className="hint">Print or save as PDF, then post at the callboard.</span>
+        <button className="btn btn-sm" onClick={() => window.print()}>
+          🖨 Print / PDF
+        </button>
+      </div>
+      <div className="report-doc">
+        <div style={{ borderBottom: '2px solid var(--accent)', paddingBottom: 8, marginBottom: 10 }}>
+          <h2 style={{ margin: 0 }}>{production?.title}</h2>
+          <div className="muted small">
+            {event.type}
+            {event.title ? ` · ${event.title}` : ''} · {formatDate(event.date)}
+            {event.callTime && ` · Call ${formatTime(event.callTime)}`}
+            {event.location && ` · ${event.location}`}
+          </div>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style={{ width: '38%' }}>Name</th>
+                <th>Role / Character</th>
+                <th style={{ width: 90 }}>Time in</th>
+                <th style={{ width: 80 }}>Initials</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="muted">No one called — add people or a call list.</td>
+                </tr>
+              ) : (
+                rows.map((p) => (
+                  <tr key={p.id}>
+                    <td style={{ fontWeight: 600 }}>{p.name}</td>
+                    <td className="faint">{p.character || p.role || ''}</td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                ))
+              )}
+              {/* A few blank rows for walk-ins / swings */}
+              {rows.length > 0 &&
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={`blank-${i}`}>
+                    <td>&nbsp;</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div className="modal-actions no-print">
+        <button className="btn btn-ghost" onClick={onClose}>
+          Close
         </button>
       </div>
     </Modal>
