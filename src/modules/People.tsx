@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton } from '../components/ui'
-import type { Person, PersonGroup } from '../lib/types'
+import { newId } from '../lib/storage'
+import { formatDateShort } from '../lib/format'
+import type { Conflict, Person, PersonGroup } from '../lib/types'
 
 const GROUPS: PersonGroup[] = [
   'Cast',
@@ -23,6 +25,7 @@ const BLANK: Omit<Person, 'id'> = {
   emergencyContactName: '',
   emergencyContactPhone: '',
   notes: '',
+  conflicts: [],
 }
 
 export function People() {
@@ -247,9 +250,14 @@ function PersonForm({
           <input value={f.emergencyContactPhone} onChange={set('emergencyContactPhone')} />
         </label>
       </div>
+      <div className="divider" />
+      <ConflictsEditor
+        conflicts={f.conflicts ?? []}
+        onChange={(list) => setF((s) => ({ ...s, conflicts: list }))}
+      />
       <label className="field">
         <span className="field-label">Notes</span>
-        <textarea value={f.notes} onChange={set('notes')} placeholder="Allergies, conflicts, etc." />
+        <textarea value={f.notes} onChange={set('notes')} placeholder="Allergies, dietary needs, etc." />
       </label>
       <div className="modal-actions">
         <button className="btn btn-ghost" onClick={onClose}>
@@ -260,5 +268,77 @@ function PersonForm({
         </button>
       </div>
     </Modal>
+  )
+}
+
+function ConflictsEditor({
+  conflicts,
+  onChange,
+}: {
+  conflicts: Conflict[]
+  onChange: (list: Conflict[]) => void
+}) {
+  const [date, setDate] = useState('')
+  const [note, setNote] = useState('')
+
+  const add = () => {
+    if (!date) return
+    onChange([...conflicts, { id: newId(), date, note: note.trim() || undefined }])
+    setDate('')
+    setNote('')
+  }
+  const remove = (id: string) => onChange(conflicts.filter((c) => c.id !== id))
+
+  const sorted = [...conflicts].sort((a, b) => a.date.localeCompare(b.date))
+
+  return (
+    <div>
+      <div className="field-label">
+        Availability conflicts{' '}
+        <span className="faint">(dates they can't attend — flagged on the schedule)</span>
+      </div>
+      {sorted.length > 0 && (
+        <div className="row wrap" style={{ gap: 6, marginBottom: 10 }}>
+          {sorted.map((c) => (
+            <span key={c.id} className="tag" style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+              {formatDateShort(c.date)}
+              {c.note ? ` · ${c.note}` : ''}
+              <button
+                type="button"
+                className="icon-btn"
+                style={{ padding: 0, lineHeight: 1 }}
+                onClick={() => remove(c.id)}
+                aria-label="Remove conflict"
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="row" style={{ gap: 6, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          style={{ maxWidth: 170 }}
+        />
+        <input
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="reason (optional)"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              add()
+            }
+          }}
+          style={{ flex: 1, minWidth: 140 }}
+        />
+        <button type="button" className="btn btn-sm" onClick={add} disabled={!date}>
+          Add
+        </button>
+      </div>
+    </div>
   )
 }

@@ -6,14 +6,26 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { loadData, saveData, newId } from './storage'
+import {
+  loadData,
+  saveData,
+  newId,
+  normalizeProduction,
+  putScriptFile,
+  getScriptFile,
+  deleteScriptFile,
+} from './storage'
 import type {
   AppData,
   Attendance,
+  LineNote,
   Person,
   Production,
+  PropItem,
   Report,
+  Scene,
   ScheduleEvent,
+  ScriptMeta,
 } from './types'
 
 interface StoreValue {
@@ -39,6 +51,22 @@ interface StoreValue {
   addReport: (r: Omit<Report, 'id' | 'createdAt'>) => Report
   updateReport: (id: string, patch: Partial<Report>) => void
   deleteReport: (id: string) => void
+  // Scenes
+  addScene: (s: Omit<Scene, 'id'>) => void
+  updateScene: (id: string, patch: Partial<Scene>) => void
+  deleteScene: (id: string) => void
+  // Props & costumes
+  addProp: (p: Omit<PropItem, 'id'>) => void
+  updateProp: (id: string, patch: Partial<PropItem>) => void
+  deleteProp: (id: string) => void
+  // Line notes
+  addLineNote: (n: Omit<LineNote, 'id'>) => void
+  updateLineNote: (id: string, patch: Partial<LineNote>) => void
+  deleteLineNote: (id: string) => void
+  // Script (static document)
+  setScript: (file: File) => Promise<void>
+  getScriptURL: () => Promise<string | null>
+  removeScript: () => Promise<void>
   // Data portability
   exportJSON: () => string
   importJSON: (json: string) => { ok: boolean; error?: string }
@@ -89,6 +117,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           events: [],
           attendance: [],
           reports: [],
+          scenes: [],
+          props: [],
+          lineNotes: [],
           createdAt: new Date().toISOString(),
         }
         setData((d) => ({
@@ -205,6 +236,82 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           reports: prod.reports.filter((x) => x.id !== id),
         })),
 
+      addScene: (s) =>
+        patchActive((prod) => ({
+          ...prod,
+          scenes: [...prod.scenes, { ...s, id: newId() }],
+        })),
+      updateScene: (id, patch) =>
+        patchActive((prod) => ({
+          ...prod,
+          scenes: prod.scenes.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+        })),
+      deleteScene: (id) =>
+        patchActive((prod) => ({
+          ...prod,
+          scenes: prod.scenes.filter((x) => x.id !== id),
+        })),
+
+      addProp: (p) =>
+        patchActive((prod) => ({
+          ...prod,
+          props: [...prod.props, { ...p, id: newId() }],
+        })),
+      updateProp: (id, patch) =>
+        patchActive((prod) => ({
+          ...prod,
+          props: prod.props.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+        })),
+      deleteProp: (id) =>
+        patchActive((prod) => ({
+          ...prod,
+          props: prod.props.filter((x) => x.id !== id),
+        })),
+
+      addLineNote: (n) =>
+        patchActive((prod) => ({
+          ...prod,
+          lineNotes: [...prod.lineNotes, { ...n, id: newId() }],
+        })),
+      updateLineNote: (id, patch) =>
+        patchActive((prod) => ({
+          ...prod,
+          lineNotes: prod.lineNotes.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+        })),
+      deleteLineNote: (id) =>
+        patchActive((prod) => ({
+          ...prod,
+          lineNotes: prod.lineNotes.filter((x) => x.id !== id),
+        })),
+
+      setScript: async (file) => {
+        if (!production) return
+        // Reuse existing id (overwrite) or mint a new one.
+        const scriptId = production.script?.id ?? newId()
+        await putScriptFile(scriptId, file)
+        const meta: ScriptMeta = {
+          id: scriptId,
+          filename: file.name,
+          mimeType: file.type || 'application/octet-stream',
+          size: file.size,
+          uploadedAt: new Date().toISOString(),
+        }
+        patchActive((prod) => ({ ...prod, script: meta }))
+      },
+
+      getScriptURL: async () => {
+        if (!production?.script) return null
+        const blob = await getScriptFile(production.script.id)
+        if (!blob) return null
+        return URL.createObjectURL(blob)
+      },
+
+      removeScript: async () => {
+        if (!production?.script) return
+        await deleteScriptFile(production.script.id)
+        patchActive((prod) => ({ ...prod, script: undefined }))
+      },
+
       exportJSON: () => JSON.stringify(data, null, 2),
 
       importJSON: (json) => {
@@ -213,11 +320,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           if (!parsed || !Array.isArray(parsed.productions)) {
             return { ok: false, error: 'File does not look like Stage Manager data.' }
           }
+          const productions = parsed.productions.map(normalizeProduction)
           setData({
             version: 1,
-            productions: parsed.productions,
+            productions,
             activeProductionId:
-              parsed.activeProductionId ?? parsed.productions[0]?.id ?? null,
+              parsed.activeProductionId ?? productions[0]?.id ?? null,
           })
           return { ok: true }
         } catch (err) {
