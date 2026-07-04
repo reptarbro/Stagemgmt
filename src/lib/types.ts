@@ -6,6 +6,14 @@ export type ID = string
 /** Broad grouping used for filtering the contact sheet and building call lists. */
 export type PersonGroup = 'Cast' | 'Crew' | 'Creative' | 'Production' | 'Musician' | 'Front of House' | 'Other'
 
+/** A date (or range note) a person is unavailable. */
+export interface Conflict {
+  id: ID
+  /** ISO date. */
+  date: string
+  note?: string
+}
+
 export interface Person {
   id: ID
   name: string
@@ -19,6 +27,8 @@ export interface Person {
   emergencyContactName?: string
   emergencyContactPhone?: string
   notes?: string
+  /** Dates this person can't attend, surfaced against the schedule. */
+  conflicts?: Conflict[]
 }
 
 export type EventType = 'Rehearsal' | 'Performance' | 'Tech' | 'Meeting' | 'Fitting' | 'Other'
@@ -77,6 +87,65 @@ export interface Report {
   createdAt: string
 }
 
+/** A unit of the play — a French scene, a numbered scene, or a song. */
+export interface Scene {
+  id: ID
+  /** Free-form label/number, e.g. "1.1", "Act 2 Sc 3", "Prologue". */
+  number: string
+  title?: string
+  /** Script page(s), e.g. "12–15". */
+  page?: string
+  /** Person ids (usually cast) present in this scene. */
+  characterIds: ID[]
+  synopsis?: string
+  notes?: string
+}
+
+export type PropCategory = 'Prop' | 'Costume' | 'Set' | 'Furniture' | 'Sound' | 'Other'
+export type PropStatus = 'Needed' | 'In progress' | 'Ready' | 'Cut'
+
+export interface PropItem {
+  id: ID
+  name: string
+  category: PropCategory
+  /** Where it's used, e.g. "Act 1", "1.3". */
+  sceneRef?: string
+  /** Person ids who handle/wear it. */
+  usedByPersonIds: ID[]
+  status: PropStatus
+  notes?: string
+}
+
+export type LineNoteType =
+  | 'dropped'
+  | 'paraphrased'
+  | 'jumped'
+  | 'added'
+  | 'called for line'
+  | 'other'
+
+export interface LineNote {
+  id: ID
+  /** ISO date of the run the note came from. */
+  date: string
+  /** The actor the note is for. */
+  personId: ID
+  /** Where in the script, e.g. "p. 34" or "2.1". */
+  location?: string
+  type: LineNoteType
+  note?: string
+  resolved?: boolean
+}
+
+/** Metadata for an uploaded script file; the bytes live in IndexedDB. */
+export interface ScriptMeta {
+  id: ID
+  filename: string
+  mimeType: string
+  size: number
+  uploadedAt: string
+}
+
 export interface Production {
   id: ID
   title: string
@@ -92,6 +161,11 @@ export interface Production {
   events: ScheduleEvent[]
   attendance: Attendance[]
   reports: Report[]
+  scenes: Scene[]
+  props: PropItem[]
+  lineNotes: LineNote[]
+  /** Uploaded script document (static for now; annotation comes in Phase 2). */
+  script?: ScriptMeta
   createdAt: string
 }
 

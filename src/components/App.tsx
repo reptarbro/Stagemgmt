@@ -5,6 +5,10 @@ import { Welcome } from '../modules/Welcome'
 import { Hub } from '../modules/Hub'
 import { People } from '../modules/People'
 import { Schedule } from '../modules/Schedule'
+import { Scenes } from '../modules/Scenes'
+import { Props } from '../modules/Props'
+import { LineNotes } from '../modules/LineNotes'
+import { Script } from '../modules/Script'
 import { Reports } from '../modules/Reports'
 import { Settings } from '../modules/Settings'
 
@@ -12,6 +16,10 @@ const NAV = [
   { to: '/hub', icon: '🎭', label: 'Production Hub' },
   { to: '/people', icon: '👥', label: 'People' },
   { to: '/schedule', icon: '🗓️', label: 'Schedule' },
+  { to: '/scenes', icon: '🎬', label: 'Scenes' },
+  { to: '/props', icon: '🎩', label: 'Props & Costumes' },
+  { to: '/line-notes', icon: '📝', label: 'Line Notes' },
+  { to: '/script', icon: '📄', label: 'Script' },
   { to: '/reports', icon: '📋', label: 'Reports' },
   { to: '/settings', icon: '⚙️', label: 'Settings' },
 ]
@@ -92,6 +100,10 @@ export function App() {
               <Route path="/hub" element={<Hub />} />
               <Route path="/people" element={<People />} />
               <Route path="/schedule" element={<Schedule />} />
+              <Route path="/scenes" element={<Scenes />} />
+              <Route path="/props" element={<Props />} />
+              <Route path="/line-notes" element={<LineNotes />} />
+              <Route path="/script" element={<Script />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/hub" replace />} />

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton } from '../components/ui'
-import { formatDate, formatTime, todayISO } from '../lib/format'
+import { formatDate, formatTime, todayISO, parseISODate } from '../lib/format'
 import type {
   Attendance,
   AttendanceStatus,
@@ -28,6 +28,7 @@ export function Schedule() {
   const { production, addEvent, updateEvent, deleteEvent } = useStore()
   const [editing, setEditing] = useState<ScheduleEvent | 'new' | null>(null)
   const [attendanceFor, setAttendanceFor] = useState<ScheduleEvent | null>(null)
+  const [view, setView] = useState<'list' | 'calendar'>('list')
 
   const events = production?.events ?? []
   const today = todayISO()
@@ -48,9 +49,27 @@ export function Schedule() {
         title="Schedule"
         subtitle="Rehearsals, performances & attendance"
         actions={
-          <button className="btn btn-primary" onClick={() => setEditing('new')}>
-            + Add event
-          </button>
+          <>
+            {events.length > 0 && (
+              <div className="row" style={{ gap: 4 }}>
+                <button
+                  className={`btn btn-sm ${view === 'list' ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => setView('list')}
+                >
+                  List
+                </button>
+                <button
+                  className={`btn btn-sm ${view === 'calendar' ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => setView('calendar')}
+                >
+                  Calendar
+                </button>
+              </div>
+            )}
+            <button className="btn btn-primary" onClick={() => setEditing('new')}>
+              + Add event
+            </button>
+          </>
         }
       />
 
@@ -58,6 +77,8 @@ export function Schedule() {
         <EmptyState mark="🗓️" title="Nothing scheduled yet">
           Add rehearsals, tech, and performances with call times, then track who shows up.
         </EmptyState>
+      ) : view === 'calendar' ? (
+        <CalendarView events={events} today={today} onSelect={setEditing} />
       ) : (
         <>
           <EventGroup
@@ -153,6 +174,13 @@ function EventRow({
   const totalCalled = event.calledPersonIds.length || production?.people.length || 0
   const summary = att ? summarize(att) : null
 
+  // Anyone called for this event who logged a conflict on this date.
+  const people = production?.people ?? []
+  const pool = event.calledPersonIds.length
+    ? people.filter((p) => event.calledPersonIds.includes(p.id))
+    : people
+  const conflicted = pool.filter((p) => (p.conflicts ?? []).some((c) => c.date === event.date))
+
   return (
     <div className="card" style={{ padding: 14 }}>
       <div className="row-between wrap" style={{ gap: 12 }}>
@@ -169,6 +197,11 @@ function EventRow({
             {event.location && ` · ${event.location}`}
           </div>
           {event.notes && <div className="small muted" style={{ marginTop: 6 }}>{event.notes}</div>}
+          {conflicted.length > 0 && (
+            <div className="small" style={{ marginTop: 6, color: 'var(--danger)' }}>
+              ⚠ Conflict: {conflicted.map((p) => p.name).join(', ')} unavailable this date
+            </div>
+          )}
         </div>
         <div className="row wrap" style={{ gap: 6 }}>
           <span className="tag">
@@ -207,6 +240,110 @@ function summarize(att: Attendance) {
     absent: vals.filter((r) => r.status === 'absent').length,
     excused: vals.filter((r) => r.status === 'excused').length,
   }
+}
+
+const TYPE_COLOR: Record<EventType, string> = {
+  Rehearsal: '#6ba4e0',
+  Performance: '#e0b64d',
+  Tech: '#c8b0f0',
+  Meeting: '#8fdcc4',
+  Fitting: '#e9b7d6',
+  Other: '#a49fba',
+}
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+function pad(n: number) {
+  return String(n).padStart(2, '0')
+}
+
+function CalendarView({
+  events,
+  today,
+  onSelect,
+}: {
+  events: ScheduleEvent[]
+  today: string
+  onSelect: (e: ScheduleEvent) => void
+}) {
+  const now = parseISODate(today)!
+  const [ym, setYm] = useState<{ y: number; m: number }>({ y: now.getFullYear(), m: now.getMonth() })
+
+  const byDate = useMemo(() => {
+    const map: Record<string, ScheduleEvent[]> = {}
+    for (const e of events) (map[e.date] ??= []).push(e)
+    for (const k of Object.keys(map))
+      map[k].sort((a, b) => (a.callTime ?? '').localeCompare(b.callTime ?? ''))
+    return map
+  }, [events])
+
+  const firstWeekday = new Date(ym.y, ym.m, 1).getDay()
+  const daysInMonth = new Date(ym.y, ym.m + 1, 0).getDate()
+  const cells: (number | null)[] = [
+    ...Array(firstWeekday).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ]
+  while (cells.length % 7 !== 0) cells.push(null)
+
+  const step = (dir: number) => {
+    setYm((s) => {
+      const m = s.m + dir
+      if (m < 0) return { y: s.y - 1, m: 11 }
+      if (m > 11) return { y: s.y + 1, m: 0 }
+      return { y: s.y, m }
+    })
+  }
+
+  return (
+    <div className="mt">
+      <div className="row-between mb">
+        <button className="btn btn-sm btn-ghost" onClick={() => step(-1)}>
+          ‹ Prev
+        </button>
+        <strong>
+          {MONTHS[ym.m]} {ym.y}
+        </strong>
+        <button className="btn btn-sm btn-ghost" onClick={() => step(1)}>
+          Next ›
+        </button>
+      </div>
+      <div className="cal-grid cal-head">
+        {WEEKDAYS.map((w) => (
+          <div key={w} className="cal-weekday">
+            {w}
+          </div>
+        ))}
+      </div>
+      <div className="cal-grid">
+        {cells.map((day, i) => {
+          if (day === null) return <div key={i} className="cal-cell cal-empty" />
+          const iso = `${ym.y}-${pad(ym.m + 1)}-${pad(day)}`
+          const dayEvents = byDate[iso] ?? []
+          return (
+            <div key={i} className={`cal-cell ${iso === today ? 'cal-today' : ''}`}>
+              <div className="cal-date">{day}</div>
+              {dayEvents.map((e) => (
+                <button
+                  key={e.id}
+                  className="cal-chip"
+                  style={{ borderLeftColor: TYPE_COLOR[e.type] }}
+                  onClick={() => onSelect(e)}
+                  title={`${e.title || e.type}${e.callTime ? ' · Call ' + formatTime(e.callTime) : ''}`}
+                >
+                  {e.callTime ? formatTime(e.callTime).replace(':00', '') + ' ' : ''}
+                  {e.title || e.type}
+                </button>
+              ))}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 function EventForm({
