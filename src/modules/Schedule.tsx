@@ -334,7 +334,7 @@ function sceneLabels(ids: string[] | undefined, scenes: Scene[]): string {
 
 const TYPE_COLOR: Record<EventType, string> = {
   Rehearsal: '#6ba4e0',
-  Performance: '#e0b64d',
+  Performance: '#2fae6b',
   Tech: '#c8b0f0',
   Meeting: '#8fdcc4',
   Fitting: '#e9b7d6',

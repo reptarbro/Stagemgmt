@@ -1,23 +1,29 @@
 :root {
-  --bg: #14111d;
-  --bg-elev: #1e1a2b;
-  --bg-elev-2: #272138;
-  --panel: #1a1626;
-  --border: #352d48;
-  --text: #ece9f5;
-  --text-dim: #a49fba;
-  --text-faint: #6f6a85;
-  --accent: #e0b64d;
-  --accent-warm: #f0c766;
-  --accent-ink: #2a2010;
-  --danger: #e5654f;
-  --success: #5fb87a;
-  --info: #6ba4e0;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  /* T-REX × brooklynONE palette: neutral near-black, ivory, sage + emerald. */
+  --bg: #0e1311;
+  --bg-elev: #151b18;
+  --bg-elev-2: #1d2420;
+  --panel: #111713;
+  --border: #26302a;
+  --border-soft: #1e2621;
+  --text: #f1efe7; /* ivory */
+  --text-dim: #a7b6ab; /* sage-grey */
+  --text-faint: #6f7d73;
+  --accent: #9fb8a6; /* sage — the pervasive, calm accent */
+  --accent-strong: #2fae6b; /* emerald — primary actions & key highlights */
+  --accent-deep: #1c7a4d; /* deep green — gradient partner / pressed */
+  --accent-ink: #08120d; /* dark ink for text on emerald */
+  --warn: #d9a441; /* amber, reserved for late/attention only */
+  --danger: #e0705b;
+  --success: #46b87f;
+  --info: #7fb0c9;
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
   --maxw: 1080px;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-body: 'Raleway Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Montserrat Variable', 'Raleway Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
 }
 
 * {
@@ -38,7 +44,11 @@ html {
 }
 
 body {
-  background: radial-gradient(1200px 600px at 70% -10%, #241d38 0%, var(--bg) 60%);
+  /* Neutral near-black with two very soft brand glows — sleek, not flat, not busy. */
+  background:
+    radial-gradient(900px 520px at 82% -8%, rgba(47, 174, 107, 0.10), transparent 60%),
+    radial-gradient(1000px 680px at 6% 108%, rgba(159, 184, 166, 0.06), transparent 55%),
+    var(--bg);
   background-color: var(--bg);
   background-attachment: fixed;
   color: var(--text);
@@ -46,7 +56,7 @@ body {
 }
 
 a {
-  color: var(--accent-warm);
+  color: var(--accent-strong);
   text-decoration: none;
 }
 
@@ -56,7 +66,9 @@ h3,
 h4 {
   margin: 0 0 0.4em;
   line-height: 1.2;
-  font-weight: 650;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 /* Titles default to Title Case app-wide (headers, subheaders, section names).
@@ -119,7 +131,7 @@ p {
 }
 .brand-mark {
   font-size: 1.5rem;
-  filter: drop-shadow(0 0 6px rgba(224, 182, 77, 0.5));
+  filter: drop-shadow(0 0 7px rgba(47, 174, 107, 0.45));
 }
 .brand-name {
   font-weight: 700;
@@ -148,9 +160,9 @@ p {
   color: var(--text);
 }
 .nav-link.active {
-  background: linear-gradient(90deg, rgba(224, 182, 77, 0.18), rgba(224, 182, 77, 0.04));
-  color: var(--accent-warm);
-  box-shadow: inset 2px 0 0 var(--accent);
+  background: linear-gradient(90deg, rgba(47, 174, 107, 0.16), rgba(159, 184, 166, 0.03));
+  color: var(--text);
+  box-shadow: inset 2px 0 0 var(--accent-strong);
 }
 .nav-icon {
   width: 20px;
@@ -250,7 +262,8 @@ p {
 .stat-value {
   font-size: 1.9rem;
   font-weight: 700;
-  color: var(--accent-warm);
+  font-family: var(--font-display);
+  color: var(--accent-strong);
   line-height: 1;
 }
 .stat-label {
@@ -287,15 +300,15 @@ p {
   transform: translateY(1px);
 }
 .btn-primary {
-  background: linear-gradient(180deg, var(--accent-warm), var(--accent));
-  color: var(--accent-ink);
+  background: linear-gradient(180deg, var(--accent-strong), var(--accent-deep));
+  color: var(--text);
   border-color: transparent;
   font-weight: 650;
 }
 .btn-danger {
   color: var(--danger);
-  border-color: rgba(229, 101, 79, 0.4);
-  background: rgba(229, 101, 79, 0.08);
+  border-color: rgba(224, 112, 91, 0.4);
+  background: rgba(224, 112, 91, 0.08);
 }
 .btn-ghost {
   background: transparent;
@@ -343,8 +356,8 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(224, 182, 77, 0.15);
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 3px rgba(47, 174, 107, 0.18);
 }
 textarea {
   resize: vertical;
@@ -413,7 +426,7 @@ tbody tr:hover {
 }
 .sort-th.active .sort-arrow {
   opacity: 1;
-  color: var(--accent-warm);
+  color: var(--accent-strong);
 }
 
 /* Rows the user can tap to open a detail view. */
@@ -426,7 +439,7 @@ tbody tr:hover {
 
 /* Discreet "needs attention" flag (e.g. props still to sort). */
 .flag-warn {
-  color: var(--accent-warm);
+  color: var(--warn);
   font-size: 0.85em;
   margin-left: 5px;
   cursor: help;
@@ -449,16 +462,16 @@ tbody tr:hover {
 .badge-Cast { color: #e9b7d6; border-color: rgba(233, 183, 214, 0.35); background: rgba(233, 183, 214, 0.08); }
 .badge-Crew { color: #9fd0e6; border-color: rgba(159, 208, 230, 0.35); background: rgba(159, 208, 230, 0.08); }
 .badge-Creative { color: #c8b0f0; border-color: rgba(200, 176, 240, 0.35); background: rgba(200, 176, 240, 0.08); }
-.badge-Production { color: #f0c766; border-color: rgba(240, 199, 102, 0.35); background: rgba(240, 199, 102, 0.08); }
+.badge-Production { color: #cdbf9a; border-color: rgba(205, 191, 154, 0.35); background: rgba(205, 191, 154, 0.08); }
 .badge-Musician { color: #8fdcc4; border-color: rgba(143, 220, 196, 0.35); background: rgba(143, 220, 196, 0.08); }
 .badge-present { color: var(--success); }
-.badge-late { color: var(--accent-warm); }
+.badge-late { color: var(--warn); }
 .badge-absent { color: var(--danger); }
 .badge-excused { color: var(--info); }
 .badge-no-show { color: var(--danger); }
 
 .cue-dry-tech { color: var(--text-dim); }
-.cue-teched { color: var(--accent-warm); border-color: rgba(240, 199, 102, 0.35); background: rgba(240, 199, 102, 0.08); }
+.cue-teched { color: var(--warn); border-color: rgba(217, 164, 65, 0.35); background: rgba(217, 164, 65, 0.08); }
 .cue-set { color: var(--success); border-color: rgba(95, 184, 122, 0.35); background: rgba(95, 184, 122, 0.08); }
 
 .tag {
@@ -812,8 +825,8 @@ tbody tr:hover {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  background: linear-gradient(90deg, rgba(224, 182, 77, 0.16), rgba(224, 182, 77, 0.04));
-  border: 1px solid rgba(224, 182, 77, 0.4);
+  background: linear-gradient(90deg, rgba(47, 174, 107, 0.14), rgba(159, 184, 166, 0.04));
+  border: 1px solid rgba(47, 174, 107, 0.38);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   margin-bottom: 18px;
