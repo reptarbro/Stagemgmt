@@ -1,13 +1,13 @@
 name: Deploy to GitHub Pages
 
 # Build the static app and publish it to GitHub Pages.
-# Runs on the default branch and on the feature branch so the app can be
-# tested on a phone before the PR is merged.
+# Deploys ONLY from the default branch — the live Pages site serves one build,
+# and triggering on other branches too caused runs to cancel each other via the
+# shared `pages` concurrency group.
 on:
   push:
     branches:
       - main
-      - claude/stage-manager-app-mr0q9w
   workflow_dispatch:
 
 # Permissions required for the GitHub Pages deployment.
@@ -16,10 +16,11 @@ permissions:
   pages: write
   id-token: write
 
-# Allow one concurrent deployment; newer runs cancel in-progress ones.
+# One deployment at a time. Do NOT cancel an in-progress deploy — let the newer
+# one queue behind it, so a nearly-finished publish is never killed.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -45,7 +46,18 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment-retry.outputs.page_url }}
     steps:
+      # First attempt. GitHub Pages occasionally returns a transient
+      # "Deployment failed, try again later" — so don't fail the job on it.
       - id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - name: Wait before retry
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 25
+      # Second attempt only if the first hit the transient error. This makes the
+      # deploy self-healing instead of needing a manual re-run.
+      - id: deployment-retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
