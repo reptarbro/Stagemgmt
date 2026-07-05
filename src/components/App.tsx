@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { getLastBackup, markBackedUp } from '../lib/storage'
+import { daysToOpening, cueToCueActive, CUE_WINDOW_DAYS } from '../lib/dates'
+import { ScrollToTop } from './ui'
 import { Welcome } from '../modules/Welcome'
 import { Hub } from '../modules/Hub'
 import { People } from '../modules/People'
@@ -10,6 +12,7 @@ import { Scenes } from '../modules/Scenes'
 import { Props } from '../modules/Props'
 import { LineNotes } from '../modules/LineNotes'
 import { Script } from '../modules/Script'
+import { CueToCue } from '../modules/CueToCue'
 import { Reports } from '../modules/Reports'
 import { Settings } from '../modules/Settings'
 
@@ -36,8 +39,21 @@ export function App() {
 
   const close = () => setMenuOpen(false)
 
+  // Cue-to-cue surfaces as tech nears; show a countdown hint until then.
+  const dOpen = production ? daysToOpening(production) : null
+  const cueActive = production ? cueToCueActive(production) : false
+  const cueHint =
+    dOpen === null || cueActive ? undefined : `in ${dOpen - CUE_WINDOW_DAYS}d`
+
+  const nav = [
+    ...NAV.slice(0, 7), // Hub … Script
+    { to: '/cues', icon: '💡', label: 'Cue-to-Cue', hint: cueHint },
+    ...NAV.slice(7), // Reports, Settings
+  ]
+
   return (
     <div className="app">
+      <ScrollToTop />
       <div className={`scrim ${menuOpen ? 'open' : ''}`} onClick={close} />
       <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
         <div className="brand">
@@ -67,19 +83,29 @@ export function App() {
         )}
 
         <nav onClick={close}>
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
               <span className="nav-icon">{n.icon}</span>
-              {n.label}
+              <span style={{ flex: 1 }}>{n.label}</span>
+              {'hint' in n && n.hint && <span className="nav-hint">{n.hint}</span>}
             </NavLink>
           ))}
         </nav>
 
         <div className="sidebar-spacer" />
+
+        <NavLink
+          to="/new"
+          onClick={close}
+          className="btn btn-primary"
+          style={{ justifyContent: 'center', margin: '0 4px 10px' }}
+        >
+          + New Production
+        </NavLink>
         <div className="hint" style={{ padding: '0 10px' }}>
           Saved automatically in this browser.
         </div>
@@ -106,8 +132,10 @@ export function App() {
               <Route path="/props" element={<Props />} />
               <Route path="/line-notes" element={<LineNotes />} />
               <Route path="/script" element={<Script />} />
+              <Route path="/cues" element={<CueToCue />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/new" element={<Welcome inShell />} />
               <Route path="*" element={<Navigate to="/hub" replace />} />
             </Routes>
           </div>

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
-import { PageHead, Modal, EmptyState, ConfirmButton } from '../components/ui'
+import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar } from '../components/ui'
 import type { Person, Scene } from '../lib/types'
 
 const BLANK: Omit<Scene, 'id'> = {
@@ -15,6 +15,7 @@ const BLANK: Omit<Scene, 'id'> = {
 export function Scenes() {
   const { production, addScene, updateScene, deleteScene } = useStore()
   const [editing, setEditing] = useState<Scene | 'new' | null>(null)
+  const [viewing, setViewing] = useState<Scene | null>(null)
   const [view, setView] = useState<'list' | 'matrix'>('list')
 
   const scenes = production?.scenes ?? []
@@ -47,12 +48,12 @@ export function Scenes() {
                   className={`btn btn-sm ${view === 'matrix' ? 'btn-primary' : 'btn-ghost'}`}
                   onClick={() => setView('matrix')}
                 >
-                  Who's-in-it grid
+                  Grid
                 </button>
               </div>
             )}
             <button className="btn btn-primary" onClick={() => setEditing('new')}>
-              + Add scene
+              + Add Scene
             </button>
           </>
         }
@@ -66,43 +67,63 @@ export function Scenes() {
       ) : view === 'matrix' ? (
         <SceneMatrix scenes={scenes} cast={cast} />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {scenes.map((s) => (
-            <div key={s.id} className="card" style={{ padding: 14 }}>
-              <div className="row-between wrap" style={{ gap: 10 }}>
-                <div style={{ minWidth: 200 }}>
-                  <div className="row" style={{ gap: 8 }}>
-                    <span className="badge">{s.number || '—'}</span>
-                    <strong>{s.title || 'Untitled scene'}</strong>
-                    {s.page && <span className="tag">p. {s.page}</span>}
-                  </div>
-                  {s.synopsis && (
-                    <div className="small muted" style={{ marginTop: 6 }}>
-                      {s.synopsis}
+        <>
+          <p className="hint no-print" style={{ marginTop: -4 }}>
+            Tap a scene for its full overview.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {scenes.map((s) => (
+              <div key={s.id} className="card" style={{ padding: 14 }}>
+                <div className="row-between wrap" style={{ gap: 10 }}>
+                  <div className="row-tap" style={{ minWidth: 200, borderRadius: 8 }} onClick={() => setViewing(s)}>
+                    <div>
+                      <div className="row" style={{ gap: 8 }}>
+                        <span className="badge">{s.number || '—'}</span>
+                        <strong className="tcase">{s.title || 'Untitled scene'}</strong>
+                        {s.page && <span className="tag">p. {s.page}</span>}
+                      </div>
+                      {s.synopsis && (
+                        <div className="small muted" style={{ marginTop: 6 }}>
+                          {s.synopsis}
+                        </div>
+                      )}
+                      <div className="row wrap" style={{ gap: 5, marginTop: 8 }}>
+                        {s.characterIds.length === 0 ? (
+                          <span className="faint small">No characters marked</span>
+                        ) : (
+                          s.characterIds.map((id) => (
+                            <span key={id} className="tag">
+                              {nameFor(id)}
+                            </span>
+                          ))
+                        )}
+                      </div>
                     </div>
-                  )}
-                  <div className="row wrap" style={{ gap: 5, marginTop: 8 }}>
-                    {s.characterIds.length === 0 ? (
-                      <span className="faint small">No characters marked</span>
-                    ) : (
-                      s.characterIds.map((id) => (
-                        <span key={id} className="tag">
-                          {nameFor(id)}
-                        </span>
-                      ))
-                    )}
                   </div>
-                </div>
-                <div className="row" style={{ gap: 4 }}>
-                  <button className="icon-btn" onClick={() => setEditing(s)} aria-label="Edit">
-                    ✎
-                  </button>
-                  <ConfirmButton onConfirm={() => deleteScene(s.id)}>🗑</ConfirmButton>
+                  <div className="row-actions">
+                    <button className="icon-btn" onClick={() => setEditing(s)} aria-label="Edit" title="Edit">
+                      ✎
+                    </button>
+                    <ConfirmButton className="icon-btn danger" onConfirm={() => deleteScene(s.id)}>🗑</ConfirmButton>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {viewing && (
+        <SceneDetail
+          scene={viewing}
+          nameFor={nameFor}
+          onClose={() => setViewing(null)}
+          onEdit={() => {
+            const s = viewing
+            setViewing(null)
+            setEditing(s)
+          }}
+        />
       )}
 
       {editing && (
@@ -118,6 +139,50 @@ export function Scenes() {
         />
       )}
     </>
+  )
+}
+
+function SceneDetail({
+  scene,
+  nameFor,
+  onClose,
+  onEdit,
+}: {
+  scene: Scene
+  nameFor: (id: string) => string
+  onClose: () => void
+  onEdit: () => void
+}) {
+  return (
+    <Modal title={`${scene.number}${scene.title ? ` · ${scene.title}` : ''}`} onClose={onClose}>
+      <div className="row wrap" style={{ gap: 8, marginBottom: 12 }}>
+        <span className="badge">{scene.number || '—'}</span>
+        {scene.page && <span className="tag">p. {scene.page}</span>}
+      </div>
+      {scene.synopsis && (
+        <p className="small" style={{ margin: '0 0 10px' }}>{scene.synopsis}</p>
+      )}
+      <div className="field-label">Characters ({scene.characterIds.length})</div>
+      <div className="row wrap" style={{ gap: 5, marginBottom: 10 }}>
+        {scene.characterIds.length === 0 ? (
+          <span className="faint small">None marked</span>
+        ) : (
+          scene.characterIds.map((id) => (
+            <span key={id} className="tag">{nameFor(id)}</span>
+          ))
+        )}
+      </div>
+      {scene.notes && (
+        <>
+          <div className="field-label">Notes</div>
+          <p className="small muted" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{scene.notes}</p>
+        </>
+      )}
+      <div className="modal-actions">
+        <button className="btn btn-ghost" onClick={onClose}>Close</button>
+        <button className="btn btn-primary" onClick={onEdit}>✎ Edit</button>
+      </div>
+    </Modal>
   )
 }
 
@@ -191,15 +256,17 @@ function SceneForm({
         : [...s.characterIds, id],
     }))
 
+  const missing = !f.number.trim() || !(f.title ?? '').trim() || f.characterIds.length === 0
+
   return (
-    <Modal title={initial ? 'Edit scene' : 'Add scene'} onClose={onClose}>
+    <Modal title={initial ? 'Edit Scene' : 'Add Scene'} onClose={onClose}>
       <div className="form-row-3">
         <label className="field">
-          <span className="field-label">Number *</span>
+          <span className="field-label">Number <ReqStar /></span>
           <input value={f.number} onChange={set('number')} placeholder="1.1" autoFocus />
         </label>
         <label className="field" style={{ gridColumn: 'span 2' }}>
-          <span className="field-label">Title</span>
+          <span className="field-label">Title <ReqStar /></span>
           <input value={f.title} onChange={set('title')} placeholder="The tavern" />
         </label>
       </div>
@@ -209,7 +276,7 @@ function SceneForm({
       </label>
 
       <div className="field-label">
-        Characters in this scene{' '}
+        Characters in this scene <ReqStar />{' '}
         <span className="faint">({f.characterIds.length} selected)</span>
       </div>
       {cast.length === 0 ? (
@@ -242,11 +309,16 @@ function SceneForm({
         <span className="field-label">Notes</span>
         <textarea value={f.notes} onChange={set('notes')} placeholder="Staging, transitions…" />
       </label>
+      {missing && (
+        <p className="hint" style={{ color: 'var(--danger)', marginBottom: 8 }}>
+          Number, title &amp; at least one character are required.
+        </p>
+      )}
       <div className="modal-actions">
         <button className="btn btn-ghost" onClick={onClose}>
           Cancel
         </button>
-        <button className="btn btn-primary" disabled={!f.number.trim()} onClick={() => onSave(f)}>
+        <button className="btn btn-primary" disabled={missing} onClick={() => onSave(f)}>
           Save
         </button>
       </div>

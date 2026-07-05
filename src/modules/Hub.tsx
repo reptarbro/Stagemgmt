@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { PageHead, Modal } from '../components/ui'
 import { formatDate, formatTime, daysUntil, todayISO } from '../lib/format'
+import { cueToCueActive } from '../lib/dates'
 import type { Production } from '../lib/types'
 
 export function Hub() {
-  const { production, updateProduction, createProduction } = useStore()
+  const { production, updateProduction } = useStore()
   const [editing, setEditing] = useState(false)
-  const [creating, setCreating] = useState(false)
   if (!production) return null
 
   const today = todayISO()
@@ -26,16 +26,22 @@ export function Hub() {
         title={production.title}
         subtitle={[production.company, production.venue].filter(Boolean).join(' · ') || 'Production overview'}
         actions={
-          <>
-            <button className="btn" onClick={() => setEditing(true)}>
-              ✎ Edit details
-            </button>
-            <button className="btn btn-ghost" onClick={() => setCreating(true)}>
-              + New production
-            </button>
-          </>
+          <button className="btn" onClick={() => setEditing(true)}>
+            ✎ Edit Details
+          </button>
         }
       />
+
+      {cueToCueActive(production) && (
+        <Link
+          to="/cues"
+          className="backup-banner no-print"
+          style={{ marginBottom: 18, textDecoration: 'none' }}
+        >
+          <span>💡 Tech is near — your Cue-to-Cue calling sheet is open.</span>
+          <span className="small" style={{ fontWeight: 600, flexShrink: 0 }}>Open →</span>
+        </Link>
+      )}
 
       <div className="grid grid-4">
         <div className="stat">
@@ -132,15 +138,6 @@ export function Hub() {
           onSave={(patch) => {
             updateProduction(production.id, patch)
             setEditing(false)
-          }}
-        />
-      )}
-      {creating && (
-        <ProductionForm
-          onClose={() => setCreating(false)}
-          onSave={(patch) => {
-            if (patch.title) createProduction({ ...patch, title: patch.title })
-            setCreating(false)
           }}
         />
       )}

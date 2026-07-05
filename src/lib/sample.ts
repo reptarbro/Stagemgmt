@@ -29,7 +29,10 @@ export function makeSampleProduction(): Production {
     { id: puck, group: 'Cast' as const, name: 'Robin Okafor', role: 'Actor', character: 'Puck',
       email: 'robin@example.com', phone: '(212) 555-0142',
       emergencyContactName: 'M. Okafor', emergencyContactPhone: '(212) 555-0199',
-      conflicts: [{ id: newId(), date: iso(4), note: 'Film shoot' }] },
+      conflicts: [
+        { id: newId(), date: iso(4), note: 'Film shoot' },
+        { id: newId(), date: iso(1), startTime: '18:00', endTime: '20:00', note: 'Class until 8pm' },
+      ] },
     { id: oberon, group: 'Cast' as const, name: 'Daniel Reyes', role: 'Actor', character: 'Oberon',
       email: 'daniel@example.com', phone: '(212) 555-0177', conflicts: [] },
     { id: titania, group: 'Cast' as const, name: 'Aisha Bello', role: 'Actor', character: 'Titania',
@@ -46,16 +49,29 @@ export function makeSampleProduction(): Production {
       email: 'sam@example.com', phone: '(212) 555-0108', conflicts: [] },
   ]
 
+  // Scenes ---------------------------------------------------------------
+  const sc1 = newId()
+  const sc2 = newId()
+  const sc3 = newId()
+  const scenes = [
+    { id: sc1, number: '1.1', title: 'The Court', page: '1–8', characterIds: [oberon, titania],
+      synopsis: 'The quarrel over the changeling boy.', notes: '' },
+    { id: sc2, number: '2.1', title: 'The Wood', page: '9–16', characterIds: [puck, oberon],
+      synopsis: 'Oberon sends Puck for the flower.', notes: 'Fog cue here.' },
+    { id: sc3, number: '2.2', title: 'The Lovers', page: '17–24', characterIds: [hermia, lysander, puck],
+      synopsis: 'The potion goes to the wrong eyes.', notes: '' },
+  ]
+
   // Events + attendance --------------------------------------------------
   const ev1 = newId()
   const ev2 = newId()
   const events = [
-    { id: ev1, type: 'Rehearsal' as const, title: 'Act 1 blocking', date: iso(-6),
+    { id: ev1, type: 'Rehearsal' as const, title: 'Act 1 Blocking', date: iso(-6),
       callTime: '18:30', startTime: '19:00', endTime: '22:00', location: 'Rehearsal Rm B',
-      calledPersonIds: [puck, oberon, titania], notes: 'Off-book for scene 1.' },
+      calledPersonIds: [puck, oberon, titania], sceneIds: [sc1], notes: 'Off-book for scene 1.' },
     { id: ev2, type: 'Rehearsal' as const, title: 'Lovers — Act 2', date: iso(-2),
       callTime: '18:30', startTime: '19:00', endTime: '22:00', location: 'Rehearsal Rm B',
-      calledPersonIds: [hermia, lysander, puck], notes: '' },
+      calledPersonIds: [hermia, lysander, puck], sceneIds: [sc3], notes: '' },
     { id: newId(), type: 'Tech' as const, title: 'Tech / dry run', date: iso(5),
       callTime: '12:00', startTime: '13:00', endTime: '18:00', location: 'Main Stage',
       calledPersonIds: [], notes: 'Whole company + crew.' },
@@ -80,16 +96,6 @@ export function makeSampleProduction(): Production {
     } },
   ]
 
-  // Scenes ---------------------------------------------------------------
-  const scenes = [
-    { id: newId(), number: '1.1', title: "The court", page: '1–8', characterIds: [oberon, titania],
-      synopsis: 'The quarrel over the changeling boy.', notes: '' },
-    { id: newId(), number: '2.1', title: 'The wood', page: '9–16', characterIds: [puck, oberon],
-      synopsis: 'Oberon sends Puck for the flower.', notes: 'Fog cue here.' },
-    { id: newId(), number: '2.2', title: 'The lovers', page: '17–24', characterIds: [hermia, lysander, puck],
-      synopsis: 'The potion goes to the wrong eyes.', notes: '' },
-  ]
-
   // Props / costumes -----------------------------------------------------
   const props = [
     { id: newId(), name: "Love-in-idleness flower", category: 'Prop' as const, sceneRef: '2.1',
@@ -106,6 +112,22 @@ export function makeSampleProduction(): Production {
       note: '"gentle" → "gentler"', resolved: false },
     { id: newId(), date: iso(-2), personId: hermia, location: 'p. 21', type: 'dropped' as const,
       note: 'Skipped the "I frown upon him" line.', resolved: true },
+  ]
+
+  // Cues (cue-to-cue) ----------------------------------------------------
+  const cues = [
+    { id: newId(), number: 'LX 1', dept: 'LX' as const, placement: "p.1 / top of show",
+      action: 'House to half, then out. Preset moonlight.', standby: 'Standby LX 1.',
+      status: 'set' as const, notes: '' },
+    { id: newId(), number: 'SQ 1', dept: 'Sound' as const, placement: "p.9 / Puck's entrance",
+      action: 'Forest ambience up.', standby: 'Standby Sound 1.', status: 'teched' as const, notes: '' },
+    { id: newId(), number: 'LX 12', dept: 'LX' as const, placement: "p.12 / 'I know a bank'",
+      action: 'UV wash for the flower reveal.', standby: 'Standby LX 12.', status: 'teched' as const,
+      notes: 'Confirm timing with SD.' },
+    { id: newId(), number: 'FLY 1', dept: 'Fly' as const, placement: 'p.16 / scene shift',
+      action: 'Bower flies in.', standby: 'Standby Fly 1.', status: 'dry-tech' as const, notes: '' },
+    { id: newId(), number: 'SPOT 1', dept: 'Spot' as const, placement: "p.20 / Titania wakes",
+      action: 'Pick up Titania, warm.', standby: 'Standby Spot 1.', status: 'dry-tech' as const, notes: '' },
   ]
 
   // A filed report -------------------------------------------------------
@@ -137,6 +159,7 @@ export function makeSampleProduction(): Production {
     firstRehearsal: iso(-21),
     openingNight: iso(10),
     closingNight: iso(24),
+    isSample: true,
     notes: 'Sample production — tap Settings → “Remove sample” to clear it anytime.',
     people,
     events,
@@ -145,6 +168,7 @@ export function makeSampleProduction(): Production {
     scenes,
     props,
     lineNotes,
+    cues,
     createdAt: new Date().toISOString(),
   }
 }

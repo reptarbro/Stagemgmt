@@ -74,6 +74,22 @@ understudy/swing track sheets · integrations with existing tools.
 ### In progress
 
 ### Done
+- [x] **Base-site revision round (from 21 annotated screenshots):** Title Case app-wide ·
+  fit-to-viewport (no dead space / iPad white gap) · bigger uniform row icons · sortable
+  table columns · tap-any-row → detail modal (People incl. conflicts, Schedule, Scenes,
+  Props, Cues) · scroll-to-top on navigation · required-field `*` convention & validation
+  across every form · onboarding requires Show title + Venue · "+ New Production" moved to
+  the sidebar bottom (removed from Hub) · People: "ICE" → "🚑 Emergency contact",
+  email/phone required for everyone, conflicts now support a time range · Schedule: all
+  event fields required, **Scene picker links events↔scenes**, **conflict-warning list**
+  when called cast clash, attendance is a **dropdown** (adds **No-show**), "Clear All",
+  scene in attendance title, sign-in prints **sheet-only full page** · Scenes: "Grid"
+  rename, required number/title/characters · Props: removed "Sound" category, required
+  fields, ⚠️ flag + clearer "still to sort" counter · Reports: **Dress Rehearsal** type,
+  Title Case, required type/date, default 4 sections, **View** moved opposite Edit/Delete ·
+  **New Cue-to-Cue calling sheet** (Q#, dept, placement, standby, GO, status; sortable,
+  printable) auto-surfacing ~21–25 days before opening · Settings: sample is a removable
+  **preview**, Storage moved up with totals across all shows
 - [x] **Phase 1.5 shipped (client-side):** `.ics` calendar export · report Email/Copy ·
   offline PWA (installable + service worker) · printable **sign-in sheet** · contact-sheet
   **CSV** + print · **bulk add** (paste cast list) · **backup reminder** banner ·

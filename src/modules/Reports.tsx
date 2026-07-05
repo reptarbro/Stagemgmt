@@ -1,20 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
-import { PageHead, Modal, EmptyState, ConfirmButton } from '../components/ui'
+import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar } from '../components/ui'
 import { formatDate, todayISO } from '../lib/format'
 import { newId } from '../lib/storage'
 import { reportToText } from '../lib/exporters'
 import type { Report, ReportSection, ReportType } from '../lib/types'
 
-/** Standard departments a rehearsal report usually addresses. */
-const DEFAULT_SECTIONS = [
-  'Scenic / Props',
-  'Costumes',
-  'Lighting',
-  'Sound',
-  'Stage Management',
-  'General Notes',
-]
+const REPORT_TYPES: ReportType[] = ['Rehearsal', 'Dress Rehearsal', 'Performance']
+
+/** A lean default set — SMs add Sound, Video, etc. as needed. */
+const DEFAULT_SECTIONS = ['Scenic / Props', 'Costumes', 'Lighting', 'Stage Management']
 
 function blankSections(): ReportSection[] {
   return DEFAULT_SECTIONS.map((title) => ({ id: newId(), title, notes: [] }))
@@ -37,7 +32,7 @@ export function Reports() {
         subtitle="Rehearsal & performance reports"
         actions={
           <button className="btn btn-primary" onClick={() => setEditing('new')}>
-            + New report
+            + New Report
           </button>
         }
       />
@@ -52,25 +47,28 @@ export function Reports() {
             const noteCount = r.sections.reduce((n, s) => n + s.notes.length, 0)
             return (
               <div key={r.id} className="card" style={{ padding: 14 }}>
-                <div className="row-between wrap" style={{ gap: 10 }}>
-                  <div>
-                    <div className="row" style={{ gap: 8 }}>
-                      <span className="badge">{r.type}</span>
-                      <strong>{formatDate(r.date)}</strong>
-                    </div>
-                    <div className="faint small" style={{ marginTop: 4 }}>
-                      {noteCount} note{noteCount === 1 ? '' : 's'}
-                      {r.summary && ` · ${r.summary.slice(0, 80)}${r.summary.length > 80 ? '…' : ''}`}
+                <div className="row wrap" style={{ gap: 12, alignItems: 'flex-start' }}>
+                  {/* View sits at the opposite end from Edit/Delete. */}
+                  <button className="btn btn-sm" onClick={() => setViewing(r)}>
+                    View
+                  </button>
+                  <div className="row-tap" style={{ flex: 1, minWidth: 160, borderRadius: 8 }} onClick={() => setViewing(r)}>
+                    <div>
+                      <div className="row" style={{ gap: 8 }}>
+                        <span className="badge">{r.type}</span>
+                        <strong>{formatDate(r.date)}</strong>
+                      </div>
+                      <div className="faint small" style={{ marginTop: 4 }}>
+                        {noteCount} note{noteCount === 1 ? '' : 's'}
+                        {r.summary && ` · ${r.summary.slice(0, 80)}${r.summary.length > 80 ? '…' : ''}`}
+                      </div>
                     </div>
                   </div>
-                  <div className="row" style={{ gap: 6 }}>
-                    <button className="btn btn-sm" onClick={() => setViewing(r)}>
-                      View
-                    </button>
-                    <button className="icon-btn" onClick={() => setEditing(r)} aria-label="Edit">
+                  <div className="row-actions">
+                    <button className="icon-btn" onClick={() => setEditing(r)} aria-label="Edit" title="Edit">
                       ✎
                     </button>
-                    <ConfirmButton onConfirm={() => deleteReport(r.id)}>🗑</ConfirmButton>
+                    <ConfirmButton className="icon-btn danger" onConfirm={() => deleteReport(r.id)}>🗑</ConfirmButton>
                   </div>
                 </div>
               </div>
@@ -175,17 +173,20 @@ function ReportEditor({
     <Modal title={initial ? 'Edit report' : 'New report'} onClose={onClose}>
       <div className="form-row">
         <label className="field">
-          <span className="field-label">Type</span>
+          <span className="field-label">Type <ReqStar /></span>
           <select
             value={f.type}
             onChange={(e) => setField('type', e.target.value as ReportType)}
           >
-            <option value="Rehearsal">Rehearsal</option>
-            <option value="Performance">Performance</option>
+            {REPORT_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Date *</span>
+          <span className="field-label">Date <ReqStar /></span>
           <input type="date" value={f.date} onChange={(e) => setField('date', e.target.value)} />
         </label>
       </div>

@@ -1,14 +1,18 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useStore } from '../lib/store'
-import { PageHead, Modal, EmptyState, ConfirmButton } from '../components/ui'
+import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar } from '../components/ui'
 import { formatDate, formatTime, todayISO, parseISODate } from '../lib/format'
+import { formatConflict } from './People'
 import { eventsToICS } from '../lib/ics'
 import { downloadText, slug } from '../lib/exporters'
 import type {
   Attendance,
   AttendanceStatus,
+  Conflict,
   EventType,
   Person,
+  Scene,
   ScheduleEvent,
 } from '../lib/types'
 
@@ -23,12 +27,31 @@ const BLANK: Omit<ScheduleEvent, 'id'> = {
   endTime: '',
   location: '',
   calledPersonIds: [],
+  sceneIds: [],
   notes: '',
+}
+
+function timeOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
+  return aStart < bEnd && bStart < aEnd
+}
+
+/** Return the conflict a person has against an event (date + optional time overlap), or null. */
+export function eventConflict(person: Person, ev: { date: string; callTime?: string; startTime?: string; endTime?: string }): Conflict | null {
+  for (const c of person.conflicts ?? []) {
+    if (c.date !== ev.date) continue
+    if (!c.startTime || !c.endTime) return c // all-day conflict
+    const es = ev.startTime || ev.callTime
+    const ee = ev.endTime || ev.startTime || ev.callTime
+    if (!es || !ee) return c // event has no window → any conflict counts
+    if (timeOverlap(c.startTime, c.endTime, es, ee)) return c
+  }
+  return null
 }
 
 export function Schedule() {
   const { production, addEvent, updateEvent, deleteEvent } = useStore()
   const [editing, setEditing] = useState<ScheduleEvent | 'new' | null>(null)
+  const [viewing, setViewing] = useState<ScheduleEvent | null>(null)
   const [attendanceFor, setAttendanceFor] = useState<ScheduleEvent | null>(null)
   const [signInFor, setSignInFor] = useState<ScheduleEvent | null>(null)
   const [view, setView] = useState<'list' | 'calendar'>('list')
@@ -85,7 +108,7 @@ export function Schedule() {
               </button>
             )}
             <button className="btn btn-primary" onClick={() => setEditing('new')}>
-              + Add event
+              + Add Event
             </button>
           </>
         }
@@ -96,13 +119,13 @@ export function Schedule() {
           Add rehearsals, tech, and performances with call times, then track who shows up.
         </EmptyState>
       ) : view === 'calendar' ? (
-        <CalendarView events={events} today={today} onSelect={setEditing} />
+        <CalendarView events={events} today={today} onSelect={setViewing} />
       ) : (
         <>
           <EventGroup
             label="Upcoming"
             events={upcoming}
-            onEdit={setEditing}
+            onView={setViewing}
             onDelete={deleteEvent}
             onAttendance={setAttendanceFor}
             onSignIn={setSignInFor}
@@ -112,7 +135,7 @@ export function Schedule() {
             <EventGroup
               label="Past"
               events={past}
-              onEdit={setEditing}
+              onView={setViewing}
               onDelete={deleteEvent}
               onAttendance={setAttendanceFor}
               onSignIn={setSignInFor}
@@ -121,10 +144,33 @@ export function Schedule() {
         </>
       )}
 
+      {viewing && (
+        <EventDetail
+          event={viewing}
+          onClose={() => setViewing(null)}
+          onEdit={() => {
+            const e = viewing
+            setViewing(null)
+            setEditing(e)
+          }}
+          onAttendance={() => {
+            const e = viewing
+            setViewing(null)
+            setAttendanceFor(e)
+          }}
+          onSignIn={() => {
+            const e = viewing
+            setViewing(null)
+            setSignInFor(e)
+          }}
+        />
+      )}
+
       {editing && (
         <EventForm
           initial={editing === 'new' ? undefined : editing}
           people={production?.people ?? []}
+          scenes={production?.scenes ?? []}
           onClose={() => setEditing(null)}
           onSave={(vals) => {
             if (editing === 'new') addEvent(vals)
@@ -146,7 +192,7 @@ export function Schedule() {
 function EventGroup({
   label,
   events,
-  onEdit,
+  onView,
   onDelete,
   onAttendance,
   onSignIn,
@@ -154,7 +200,7 @@ function EventGroup({
 }: {
   label: string
   events: ScheduleEvent[]
-  onEdit: (e: ScheduleEvent) => void
+  onView: (e: ScheduleEvent) => void
   onDelete: (id: string) => void
   onAttendance: (e: ScheduleEvent) => void
   onSignIn: (e: ScheduleEvent) => void
@@ -171,7 +217,7 @@ function EventGroup({
             <EventRow
               key={e.id}
               event={e}
-              onEdit={() => onEdit(e)}
+              onView={() => onView(e)}
               onDelete={() => onDelete(e.id)}
               onAttendance={() => onAttendance(e)}
               onSignIn={() => onSignIn(e)}
@@ -185,13 +231,13 @@ function EventGroup({
 
 function EventRow({
   event,
-  onEdit,
+  onView,
   onDelete,
   onAttendance,
   onSignIn,
 }: {
   event: ScheduleEvent
-  onEdit: () => void
+  onView: () => void
   onDelete: () => void
   onAttendance: () => void
   onSignIn: () => void
@@ -201,34 +247,35 @@ function EventRow({
   const totalCalled = event.calledPersonIds.length || production?.people.length || 0
   const summary = att ? summarize(att) : null
 
-  // Anyone called for this event who logged a conflict on this date.
   const people = production?.people ?? []
   const pool = event.calledPersonIds.length
     ? people.filter((p) => event.calledPersonIds.includes(p.id))
     : people
-  const conflicted = pool.filter((p) => (p.conflicts ?? []).some((c) => c.date === event.date))
+  const conflicted = pool.filter((p) => eventConflict(p, event))
 
   return (
     <div className="card" style={{ padding: 14 }}>
       <div className="row-between wrap" style={{ gap: 12 }}>
-        <div style={{ minWidth: 200 }}>
-          <div className="row" style={{ gap: 8 }}>
-            <span className="badge">{event.type}</span>
-            <strong>{event.title || event.type}</strong>
-          </div>
-          <div className="faint small" style={{ marginTop: 4 }}>
-            {formatDate(event.date)}
-            {event.callTime && ` · Call ${formatTime(event.callTime)}`}
-            {event.startTime && ` · ${formatTime(event.startTime)}`}
-            {event.endTime && `–${formatTime(event.endTime)}`}
-            {event.location && ` · ${event.location}`}
-          </div>
-          {event.notes && <div className="small muted" style={{ marginTop: 6 }}>{event.notes}</div>}
-          {conflicted.length > 0 && (
-            <div className="small" style={{ marginTop: 6, color: 'var(--danger)' }}>
-              ⚠ Conflict: {conflicted.map((p) => p.name).join(', ')} unavailable this date
+        <div className="row-tap" style={{ minWidth: 200, borderRadius: 8 }} onClick={onView}>
+          <div>
+            <div className="row" style={{ gap: 8 }}>
+              <span className="badge">{event.type}</span>
+              <strong className="tcase">{event.title || event.type}</strong>
             </div>
-          )}
+            <div className="faint small" style={{ marginTop: 4 }}>
+              {formatDate(event.date)}
+              {event.callTime && ` · Call ${formatTime(event.callTime)}`}
+              {event.startTime && ` · ${formatTime(event.startTime)}`}
+              {event.endTime && `–${formatTime(event.endTime)}`}
+              {event.location && ` · ${event.location}`}
+            </div>
+            {event.notes && <div className="small muted" style={{ marginTop: 6 }}>{event.notes}</div>}
+            {conflicted.length > 0 && (
+              <div className="small" style={{ marginTop: 6, color: 'var(--danger)' }}>
+                ⚠️ Conflict: {conflicted.map((p) => p.name).join(', ')} unavailable
+              </div>
+            )}
+          </div>
         </div>
         <div className="row wrap" style={{ gap: 6 }}>
           <span className="tag">
@@ -237,20 +284,22 @@ function EventRow({
               : 'Whole company'}
           </span>
           {summary && (
-            <span className="tag" title="Attendance">
-              ✓ {summary.present} · ⏱ {summary.late} · ✕ {summary.absent}
+            <span className="tag" title="Attendance so far">
+              {summary.present} present · {summary.late} late · {summary.absent} absent
             </span>
           )}
           <button className="btn btn-sm" onClick={onAttendance}>
             ✓ Attendance
           </button>
           <button className="btn btn-sm btn-ghost" onClick={onSignIn} title="Printable sign-in sheet">
-            🖊 Sign-in
+            🖊 Sign-in Sheet
           </button>
-          <button className="icon-btn" onClick={onEdit} aria-label="Edit">
-            ✎
-          </button>
-          <ConfirmButton onConfirm={onDelete}>🗑</ConfirmButton>
+          <div className="row-actions">
+            <button className="icon-btn" onClick={onView} aria-label="View" title="View">
+              👁
+            </button>
+            <ConfirmButton className="icon-btn danger" onConfirm={onDelete}>🗑</ConfirmButton>
+          </div>
         </div>
       </div>
       {totalCalled === 0 && (
@@ -269,7 +318,18 @@ function summarize(att: Attendance) {
     late: vals.filter((r) => r.status === 'late').length,
     absent: vals.filter((r) => r.status === 'absent').length,
     excused: vals.filter((r) => r.status === 'excused').length,
+    noShow: vals.filter((r) => r.status === 'no-show').length,
   }
+}
+
+/** Human label for the scenes attached to an event, e.g. "2.1 The Wood, 2.2 The Lovers". */
+function sceneLabels(ids: string[] | undefined, scenes: Scene[]): string {
+  if (!ids || ids.length === 0) return ''
+  return ids
+    .map((id) => scenes.find((s) => s.id === id))
+    .filter((s): s is Scene => !!s)
+    .map((s) => `${s.number}${s.title ? ` ${s.title}` : ''}`)
+    .join(', ')
 }
 
 const TYPE_COLOR: Record<EventType, string> = {
@@ -359,7 +419,7 @@ function CalendarView({
               {dayEvents.map((e) => (
                 <button
                   key={e.id}
-                  className="cal-chip"
+                  className="cal-chip tcase"
                   style={{ borderLeftColor: TYPE_COLOR[e.type] }}
                   onClick={() => onSelect(e)}
                   title={`${e.title || e.type}${e.callTime ? ' · Call ' + formatTime(e.callTime) : ''}`}
@@ -376,14 +436,88 @@ function CalendarView({
   )
 }
 
+function EventDetail({
+  event,
+  onClose,
+  onEdit,
+  onAttendance,
+  onSignIn,
+}: {
+  event: ScheduleEvent
+  onClose: () => void
+  onEdit: () => void
+  onAttendance: () => void
+  onSignIn: () => void
+}) {
+  const { production } = useStore()
+  const people = production?.people ?? []
+  const scenes = production?.scenes ?? []
+  const called = event.calledPersonIds.length
+    ? people.filter((p) => event.calledPersonIds.includes(p.id))
+    : people
+  const conflicted = called.filter((p) => eventConflict(p, event))
+  const scenesText = sceneLabels(event.sceneIds, scenes)
+
+  return (
+    <Modal title={event.title || event.type} onClose={onClose}>
+      <div className="row wrap" style={{ gap: 8, marginBottom: 12 }}>
+        <span className="badge">{event.type}</span>
+        {scenesText && <span className="tag">🎬 {scenesText}</span>}
+      </div>
+      <p className="small" style={{ margin: '0 0 10px' }}>
+        {formatDate(event.date)}
+        {event.callTime && ` · Call ${formatTime(event.callTime)}`}
+        {event.startTime && ` · ${formatTime(event.startTime)}`}
+        {event.endTime && `–${formatTime(event.endTime)}`}
+        {event.location && ` · ${event.location}`}
+      </p>
+
+      <div className="field-label">
+        Who's called{' '}
+        <span className="faint">({event.calledPersonIds.length ? called.length : 'whole company'})</span>
+      </div>
+      <p className="small muted" style={{ marginTop: 0 }}>
+        {called.length === 0 ? '—' : called.map((p) => p.name).join(', ')}
+      </p>
+
+      {conflicted.length > 0 && (
+        <div className="card" style={{ borderColor: 'rgba(229,101,79,.35)', padding: '10px 12px', marginBottom: 12 }}>
+          <div className="small" style={{ color: 'var(--danger)', fontWeight: 600 }}>⚠️ Availability conflicts</div>
+          <ul className="list-reset small" style={{ marginTop: 4 }}>
+            {conflicted.map((p) => (
+              <li key={p.id}>{p.name} — {formatConflict(eventConflict(p, event)!)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {event.notes && (
+        <>
+          <div className="field-label">Notes</div>
+          <p className="small muted" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{event.notes}</p>
+        </>
+      )}
+
+      <div className="modal-actions" style={{ flexWrap: 'wrap' }}>
+        <button className="btn btn-ghost" onClick={onClose}>Close</button>
+        <button className="btn" onClick={onSignIn}>🖊 Sign-in Sheet</button>
+        <button className="btn" onClick={onAttendance}>✓ Attendance</button>
+        <button className="btn btn-primary" onClick={onEdit}>✎ Edit</button>
+      </div>
+    </Modal>
+  )
+}
+
 function EventForm({
   initial,
   people,
+  scenes,
   onClose,
   onSave,
 }: {
   initial?: ScheduleEvent
   people: Person[]
+  scenes: Scene[]
   onClose: () => void
   onSave: (vals: Omit<ScheduleEvent, 'id'>) => void
 }) {
@@ -401,11 +535,36 @@ function EventForm({
         : [...s.calledPersonIds, id],
     }))
 
+  const toggleScene = (id: string) =>
+    setF((s) => ({
+      ...s,
+      sceneIds: (s.sceneIds ?? []).includes(id)
+        ? (s.sceneIds ?? []).filter((x) => x !== id)
+        : [...(s.sceneIds ?? []), id],
+    }))
+
+  // Live conflict warnings for the people called against the chosen date/times.
+  const pool = f.calledPersonIds.length
+    ? people.filter((p) => f.calledPersonIds.includes(p.id))
+    : people
+  const warnings = pool
+    .map((p) => ({ p, c: eventConflict(p, f) }))
+    .filter((w): w is { p: Person; c: Conflict } => !!w.c)
+
+  const missing =
+    !f.type ||
+    !f.title.trim() ||
+    !f.date ||
+    !f.callTime ||
+    !f.startTime ||
+    !f.endTime ||
+    !(f.location ?? '').trim()
+
   return (
-    <Modal title={initial ? 'Edit event' : 'Add event'} onClose={onClose}>
+    <Modal title={initial ? 'Edit Event' : 'Add Event'} onClose={onClose}>
       <div className="form-row">
         <label className="field">
-          <span className="field-label">Type</span>
+          <span className="field-label">Type <ReqStar /></span>
           <select value={f.type} onChange={set('type')}>
             {EVENT_TYPES.map((t) => (
               <option key={t} value={t}>
@@ -415,34 +574,60 @@ function EventForm({
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Title</span>
+          <span className="field-label">Title <ReqStar /></span>
           <input value={f.title} onChange={set('title')} placeholder="e.g. Act 1 blocking" />
         </label>
       </div>
       <div className="form-row">
         <label className="field">
-          <span className="field-label">Date *</span>
+          <span className="field-label">Date <ReqStar /></span>
           <input type="date" value={f.date} onChange={set('date')} />
         </label>
         <label className="field">
-          <span className="field-label">Call time</span>
+          <span className="field-label">Call time <ReqStar /></span>
           <input type="time" value={f.callTime} onChange={set('callTime')} />
         </label>
       </div>
       <div className="form-row-3">
         <label className="field">
-          <span className="field-label">Start</span>
+          <span className="field-label">Start <ReqStar /></span>
           <input type="time" value={f.startTime} onChange={set('startTime')} />
         </label>
         <label className="field">
-          <span className="field-label">End</span>
+          <span className="field-label">End <ReqStar /></span>
           <input type="time" value={f.endTime} onChange={set('endTime')} />
         </label>
         <label className="field">
-          <span className="field-label">Location</span>
+          <span className="field-label">Location <ReqStar /></span>
           <input value={f.location} onChange={set('location')} placeholder="Rehearsal Rm B" />
         </label>
       </div>
+
+      {scenes.length > 0 && (
+        <>
+          <div className="field-label">
+            Scene(s) worked <span className="faint">(optional — links to Scenes)</span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+            {scenes.map((s) => {
+              const on = (f.sceneIds ?? []).includes(s.id)
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  className={`btn btn-sm ${on ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => toggleScene(s.id)}
+                  style={{ borderRadius: 999 }}
+                >
+                  {on ? '✓ ' : ''}
+                  {s.number}
+                  {s.title ? ` ${s.title}` : ''}
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
 
       <div className="field-label">
         Who's called{' '}
@@ -465,6 +650,7 @@ function EventForm({
         >
           {people.map((p) => {
             const on = f.calledPersonIds.includes(p.id)
+            const clash = !!eventConflict(p, f)
             return (
               <button
                 key={p.id}
@@ -472,12 +658,29 @@ function EventForm({
                 className={`btn btn-sm ${on ? 'btn-primary' : 'btn-ghost'}`}
                 onClick={() => toggle(p.id)}
                 style={{ borderRadius: 999 }}
+                title={clash ? 'Has a logged conflict on this date/time' : undefined}
               >
                 {on ? '✓ ' : ''}
                 {p.name}
+                {clash ? ' ⚠️' : ''}
               </button>
             )
           })}
+        </div>
+      )}
+
+      {warnings.length > 0 && (
+        <div className="card" style={{ borderColor: 'rgba(229,101,79,.4)', padding: '10px 12px', marginBottom: 14 }}>
+          <div className="small" style={{ color: 'var(--danger)', fontWeight: 600 }}>
+            ⚠️ {warnings.length} availability conflict{warnings.length === 1 ? '' : 's'} for this call
+          </div>
+          <ul className="list-reset small" style={{ marginTop: 4 }}>
+            {warnings.map(({ p, c }) => (
+              <li key={p.id}>
+                <strong>{p.name}</strong> — {formatConflict(c)}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -485,11 +688,16 @@ function EventForm({
         <span className="field-label">Notes</span>
         <textarea value={f.notes} onChange={set('notes')} placeholder="Scenes, focus, reminders…" />
       </label>
+      {missing && (
+        <p className="hint" style={{ color: 'var(--danger)', marginBottom: 8 }}>
+          Type, title, date, call time, start, end &amp; location are all required.
+        </p>
+      )}
       <div className="modal-actions">
         <button className="btn btn-ghost" onClick={onClose}>
           Cancel
         </button>
-        <button className="btn btn-primary" disabled={!f.date} onClick={() => onSave(f)}>
+        <button className="btn btn-primary" disabled={missing} onClick={() => onSave(f)}>
           Save
         </button>
       </div>
@@ -497,13 +705,14 @@ function EventForm({
   )
 }
 
-const STATUS_CYCLE: AttendanceStatus[] = ['unmarked', 'present', 'late', 'absent', 'excused']
+const STATUSES: AttendanceStatus[] = ['unmarked', 'present', 'late', 'absent', 'excused', 'no-show']
 const STATUS_LABEL: Record<AttendanceStatus, string> = {
   unmarked: '—',
   present: 'Present',
   late: 'Late',
   absent: 'Absent',
   excused: 'Excused',
+  'no-show': 'No-show',
 }
 
 function AttendanceModal({ event, onClose }: { event: ScheduleEvent; onClose: () => void }) {
@@ -516,11 +725,8 @@ function AttendanceModal({ event, onClose }: { event: ScheduleEvent; onClose: ()
   const existing = getAttendance(event.id)
   const [records, setRecords] = useState<Attendance['records']>(existing?.records ?? {})
 
-  const cycle = (id: string) => {
-    const cur = records[id]?.status ?? 'unmarked'
-    const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur) + 1) % STATUS_CYCLE.length]
-    setRecords((r) => ({ ...r, [id]: { ...r[id], status: next } }))
-  }
+  const setStatus = (id: string, status: AttendanceStatus) =>
+    setRecords((r) => ({ ...r, [id]: { ...r[id], status } }))
 
   const setAll = (status: AttendanceStatus) =>
     setRecords(() => Object.fromEntries(called.map((p) => [p.id, { status }])))
@@ -530,11 +736,14 @@ function AttendanceModal({ event, onClose }: { event: ScheduleEvent; onClose: ()
     onClose()
   }
 
+  const scenesText = sceneLabels(event.sceneIds, production?.scenes ?? [])
+  const heading = `Attendance · ${event.title || event.type}${scenesText ? ` — ${scenesText}` : ''}`
+
   return (
-    <Modal title={`Attendance · ${event.title || event.type}`} onClose={onClose}>
+    <Modal title={heading} onClose={onClose}>
       <p className="muted small" style={{ marginTop: 0 }}>
-        {formatDate(event.date)} {event.callTime && `· Call ${formatTime(event.callTime)}`}. Tap a
-        status to cycle it.
+        {formatDate(event.date)} {event.callTime && `· Call ${formatTime(event.callTime)}`}. Choose a
+        status for each person.
       </p>
       {called.length === 0 ? (
         <p className="hint">No one is called for this event yet.</p>
@@ -545,7 +754,7 @@ function AttendanceModal({ event, onClose }: { event: ScheduleEvent; onClose: ()
               Mark all present
             </button>
             <button className="btn btn-sm btn-ghost" onClick={() => setRecords({})}>
-              Clear
+              Clear All
             </button>
           </div>
           <ul className="list-reset">
@@ -561,13 +770,18 @@ function AttendanceModal({ event, onClose }: { event: ScheduleEvent; onClose: ()
                     <div style={{ fontWeight: 550 }}>{p.name}</div>
                     <div className="faint small">{p.character || p.role}</div>
                   </div>
-                  <button
-                    className={`btn btn-sm badge-${status}`}
-                    onClick={() => cycle(p.id)}
-                    style={{ minWidth: 96, justifyContent: 'center' }}
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(p.id, e.target.value as AttendanceStatus)}
+                    className={`badge-${status}`}
+                    style={{ width: 'auto', minWidth: 120 }}
                   >
-                    {STATUS_LABEL[status]}
-                  </button>
+                    {STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {STATUS_LABEL[s]}
+                      </option>
+                    ))}
+                  </select>
                 </li>
               )
             })}
@@ -594,68 +808,90 @@ function SignInSheet({ event, onClose }: { event: ScheduleEvent; onClose: () => 
       : (production?.people ?? [])
   const rows = [...called].sort((a, b) => a.name.localeCompare(b.name))
 
-  return (
-    <Modal title={`Sign-in · ${event.title || event.type}`} onClose={onClose}>
-      <div className="row-between no-print mb">
-        <span className="hint">Print or save as PDF, then post at the callboard.</span>
-        <button className="btn btn-sm" onClick={() => window.print()}>
-          🖨 Print / PDF
-        </button>
-      </div>
-      <div className="report-doc">
-        <div style={{ borderBottom: '2px solid var(--accent)', paddingBottom: 8, marginBottom: 10 }}>
-          <h2 style={{ margin: 0 }}>{production?.title}</h2>
-          <div className="muted small">
-            {event.type}
-            {event.title ? ` · ${event.title}` : ''} · {formatDate(event.date)}
-            {event.callTime && ` · Call ${formatTime(event.callTime)}`}
-            {event.location && ` · ${event.location}`}
+  // Escape to close.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const print = () => {
+    document.body.classList.add('printing-sheet')
+    const cleanup = () => {
+      document.body.classList.remove('printing-sheet')
+      window.removeEventListener('afterprint', cleanup)
+    }
+    window.addEventListener('afterprint', cleanup)
+    window.print()
+  }
+
+  // Rendered in a body-level portal so it can be printed alone (see .sheet-print-root CSS).
+  return createPortal(
+    <div className="sheet-print-root">
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="row-between no-print" style={{ marginBottom: 12 }}>
+            <span className="hint">Print or save as PDF, then post at the callboard.</span>
+            <button className="btn btn-sm" onClick={print}>
+              🖨 Print / PDF
+            </button>
+          </div>
+          <div className="sheet-doc">
+            <div style={{ borderBottom: '2px solid var(--accent)', paddingBottom: 8, marginBottom: 10 }}>
+              <h2 style={{ margin: 0 }}>{production?.title}</h2>
+              <div className="muted small">
+                {event.type}
+                {event.title ? ` · ${event.title}` : ''} · {formatDate(event.date)}
+                {event.callTime && ` · Call ${formatTime(event.callTime)}`}
+                {event.location && ` · ${event.location}`}
+              </div>
+            </div>
+            <table className="sheet-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '38%' }}>Name</th>
+                  <th>Role / Character</th>
+                  <th style={{ width: 90 }}>Time in</th>
+                  <th style={{ width: 80 }}>Initials</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="muted">No one called — add people or a call list.</td>
+                  </tr>
+                ) : (
+                  rows.map((p) => (
+                    <tr key={p.id}>
+                      <td style={{ fontWeight: 600 }}>{p.name}</td>
+                      <td className="faint">{p.character || p.role || ''}</td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                  ))
+                )}
+                {rows.length > 0 &&
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <tr key={`blank-${i}`}>
+                      <td>&nbsp;</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="modal-actions no-print">
+            <button className="btn btn-ghost" onClick={onClose}>
+              Close
+            </button>
           </div>
         </div>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th style={{ width: '38%' }}>Name</th>
-                <th>Role / Character</th>
-                <th style={{ width: 90 }}>Time in</th>
-                <th style={{ width: 80 }}>Initials</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="muted">No one called — add people or a call list.</td>
-                </tr>
-              ) : (
-                rows.map((p) => (
-                  <tr key={p.id}>
-                    <td style={{ fontWeight: 600 }}>{p.name}</td>
-                    <td className="faint">{p.character || p.role || ''}</td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                ))
-              )}
-              {/* A few blank rows for walk-ins / swings */}
-              {rows.length > 0 &&
-                Array.from({ length: 3 }).map((_, i) => (
-                  <tr key={`blank-${i}`}>
-                    <td>&nbsp;</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
       </div>
-      <div className="modal-actions no-print">
-        <button className="btn btn-ghost" onClick={onClose}>
-          Close
-        </button>
-      </div>
-    </Modal>
+    </div>,
+    document.body,
   )
 }

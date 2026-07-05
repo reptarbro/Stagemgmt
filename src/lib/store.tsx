@@ -19,6 +19,7 @@ import { makeSampleProduction } from './sample'
 import type {
   AppData,
   Attendance,
+  Cue,
   LineNote,
   Person,
   Production,
@@ -65,6 +66,10 @@ interface StoreValue {
   addLineNote: (n: Omit<LineNote, 'id'>) => void
   updateLineNote: (id: string, patch: Partial<LineNote>) => void
   deleteLineNote: (id: string) => void
+  // Cues (cue-to-cue / calling script)
+  addCue: (c: Omit<Cue, 'id'>) => void
+  updateCue: (id: string, patch: Partial<Cue>) => void
+  deleteCue: (id: string) => void
   // Script (static document)
   setScript: (file: File) => Promise<void>
   getScriptURL: () => Promise<string | null>
@@ -122,6 +127,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           scenes: [],
           props: [],
           lineNotes: [],
+          cues: [],
           createdAt: new Date().toISOString(),
         }
         setData((d) => ({
@@ -293,6 +299,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         patchActive((prod) => ({
           ...prod,
           lineNotes: prod.lineNotes.filter((x) => x.id !== id),
+        })),
+
+      addCue: (c) =>
+        patchActive((prod) => ({
+          ...prod,
+          cues: [...(prod.cues ?? []), { ...c, id: newId() }],
+        })),
+      updateCue: (id, patch) =>
+        patchActive((prod) => ({
+          ...prod,
+          cues: (prod.cues ?? []).map((x) => (x.id === id ? { ...x, ...patch } : x)),
+        })),
+      deleteCue: (id) =>
+        patchActive((prod) => ({
+          ...prod,
+          cues: (prod.cues ?? []).filter((x) => x.id !== id),
         })),
 
       setScript: async (file) => {

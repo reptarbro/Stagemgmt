@@ -11,6 +11,10 @@ export interface Conflict {
   id: ID
   /** ISO date. */
   date: string
+  /** Optional "HH:MM" start of the unavailable window. Absent = all day. */
+  startTime?: string
+  /** Optional "HH:MM" end of the unavailable window. */
+  endTime?: string
   note?: string
 }
 
@@ -46,10 +50,18 @@ export interface ScheduleEvent {
   location?: string
   /** Person ids called for this event. Empty = whole company / TBD. */
   calledPersonIds: ID[]
+  /** Scene ids being worked in this event, linking Schedule <-> Scenes. */
+  sceneIds?: ID[]
   notes?: string
 }
 
-export type AttendanceStatus = 'present' | 'late' | 'absent' | 'excused' | 'unmarked'
+export type AttendanceStatus =
+  | 'present'
+  | 'late'
+  | 'absent'
+  | 'excused'
+  | 'no-show'
+  | 'unmarked'
 
 /** Attendance is stored per event, keyed by person id. */
 export interface Attendance {
@@ -69,7 +81,7 @@ export interface ReportSection {
   notes: ReportNote[]
 }
 
-export type ReportType = 'Rehearsal' | 'Performance'
+export type ReportType = 'Rehearsal' | 'Dress Rehearsal' | 'Performance'
 
 export interface Report {
   id: ID
@@ -101,7 +113,7 @@ export interface Scene {
   notes?: string
 }
 
-export type PropCategory = 'Prop' | 'Costume' | 'Set' | 'Furniture' | 'Sound' | 'Other'
+export type PropCategory = 'Prop' | 'Costume' | 'Set' | 'Furniture' | 'Other'
 export type PropStatus = 'Needed' | 'In progress' | 'Ready' | 'Cut'
 
 export interface PropItem {
@@ -137,6 +149,28 @@ export interface LineNote {
   resolved?: boolean
 }
 
+/**
+ * A single technical cue for the calling script / cue-to-cue.
+ * Surfaced as tech approaches (roughly three weeks out from opening).
+ */
+export type CueDept = 'LX' | 'Sound' | 'Fly' | 'Deck' | 'Spot' | 'Projection' | 'Other'
+export type CueStatus = 'dry-tech' | 'teched' | 'set'
+
+export interface Cue {
+  id: ID
+  /** Call number, e.g. "Q1", "LX 12", "SQ 3". */
+  number: string
+  dept: CueDept
+  /** Where it fires — page/scene + line or a visual, e.g. "p.12 / 'goodnight'". */
+  placement?: string
+  /** What happens on the GO. */
+  action?: string
+  /** The standby line the caller reads before the GO. */
+  standby?: string
+  status: CueStatus
+  notes?: string
+}
+
 /** Metadata for an uploaded script file; the bytes live in IndexedDB. */
 export interface ScriptMeta {
   id: ID
@@ -164,8 +198,12 @@ export interface Production {
   scenes: Scene[]
   props: PropItem[]
   lineNotes: LineNote[]
+  /** Calling-script cues (cue-to-cue). */
+  cues: Cue[]
   /** Uploaded script document (static for now; annotation comes in Phase 2). */
   script?: ScriptMeta
+  /** True for the built-in demo show, so it can be shown as a removable preview. */
+  isSample?: boolean
   createdAt: string
 }
 

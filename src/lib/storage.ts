@@ -31,7 +31,9 @@ export function normalizeProduction(p: Partial<Production>): Production {
     scenes: p.scenes ?? [],
     props: p.props ?? [],
     lineNotes: p.lineNotes ?? [],
+    cues: p.cues ?? [],
     script: p.script,
+    isSample: p.isSample,
     createdAt: p.createdAt ?? new Date().toISOString(),
   }
 }

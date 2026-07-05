@@ -31,8 +31,16 @@ body,
   min-height: 100%;
 }
 
+/* Dark base on the root element so no white ever shows behind the app
+   (iPad Safari would otherwise flash white below short pages). */
+html {
+  background: var(--bg);
+}
+
 body {
   background: radial-gradient(1200px 600px at 70% -10%, #241d38 0%, var(--bg) 60%);
+  background-color: var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
 }
@@ -51,6 +59,24 @@ h4 {
   font-weight: 650;
 }
 
+/* Titles default to Title Case app-wide (headers, subheaders, section names).
+   capitalize only upper-cases the first letter of each word, leaving numbers
+   and existing caps intact. */
+h1,
+h2,
+h3,
+.subtitle,
+.tcase {
+  text-transform: capitalize;
+}
+
+/* Required-field marker. */
+.req-star {
+  color: var(--danger);
+  font-weight: 700;
+  margin-left: 2px;
+}
+
 h1 {
   font-size: 1.6rem;
 }
@@ -66,6 +92,7 @@ p {
 .app {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .sidebar {
@@ -80,6 +107,7 @@ p {
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
 }
 
@@ -128,6 +156,14 @@ p {
   width: 20px;
   text-align: center;
   font-size: 1.05rem;
+}
+.nav-hint {
+  font-size: 0.66rem;
+  color: var(--text-faint);
+  background: var(--bg-elev-2);
+  border-radius: 999px;
+  padding: 1px 7px;
+  letter-spacing: 0.02em;
 }
 
 .sidebar-spacer {
@@ -360,6 +396,42 @@ tbody tr:hover {
   background: rgba(255, 255, 255, 0.02);
 }
 
+/* Sortable column header. */
+.sort-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.sort-th:hover {
+  color: var(--text-dim);
+}
+.sort-arrow {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.7em;
+  opacity: 0.4;
+}
+.sort-th.active .sort-arrow {
+  opacity: 1;
+  color: var(--accent-warm);
+}
+
+/* Rows the user can tap to open a detail view. */
+.row-tap {
+  cursor: pointer;
+}
+.row-tap:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Discreet "needs attention" flag (e.g. props still to sort). */
+.flag-warn {
+  color: var(--accent-warm);
+  font-size: 0.85em;
+  margin-left: 5px;
+  cursor: help;
+}
+
 /* ---------- Badges / chips ---------- */
 .badge {
   display: inline-flex;
@@ -383,6 +455,11 @@ tbody tr:hover {
 .badge-late { color: var(--accent-warm); }
 .badge-absent { color: var(--danger); }
 .badge-excused { color: var(--info); }
+.badge-no-show { color: var(--danger); }
+
+.cue-dry-tech { color: var(--text-dim); }
+.cue-teched { color: var(--accent-warm); border-color: rgba(240, 199, 102, 0.35); background: rgba(240, 199, 102, 0.08); }
+.cue-set { color: var(--success); border-color: rgba(95, 184, 122, 0.35); background: rgba(95, 184, 122, 0.08); }
 
 .tag {
   display: inline-block;
@@ -493,17 +570,33 @@ tbody tr:hover {
   font-size: 0.8rem;
 }
 .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
   background: transparent;
   border: none;
-  color: var(--text-faint);
+  color: var(--text-dim);
   cursor: pointer;
-  padding: 5px;
-  border-radius: 6px;
-  font-size: 0.95rem;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  line-height: 1;
 }
 .icon-btn:hover {
   background: var(--bg-elev-2);
   color: var(--text);
+}
+.icon-btn.danger {
+  color: var(--danger);
+}
+/* Row action cluster — keeps edit/attach/delete the same size, aligned. */
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
 }
 
 /* ---------- Production switcher ---------- */
@@ -518,7 +611,7 @@ tbody tr:hover {
   margin-top: 6px;
 }
 
-/* ---------- Report print ---------- */
+/* ---------- Print ---------- */
 @media print {
   .sidebar,
   .topbar,
@@ -538,6 +631,60 @@ tbody tr:hover {
     background: #fff;
     color: #000;
   }
+
+  /* Sign-in sheet: print ONLY the sheet, full page (nothing from the app). */
+  body:has(.sheet-print-root) #root {
+    display: none !important;
+  }
+  .sheet-print-root .modal-backdrop {
+    position: static;
+    inset: auto;
+    background: none;
+    backdrop-filter: none;
+    padding: 0;
+    margin: 0;
+    display: block;
+    overflow: visible;
+  }
+  .sheet-print-root .modal {
+    border: none;
+    box-shadow: none;
+    max-width: none;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    background: #fff;
+    color: #000;
+  }
+  .sheet-print-root h2 {
+    color: #000;
+  }
+  .sheet-table th,
+  .sheet-table td {
+    border: 1px solid #000;
+    color: #000;
+    padding: 12px 10px;
+  }
+}
+
+/* Sign-in sheet table (screen). */
+.sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.sheet-table th {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.sheet-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
 }
 
 /* ---------- Responsive ---------- */

@@ -4,10 +4,22 @@ import { PageHead, ConfirmButton } from '../components/ui'
 import { markBackedUp } from '../lib/storage'
 
 export function Settings() {
-  const { production, data, exportJSON, importJSON, deleteProduction, loadSampleProduction } =
-    useStore()
+  const {
+    production,
+    data,
+    exportJSON,
+    importJSON,
+    deleteProduction,
+    loadSampleProduction,
+    setActiveProduction,
+  } = useStore()
   const [msg, setMsg] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  const sample = data.productions.find((p) => p.isSample)
+  const realProductions = data.productions.filter((p) => !p.isSample)
+  const totalPeople = data.productions.reduce((n, p) => n + p.people.length, 0)
+  const totalEvents = data.productions.reduce((n, p) => n + p.events.length, 0)
 
   const download = () => {
     const blob = new Blob([exportJSON()], { type: 'application/json' })
@@ -43,22 +55,56 @@ export function Settings() {
         </div>
       )}
 
+      {/* Storage overview — across every production. */}
+      <div className="card">
+        <div className="card-title">Storage</div>
+        <div className="grid grid-4">
+          <Stat value={realProductions.length} label="Productions" />
+          <Stat value={totalPeople} label="People (all shows)" />
+          <Stat value={totalEvents} label="Events (all shows)" />
+          <Stat value={production?.title ?? '—'} label="Current" small />
+        </div>
+      </div>
+
       <div className="card">
         <div className="card-title">Demo</div>
         <p className="small muted">
-          Load a fully-populated sample show — cast &amp; crew, schedule, scenes, props, line notes, and a
-          filed report — so the app looks alive when you show it to someone. It's added as a separate
-          production; delete it anytime in the Danger zone below.
+          Preview a fully-populated sample show — cast &amp; crew, schedule, scenes, props, line notes,
+          cues, and a filed report — to see how everything fits together. It's clearly marked as a sample
+          and you can remove it in one tap; your real shows aren't affected.
         </p>
-        <button
-          className="btn"
-          onClick={() => {
-            loadSampleProduction()
-            setMsg('Sample production loaded — see the Production Hub.')
-          }}
-        >
-          ✨ Load sample production
-        </button>
+        {sample ? (
+          <div className="row wrap" style={{ gap: 10 }}>
+            <button
+              className="btn"
+              onClick={() => {
+                setActiveProduction(sample.id)
+                setMsg('Viewing the sample — see the Production Hub.')
+              }}
+            >
+              👁 View sample
+            </button>
+            <ConfirmButton
+              className="btn btn-danger"
+              onConfirm={() => {
+                deleteProduction(sample.id)
+                setMsg('Sample removed.')
+              }}
+            >
+              Remove sample
+            </ConfirmButton>
+          </div>
+        ) : (
+          <button
+            className="btn"
+            onClick={() => {
+              loadSampleProduction()
+              setMsg('Sample loaded — see the Production Hub.')
+            }}
+          >
+            ✨ Preview a sample show
+          </button>
+        )}
       </div>
 
       <div className="card">
@@ -103,18 +149,6 @@ export function Settings() {
         </button>
       </div>
 
-      <div className="card">
-        <div className="card-title">Storage</div>
-        <div className="row-between small" style={{ padding: '4px 0' }}>
-          <span className="faint">Productions</span>
-          <span>{data.productions.length}</span>
-        </div>
-        <div className="row-between small" style={{ padding: '4px 0' }}>
-          <span className="faint">Current production</span>
-          <span>{production?.title ?? '—'}</span>
-        </div>
-      </div>
-
       {production && (
         <div className="card" style={{ borderColor: 'rgba(229,101,79,.35)' }}>
           <div className="card-title" style={{ color: 'var(--danger)' }}>
@@ -136,5 +170,14 @@ export function Settings() {
         </div>
       )}
     </>
+  )
+}
+
+function Stat({ value, label, small }: { value: React.ReactNode; label: string; small?: boolean }) {
+  return (
+    <div className="stat">
+      <div className="stat-value" style={small ? { fontSize: '1.1rem' } : undefined}>{value}</div>
+      <div className="stat-label">{label}</div>
+    </div>
   )
 }
