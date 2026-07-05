@@ -132,7 +132,7 @@ export function Welcome() {
           {/* 3) Sample — always the last option */}
           <Divider label="or" />
           <button type="button" className="btn" style={{ width: '100%' }} onClick={openSample}>
-            {sample ? '✨ Open the sample production' : '✨ Explore a Sample Production'}
+            ✨ Explore a Sample Production
           </button>
           <p className="hint" style={{ textAlign: 'center', margin: '12px 0 0' }}>
             Everything is stored privately in this browser. You can export a backup anytime.
