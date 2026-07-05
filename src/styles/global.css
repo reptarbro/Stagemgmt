@@ -34,7 +34,7 @@ html,
 body,
 #root {
   margin: 0;
-  min-height: 100%;
+  height: 100%;
 }
 
 /* Dark base on the root element so no white ever shows behind the app
@@ -53,6 +53,10 @@ body {
   background-attachment: fixed;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  /* The shell owns scrolling (.main / .welcome-scroll scroll internally); the
+     page itself never scrolls, so iOS Safari can't rubber-band into an empty
+     background void below short pages. */
+  overflow: hidden;
 }
 
 a {
@@ -103,10 +107,11 @@ p {
 /* ---------- Layout shell ---------- */
 .app {
   display: flex;
-  min-height: 100vh;
-  /* svh = smallest viewport height, so the app never grows taller than the
-     visible area (prevents scrolling into empty background on iOS Safari). */
-  min-height: 100svh;
+  /* Fixed to the smallest viewport height (svh = address-bar-visible height) so
+     the shell always fits the visible area exactly — the page never scrolls,
+     only .main scrolls inside it. No rubber-band into empty background. */
+  height: 100vh;
+  height: 100svh;
 }
 
 .sidebar {
@@ -240,11 +245,34 @@ p {
 .main {
   flex: 1;
   min-width: 0;
+  /* The one vertical scroll container. min-height:0 lets it shrink within the
+     flex column so overflow scrolls here instead of growing the page. */
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 28px clamp(16px, 4vw, 44px) 40px;
 }
 .main-inner {
   max-width: var(--maxw);
   margin: 0 auto;
+}
+
+/* Landing page scroll shell — Welcome renders outside .app, so it owns its own
+   scroll the same way, keeping body locked. */
+.welcome-scroll {
+  height: 100vh;
+  height: 100svh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.welcome-center {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /* ---------- Topbar (mobile) ---------- */
@@ -717,6 +745,16 @@ tbody tr:hover {
   body {
     background: #fff;
     color: #000;
+    /* Undo the app-shell scroll lock so multi-page sheets paginate. */
+    overflow: visible;
+    height: auto;
+  }
+  html,
+  #root {
+    height: auto;
+  }
+  .main {
+    overflow: visible;
   }
   .card,
   .report-doc {

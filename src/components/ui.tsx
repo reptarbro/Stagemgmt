@@ -86,10 +86,12 @@ export function EmptyState({
   )
 }
 
-/** Scrolls the window to the top whenever the route changes. */
+/** Scrolls the content pane to the top whenever the route changes. The page
+    body no longer scrolls (the shell owns scrolling), so reset .main directly. */
 export function ScrollToTop() {
   const { pathname } = useLocation()
   useEffect(() => {
+    document.querySelector('.main')?.scrollTo({ top: 0 })
     window.scrollTo(0, 0)
   }, [pathname])
   return null

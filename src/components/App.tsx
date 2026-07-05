@@ -174,7 +174,7 @@ function Shell() {
         </div>
       </aside>
 
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div className="topbar">
           <button className="icon-btn" onClick={() => setMenuOpen((o) => !o)} aria-label="Menu">
             ☰

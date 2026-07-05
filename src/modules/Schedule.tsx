@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar } from '../components/ui'
 import { PrintSheet } from '../components/PrintSheet'
+import { putFile, getFile, deleteFile, signInKey } from '../lib/storage'
 import { formatDate, formatTime, todayISO, parseISODate } from '../lib/format'
 import { formatConflict } from './People'
 import { eventsToICS } from '../lib/ics'
@@ -133,6 +134,7 @@ export function Schedule() {
           <EventGroup
             label="Upcoming"
             events={upcoming}
+            today={today}
             onView={setViewing}
             onDelete={deleteEvent}
             onAttendance={setAttendanceFor}
@@ -143,6 +145,7 @@ export function Schedule() {
             <EventGroup
               label="Past"
               events={past}
+              today={today}
               onView={setViewing}
               onDelete={deleteEvent}
               onAttendance={setAttendanceFor}
@@ -192,7 +195,13 @@ export function Schedule() {
         <AttendanceModal event={attendanceFor} onClose={() => setAttendanceFor(null)} />
       )}
 
-      {signInFor && <SignInSheet event={signInFor} onClose={() => setSignInFor(null)} />}
+      {signInFor && (
+        <SignInSheet
+          event={signInFor}
+          isPast={signInFor.date < today}
+          onClose={() => setSignInFor(null)}
+        />
+      )}
     </>
   )
 }
@@ -200,6 +209,7 @@ export function Schedule() {
 function EventGroup({
   label,
   events,
+  today,
   onView,
   onDelete,
   onAttendance,
@@ -208,6 +218,7 @@ function EventGroup({
 }: {
   label: string
   events: ScheduleEvent[]
+  today: string
   onView: (e: ScheduleEvent) => void
   onDelete: (id: string) => void
   onAttendance: (e: ScheduleEvent) => void
@@ -225,6 +236,7 @@ function EventGroup({
             <EventRow
               key={e.id}
               event={e}
+              isPast={e.date < today}
               onView={() => onView(e)}
               onDelete={() => onDelete(e.id)}
               onAttendance={() => onAttendance(e)}
@@ -239,12 +251,14 @@ function EventGroup({
 
 function EventRow({
   event,
+  isPast,
   onView,
   onDelete,
   onAttendance,
   onSignIn,
 }: {
   event: ScheduleEvent
+  isPast: boolean
   onView: () => void
   onDelete: () => void
   onAttendance: () => void
@@ -299,8 +313,20 @@ function EventRow({
           <button className="btn btn-sm" onClick={onAttendance}>
             ✓ Attendance
           </button>
-          <button className="btn btn-sm btn-ghost" onClick={onSignIn} title="Printable sign-in sheet">
-            🖊 Sign-in Sheet
+          <button
+            className={`btn btn-sm ${isPast && event.signInUploadedAt ? '' : 'btn-ghost'}`}
+            onClick={onSignIn}
+            title={
+              isPast
+                ? 'Print a blank sheet, or upload/view the signed one'
+                : 'Printable sign-in sheet'
+            }
+          >
+            {isPast
+              ? event.signInUploadedAt
+                ? '🖊 Sign-in ✓ uploaded'
+                : '🖊 Sign-in · Upload'
+              : '🖊 Sign-in Sheet'}
           </button>
           <div className="row-actions">
             <button className="icon-btn" onClick={onView} aria-label="View" title="View">
@@ -825,7 +851,15 @@ function AttendanceModal({ event, onClose }: { event: ScheduleEvent; onClose: ()
   )
 }
 
-function SignInSheet({ event, onClose }: { event: ScheduleEvent; onClose: () => void }) {
+function SignInSheet({
+  event,
+  isPast,
+  onClose,
+}: {
+  event: ScheduleEvent
+  isPast: boolean
+  onClose: () => void
+}) {
   const { production } = useStore()
   const called =
     event.calledPersonIds.length > 0
@@ -839,6 +873,7 @@ function SignInSheet({ event, onClose }: { event: ScheduleEvent; onClose: () => 
 
   return (
     <PrintSheet hint="Print or save the sign-in sheet as a PDF, then post it at the callboard." onClose={onClose}>
+      {isPast && <SignedSheetPanel event={event} />}
       <div className="sheet-head">
         <h2>{production?.title} — Sign-in Sheet</h2>
         <div className="sheet-sub">
@@ -880,5 +915,127 @@ function SignInSheet({ event, onClose }: { event: ScheduleEvent; onClose: () => 
         </tbody>
       </table>
     </PrintSheet>
+  )
+}
+
+/**
+ * Upload / view the physically-signed sign-in sheet for a PAST event.
+ * The image or PDF lives in IndexedDB (too big for localStorage); the event
+ * just carries a flag + mime so we know one exists.
+ */
+function SignedSheetPanel({ event }: { event: ScheduleEvent }) {
+  const { production, updateEvent } = useStore()
+  // Read the live event from the store — the modal's `event` prop is a snapshot
+  // taken when it opened, so it wouldn't reflect an upload made just now.
+  const live = production?.events.find((e) => e.id === event.id) ?? event
+  const [url, setUrl] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const uploadedAt = live.signInUploadedAt
+  const mime = live.signInMime ?? ''
+  const isPdf = mime.includes('pdf')
+
+  // Load the stored blob into an object URL for preview whenever it changes.
+  useEffect(() => {
+    let revoked: string | null = null
+    let cancelled = false
+    if (uploadedAt) {
+      getFile(signInKey(event.id)).then((blob) => {
+        if (cancelled || !blob) return
+        const u = URL.createObjectURL(blob)
+        revoked = u
+        setUrl(u)
+      })
+    } else {
+      setUrl(null)
+    }
+    return () => {
+      cancelled = true
+      if (revoked) URL.revokeObjectURL(revoked)
+    }
+  }, [event.id, uploadedAt])
+
+  const onPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-picking the same file
+    if (!file) return
+    setBusy(true)
+    try {
+      await putFile(signInKey(event.id), file)
+      updateEvent(event.id, {
+        signInUploadedAt: new Date().toISOString(),
+        signInMime: file.type,
+      })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const remove = async () => {
+    setBusy(true)
+    try {
+      await deleteFile(signInKey(event.id))
+      updateEvent(event.id, { signInUploadedAt: undefined, signInMime: undefined })
+      setUrl(null)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div
+      className="card no-print"
+      style={{ padding: 14, marginBottom: 14, background: 'var(--bg-elev)' }}
+    >
+      <div className="row-between wrap" style={{ gap: 10 }}>
+        <div>
+          <div style={{ fontWeight: 600 }}>Signed sheet</div>
+          <div className="faint small">
+            {uploadedAt
+              ? `Uploaded ${formatDate(uploadedAt.slice(0, 10))}`
+              : 'Upload a photo or scan of the signed sheet to keep it on file.'}
+          </div>
+        </div>
+        <div className="row wrap" style={{ gap: 6 }}>
+          <label className="btn btn-sm btn-primary" style={{ cursor: 'pointer' }}>
+            {busy ? 'Saving…' : uploadedAt ? '↻ Replace' : '⤒ Upload signed sheet'}
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={onPick}
+              style={{ display: 'none' }}
+            />
+          </label>
+          {uploadedAt && url && (
+            <a className="btn btn-sm" href={url} target="_blank" rel="noreferrer">
+              👁 View full size
+            </a>
+          )}
+          {uploadedAt && (
+            <ConfirmButton className="btn btn-sm btn-danger" onConfirm={remove}>
+              Remove
+            </ConfirmButton>
+          )}
+        </div>
+      </div>
+      {uploadedAt && url && !isPdf && (
+        <img
+          src={url}
+          alt="Signed sign-in sheet"
+          style={{
+            display: 'block',
+            marginTop: 12,
+            maxWidth: '100%',
+            maxHeight: 340,
+            borderRadius: 8,
+            border: '1px solid var(--border)',
+          }}
+        />
+      )}
+      {uploadedAt && url && isPdf && (
+        <p className="small muted" style={{ marginTop: 10, marginBottom: 0 }}>
+          PDF uploaded — tap “View full size” to open it.
+        </p>
+      )}
+    </div>
   )
 }

@@ -60,6 +60,11 @@ export interface ScheduleEvent {
   /** Scene ids being worked in this event, linking Schedule <-> Scenes. */
   sceneIds?: ID[]
   notes?: string
+  /** ISO timestamp set when a photo/scan of the signed sheet is uploaded
+      (bytes live in IndexedDB under `signin:<eventId>`). Past events only. */
+  signInUploadedAt?: string
+  /** MIME type of the uploaded signed sheet, e.g. "image/jpeg", "application/pdf". */
+  signInMime?: string
 }
 
 export type AttendanceStatus =

@@ -45,7 +45,8 @@ export function Welcome() {
   )
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', padding: 20 }}>
+    <div className="welcome-scroll">
+      <div className="welcome-center">
       <div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
           <StandbyMark size={76} />
@@ -138,6 +139,7 @@ export function Welcome() {
             Everything is stored privately in this browser. You can export a backup anytime.
           </p>
         </div>
+      </div>
       </div>
     </div>
   )

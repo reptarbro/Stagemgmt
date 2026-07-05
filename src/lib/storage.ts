@@ -149,3 +149,13 @@ export async function deleteScriptFile(key: string): Promise<void> {
   })
   db.close()
 }
+
+// The same IndexedDB store also holds other binary blobs (e.g. uploaded
+// sign-in sheet photos, keyed `signin:<eventId>`). These generic aliases make
+// that intent clear at the call site.
+export const putFile = putScriptFile
+export const getFile = getScriptFile
+export const deleteFile = deleteScriptFile
+
+/** IndexedDB key for an event's uploaded (signed) sign-in sheet. */
+export const signInKey = (eventId: string) => `signin:${eventId}`

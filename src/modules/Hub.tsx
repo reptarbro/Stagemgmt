@@ -140,7 +140,12 @@ export function Hub() {
               <li className="muted small">No one on the roster yet.</li>
             ) : (
               [...production.people]
-                .sort((a, b) => a.name.localeCompare(b.name))
+                // Cast first, then everyone else (crew/production/creative…),
+                // each block alphabetical. No user sort control — just tidy.
+                .sort((a, b) => {
+                  const rank = (g: string) => (g === 'Cast' ? 0 : 1)
+                  return rank(a.group) - rank(b.group) || a.name.localeCompare(b.name)
+                })
                 .map((p) => (
                   <li key={p.id} className="row-between" style={{ padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
                     <span style={{ fontWeight: 550 }}>{p.name}</span>
