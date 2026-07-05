@@ -1,0 +1,15 @@
+{
+  "name": "Stage Manager",
+  "short_name": "Stage Mgr",
+  "description": "Track and manage theatrical productions — people, schedule, attendance, reports.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E1311",
+  "theme_color": "#0E1311",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

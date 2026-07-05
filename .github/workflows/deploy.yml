@@ -1,0 +1,51 @@
+name: Deploy to GitHub Pages
+
+# Build the static app and publish it to GitHub Pages.
+# Runs on the default branch and on the feature branch so the app can be
+# tested on a phone before the PR is merged.
+on:
+  push:
+    branches:
+      - main
+      - claude/stage-manager-app-mr0q9w
+  workflow_dispatch:
+
+# Permissions required for the GitHub Pages deployment.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; newer runs cancel in-progress ones.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # Auto-enables Pages (build type = GitHub Actions) if not already on.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
