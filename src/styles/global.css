@@ -166,8 +166,16 @@ p {
 }
 .nav-icon {
   width: 20px;
-  text-align: center;
-  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+}
+.nav-link:hover .nav-icon {
+  color: var(--text-dim);
+}
+.nav-link.active .nav-icon {
+  color: var(--accent-strong);
 }
 .nav-hint {
   font-size: 0.66rem;
@@ -459,11 +467,12 @@ tbody tr:hover {
   color: var(--text-dim);
   white-space: nowrap;
 }
-.badge-Cast { color: #e9b7d6; border-color: rgba(233, 183, 214, 0.35); background: rgba(233, 183, 214, 0.08); }
-.badge-Crew { color: #9fd0e6; border-color: rgba(159, 208, 230, 0.35); background: rgba(159, 208, 230, 0.08); }
-.badge-Creative { color: #c8b0f0; border-color: rgba(200, 176, 240, 0.35); background: rgba(200, 176, 240, 0.08); }
-.badge-Production { color: #cdbf9a; border-color: rgba(205, 191, 154, 0.35); background: rgba(205, 191, 154, 0.08); }
-.badge-Musician { color: #8fdcc4; border-color: rgba(143, 220, 196, 0.35); background: rgba(143, 220, 196, 0.08); }
+/* Group badges — harmonized into the brand family (greens · sage · amber · olive). */
+.badge-Cast { color: #46b87f; border-color: rgba(70, 184, 127, 0.35); background: rgba(70, 184, 127, 0.08); }
+.badge-Crew { color: #9fb8a6; border-color: rgba(159, 184, 166, 0.35); background: rgba(159, 184, 166, 0.08); }
+.badge-Creative { color: #6cc3c0; border-color: rgba(108, 195, 192, 0.35); background: rgba(108, 195, 192, 0.08); }
+.badge-Production { color: #d9a441; border-color: rgba(217, 164, 65, 0.35); background: rgba(217, 164, 65, 0.08); }
+.badge-Musician { color: #bcc98a; border-color: rgba(188, 201, 138, 0.35); background: rgba(188, 201, 138, 0.08); }
 .badge-present { color: var(--success); }
 .badge-late { color: var(--warn); }
 .badge-absent { color: var(--danger); }

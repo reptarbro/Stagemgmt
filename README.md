@@ -1,4 +1,4 @@
-# 🎭 Stage Manager
+# Standby — the stage manager's prompt book
 
 A web app that helps stage managers track and fully manage their productions —
 their prompt book, contact sheet, schedule, and report desk in one place.

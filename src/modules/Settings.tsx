@@ -139,7 +139,7 @@ export function Settings() {
         <button
           className="btn"
           onClick={() => {
-            const subject = 'Stage Manager — feedback'
+            const subject = 'Standby — feedback'
             const body =
               'What I was doing:\n\nWhat happened / what I wish it did:\n\nDevice & browser:\n'
             window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`

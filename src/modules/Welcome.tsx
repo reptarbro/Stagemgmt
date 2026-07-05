@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { ReqStar } from '../components/ui'
+import { StandbyMark, APP_NAME } from '../components/Brand'
 
 export function Welcome({ inShell = false }: { inShell?: boolean }) {
   const { createProduction, loadSampleProduction } = useStore()
@@ -31,10 +32,20 @@ export function Welcome({ inShell = false }: { inShell?: boolean }) {
       <div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}>
         {!inShell && (
           <>
-            <div style={{ fontSize: '3.4rem', filter: 'drop-shadow(0 0 14px rgba(47,174,107,.4))' }}>
-              🎭
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+              <StandbyMark size={76} />
             </div>
-            <h1 style={{ fontSize: '2rem', marginBottom: 4 }}>Stage Manager</h1>
+            <h1
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: '2.5rem',
+                margin: '0 0 4px',
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {APP_NAME}
+            </h1>
             <p className="muted" style={{ marginTop: 0 }}>
               Your prompt book, contact sheet, calling script, and report desk — in one place.
             </p>

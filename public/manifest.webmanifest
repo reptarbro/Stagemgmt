@@ -1,6 +1,6 @@
 {
-  "name": "Stage Manager",
-  "short_name": "Stage Mgr",
+  "name": "Standby",
+  "short_name": "Standby",
   "description": "Track and manage theatrical productions — people, schedule, attendance, reports.",
   "start_url": "./",
   "scope": "./",

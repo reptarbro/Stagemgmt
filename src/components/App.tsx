@@ -4,6 +4,8 @@ import { useStore } from '../lib/store'
 import { getLastBackup, markBackedUp } from '../lib/storage'
 import { daysToOpening, cueToCueActive, CUE_WINDOW_DAYS } from '../lib/dates'
 import { ScrollToTop } from './ui'
+import { StandbyMark, APP_NAME, APP_TAGLINE } from './Brand'
+import { NavIcon, type IconName } from './icons'
 import { Welcome } from '../modules/Welcome'
 import { Hub } from '../modules/Hub'
 import { People } from '../modules/People'
@@ -16,16 +18,16 @@ import { CueToCue } from '../modules/CueToCue'
 import { Reports } from '../modules/Reports'
 import { Settings } from '../modules/Settings'
 
-const NAV = [
-  { to: '/hub', icon: '🎭', label: 'Production Hub' },
-  { to: '/people', icon: '👥', label: 'People' },
-  { to: '/schedule', icon: '🗓️', label: 'Schedule' },
-  { to: '/scenes', icon: '🎬', label: 'Scenes' },
-  { to: '/props', icon: '🎩', label: 'Props & Costumes' },
-  { to: '/line-notes', icon: '📝', label: 'Line Notes' },
-  { to: '/script', icon: '📄', label: 'Script' },
-  { to: '/reports', icon: '📋', label: 'Reports' },
-  { to: '/settings', icon: '⚙️', label: 'Settings' },
+const NAV: { to: string; icon: IconName; label: string }[] = [
+  { to: '/hub', icon: 'hub', label: 'Production Hub' },
+  { to: '/people', icon: 'people', label: 'People' },
+  { to: '/schedule', icon: 'schedule', label: 'Schedule' },
+  { to: '/scenes', icon: 'scenes', label: 'Scenes' },
+  { to: '/props', icon: 'props', label: 'Props & Costumes' },
+  { to: '/line-notes', icon: 'notes', label: 'Line Notes' },
+  { to: '/script', icon: 'script', label: 'Script' },
+  { to: '/reports', icon: 'reports', label: 'Reports' },
+  { to: '/settings', icon: 'settings', label: 'Settings' },
 ]
 
 export function App() {
@@ -45,9 +47,9 @@ export function App() {
   const cueHint =
     dOpen === null || cueActive ? undefined : `in ${dOpen - CUE_WINDOW_DAYS}d`
 
-  const nav = [
+  const nav: { to: string; icon: IconName; label: string; hint?: string }[] = [
     ...NAV.slice(0, 7), // Hub … Script
-    { to: '/cues', icon: '💡', label: 'Cue-to-Cue', hint: cueHint },
+    { to: '/cues', icon: 'cues', label: 'Cue-to-Cue', hint: cueHint },
     ...NAV.slice(7), // Reports, Settings
   ]
 
@@ -57,10 +59,14 @@ export function App() {
       <div className={`scrim ${menuOpen ? 'open' : ''}`} onClick={close} />
       <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
         <div className="brand">
-          <span className="brand-mark">🎭</span>
+          <span className="brand-mark" style={{ display: 'flex' }}>
+            <StandbyMark size={30} />
+          </span>
           <div>
-            <div className="brand-name">Stage Manager</div>
-            <div className="brand-sub">Prompt Book</div>
+            <div className="brand-name" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              {APP_NAME}
+            </div>
+            <div className="brand-sub">{APP_TAGLINE}</div>
           </div>
         </div>
 
@@ -89,9 +95,9 @@ export function App() {
               to={n.to}
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
-              <span className="nav-icon">{n.icon}</span>
+              <span className="nav-icon"><NavIcon name={n.icon} /></span>
               <span style={{ flex: 1 }}>{n.label}</span>
-              {'hint' in n && n.hint && <span className="nav-hint">{n.hint}</span>}
+              {n.hint && <span className="nav-hint">{n.hint}</span>}
             </NavLink>
           ))}
         </nav>
@@ -116,7 +122,7 @@ export function App() {
           <button className="icon-btn" onClick={() => setMenuOpen((o) => !o)} aria-label="Menu">
             ☰
           </button>
-          <strong>{production?.title ?? 'Stage Manager'}</strong>
+          <strong>{production?.title ?? APP_NAME}</strong>
           <span style={{ width: 24 }} />
         </div>
 

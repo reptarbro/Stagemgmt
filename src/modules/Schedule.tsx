@@ -332,13 +332,14 @@ function sceneLabels(ids: string[] | undefined, scenes: Scene[]): string {
     .join(', ')
 }
 
+// Event-type accents, kept within the brand family for a uniform calendar.
 const TYPE_COLOR: Record<EventType, string> = {
-  Rehearsal: '#6ba4e0',
-  Performance: '#2fae6b',
-  Tech: '#c8b0f0',
-  Meeting: '#8fdcc4',
-  Fitting: '#e9b7d6',
-  Other: '#a49fba',
+  Rehearsal: '#9fb8a6', // sage
+  Performance: '#2fae6b', // emerald
+  Tech: '#d9a441', // amber
+  Meeting: '#6cc3c0', // teal
+  Fitting: '#bcc98a', // olive
+  Other: '#7f8d82', // muted
 }
 
 const MONTHS = [

@@ -52,7 +52,7 @@ export function eventsToICS(
   const lines: string[] = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Stage Manager//Schedule//EN',
+    'PRODID:-//Standby//Schedule//EN',
     'CALSCALE:GREGORIAN',
     `X-WR-CALNAME:${esc(prod.title)}`,
   ]
