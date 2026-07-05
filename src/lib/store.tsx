@@ -139,6 +139,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
 
       loadSampleProduction: () => {
+        // Never create a second sample — just switch to the existing one.
+        const existing = data.productions.find((p) => p.isSample)
+        if (existing) {
+          setData((d) => ({ ...d, activeProductionId: existing.id }))
+          return
+        }
         const prod = makeSampleProduction()
         setData((d) => ({
           ...d,

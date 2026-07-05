@@ -26,6 +26,7 @@ export function LineNotes() {
   const { production, addLineNote, updateLineNote, deleteLineNote } = useStore()
   const [editing, setEditing] = useState<LineNote | 'new' | null>(null)
   const [hideResolved, setHideResolved] = useState(false)
+  const [actorFilter, setActorFilter] = useState<string | null>(null)
 
   const notes = production?.lineNotes ?? []
   const cast = useMemo(
@@ -42,8 +43,9 @@ export function LineNotes() {
     () =>
       [...notes]
         .filter((n) => (hideResolved ? !n.resolved : true))
+        .filter((n) => (actorFilter ? n.personId === actorFilter : true))
         .sort((a, b) => b.date.localeCompare(a.date)),
-    [notes, hideResolved],
+    [notes, hideResolved, actorFilter],
   )
 
   // Per-actor outstanding counts — handy for "who needs to be off book".
@@ -77,11 +79,19 @@ export function LineNotes() {
               <div className="card-title">Outstanding by actor</div>
               <div className="row wrap" style={{ gap: 8 }}>
                 {perActor.map(([id, n]) => (
-                  <span key={id} className="tag">
-                    {nameFor(id)} · <strong>{n}</strong>
-                  </span>
+                  <button
+                    key={id}
+                    className={`btn btn-sm ${actorFilter === id ? 'btn-primary' : 'btn-ghost'}`}
+                    style={{ borderRadius: 999 }}
+                    onClick={() => setActorFilter(actorFilter === id ? null : id)}
+                  >
+                    {nameFor(id)} · <strong style={{ marginLeft: 4 }}>{n}</strong>
+                  </button>
                 ))}
               </div>
+              <p className="hint" style={{ margin: '8px 0 0' }}>
+                Tap an actor to show only their notes.
+              </p>
             </div>
           )}
 
@@ -123,7 +133,7 @@ export function LineNotes() {
                     <td className="small">{n.location || '—'}</td>
                     <td className="small">{n.note || '—'}</td>
                     <td>
-                      <div className="row" style={{ gap: 4, justifyContent: 'flex-end' }}>
+                      <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
                         <button
                           className="icon-btn"
                           title={n.resolved ? 'Mark unresolved' : 'Mark resolved'}
@@ -134,7 +144,7 @@ export function LineNotes() {
                         <button className="icon-btn" onClick={() => setEditing(n)} aria-label="Edit">
                           ✎
                         </button>
-                        <ConfirmButton onConfirm={() => deleteLineNote(n.id)}>🗑</ConfirmButton>
+                        <ConfirmButton className="icon-btn danger" onConfirm={() => deleteLineNote(n.id)}>🗑</ConfirmButton>
                       </div>
                     </td>
                   </tr>

@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar, SortTh, useSort } from '../components/ui'
+import { PrintSheet } from '../components/PrintSheet'
 import { newId } from '../lib/storage'
 import { formatDateShort, formatTime } from '../lib/format'
 import { contactsCSV, downloadText, slug } from '../lib/exporters'
-import type { Conflict, Person, PersonGroup } from '../lib/types'
+import type { Conflict, Person, PersonGroup, Production } from '../lib/types'
 
 const GROUPS: PersonGroup[] = [
   'Cast',
@@ -58,6 +59,7 @@ export function People() {
   const [editing, setEditing] = useState<Person | 'new' | null>(null)
   const [viewing, setViewing] = useState<Person | null>(null)
   const [bulk, setBulk] = useState(false)
+  const [printing, setPrinting] = useState(false)
   const [filter, setFilter] = useState<'All' | PersonGroup>('All')
   const [q, setQ] = useState('')
   const sort = useSort<SortKey>('name')
@@ -96,20 +98,25 @@ export function People() {
         title="People"
         subtitle="Cast & crew contact sheet"
         actions={
-          <div className="row wrap no-print" style={{ gap: 6 }}>
-            {people.length > 0 && (
-              <>
-                <button className="btn btn-sm" onClick={exportCSV} title="Download contact sheet (CSV)">
-                  ⤓ CSV
-                </button>
-                <button className="btn btn-sm btn-ghost" onClick={() => window.print()} title="Print contact sheet">
-                  🖨 Print
-                </button>
-              </>
-            )}
-            <button className="btn btn-sm" onClick={() => setBulk(true)}>
-              ⧉ Paste List
-            </button>
+          <div
+            className="no-print"
+            style={{ width: '100%', display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}
+          >
+            <div className="row wrap" style={{ gap: 6 }}>
+              {people.length > 0 && (
+                <>
+                  <button className="btn btn-sm" onClick={exportCSV} title="Download contact sheet (CSV)">
+                    ⤓ CSV
+                  </button>
+                  <button className="btn btn-sm btn-ghost" onClick={() => setPrinting(true)} title="Printable cast list">
+                    🖨 Print
+                  </button>
+                </>
+              )}
+              <button className="btn btn-sm" onClick={() => setBulk(true)}>
+                ⧉ Paste List
+              </button>
+            </div>
             <button className="btn btn-primary" onClick={() => setEditing('new')}>
               + Add Person
             </button>
@@ -136,7 +143,7 @@ export function People() {
             </FilterChip>
             {GROUPS.filter((g) => counts[g]).map((g) => (
               <FilterChip key={g} active={filter === g} onClick={() => setFilter(g)}>
-                {g} {counts[g]}
+                {g}
               </FilterChip>
             ))}
           </div>
@@ -169,7 +176,7 @@ export function People() {
                       <div>{p.role || '—'}</div>
                       {p.character && <div className="faint small">as {p.character}</div>}
                     </td>
-                    <td className="small">
+                    <td className="small" style={{ whiteSpace: 'nowrap' }}>
                       {p.email && (
                         <div>
                           <a href={`mailto:${p.email}`} onClick={(e) => e.stopPropagation()}>
@@ -244,7 +251,78 @@ export function People() {
           }}
         />
       )}
+
+      {printing && production && (
+        <CastListSheet production={production} people={people} onClose={() => setPrinting(false)} />
+      )}
     </>
+  )
+}
+
+function CastListSheet({
+  production,
+  people,
+  onClose,
+}: {
+  production: Production
+  people: Person[]
+  onClose: () => void
+}) {
+  const rows = [...people].sort((a, b) => a.name.localeCompare(b.name))
+  return (
+    <PrintSheet hint="Print or save the cast &amp; crew list as a PDF." onClose={onClose}>
+      <div className="sheet-head">
+        <h2>{production.title} — Cast List</h2>
+        <div className="sheet-sub">
+          Cast &amp; Crew Contact Sheet
+          {production.company ? ` · ${production.company}` : ''}
+        </div>
+      </div>
+      <table className="sheet-table">
+        <thead>
+          <tr>
+            <th style={{ width: '20%' }}>Name</th>
+            <th style={{ width: '13%' }}>Group</th>
+            <th style={{ width: '22%' }}>Role / Character</th>
+            <th style={{ width: '25%' }}>Contact</th>
+            <th style={{ width: '20%' }}>Emergency</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={5} className="muted">No one on the roster yet.</td>
+            </tr>
+          ) : (
+            rows.map((p) => (
+              <tr key={p.id}>
+                <td style={{ fontWeight: 700 }}>{p.name}</td>
+                <td>{p.group}</td>
+                <td>
+                  {p.role || '—'}
+                  {p.character ? (
+                    <>
+                      {' '}
+                      <strong>as {p.character}</strong>
+                    </>
+                  ) : null}
+                </td>
+                <td>
+                  {p.email || ''}
+                  {p.email && p.phone ? <br /> : null}
+                  {p.phone || (!p.email ? '—' : '')}
+                </td>
+                <td>
+                  {p.emergencyContactName
+                    ? `${p.emergencyContactName}${p.emergencyContactPhone ? ` · ${p.emergencyContactPhone}` : ''}`
+                    : '—'}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </PrintSheet>
   )
 }
 

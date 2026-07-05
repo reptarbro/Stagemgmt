@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar } from '../components/ui'
+import { PrintSheet } from '../components/PrintSheet'
 import { formatDate, todayISO } from '../lib/format'
 import { newId } from '../lib/storage'
 import { reportToText } from '../lib/exporters'
+import { shareReportPDF } from '../lib/reportPdf'
 import type { Report, ReportSection, ReportType } from '../lib/types'
 
 const REPORT_TYPES: ReportType[] = ['Rehearsal', 'Dress Rehearsal', 'Performance']
@@ -340,6 +342,7 @@ function SectionEditor({
 function ReportViewer({ report, onClose }: { report: Report; onClose: () => void }) {
   const { production } = useStore()
   const [copied, setCopied] = useState(false)
+  const [sending, setSending] = useState(false)
   const sectionsWithNotes = report.sections.filter((s) => s.notes.length > 0)
 
   const asText = () => (production ? reportToText(report, production) : '')
@@ -354,102 +357,75 @@ function ReportViewer({ report, onClose }: { report: Report; onClose: () => void
     }
   }
 
-  const email = () => {
-    const subject = `${production?.title ?? 'Show'} — ${report.type} Report — ${formatDate(report.date)}`
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(asText())}`
+  const email = async () => {
+    if (!production) return
+    setSending(true)
+    try {
+      await shareReportPDF(report, production)
+    } finally {
+      setSending(false)
+    }
   }
 
+  const empty =
+    !report.summary && !report.workedOn && sectionsWithNotes.length === 0 && !report.scheduleNote
+
   return (
-    <Modal title={`${report.type} Report`} onClose={onClose}>
-      <div className="report-doc">
-        <div className="row-between no-print mb wrap" style={{ gap: 8 }}>
-          <span className="hint">Ready to distribute</span>
-          <div className="row wrap" style={{ gap: 6 }}>
-            <button className="btn btn-sm btn-primary" onClick={email}>
-              ✉ Email
-            </button>
-            <button className="btn btn-sm" onClick={copy}>
-              {copied ? '✓ Copied' : '⧉ Copy'}
-            </button>
-            <button className="btn btn-sm" onClick={() => window.print()}>
-              🖨 Print / PDF
-            </button>
-          </div>
+    <PrintSheet
+      hint="Ready to distribute — email the PDF, copy the text, or print."
+      onClose={onClose}
+      actions={
+        <>
+          <button className="btn btn-sm btn-primary" onClick={email} disabled={sending}>
+            {sending ? '…' : '✉ Email PDF'}
+          </button>
+          <button className="btn btn-sm" onClick={copy}>
+            {copied ? '✓ Copied' : '⧉ Copy'}
+          </button>
+        </>
+      }
+    >
+      <div className="sheet-head">
+        <h2>{production?.title}</h2>
+        <div className="sheet-sub">
+          {report.type} Report · {formatDate(report.date)}
+          {production?.company ? ` · ${production.company}` : ''}
         </div>
-
-        <div style={{ borderBottom: '2px solid var(--accent)', paddingBottom: 10, marginBottom: 14 }}>
-          <h2 style={{ margin: 0 }}>{production?.title}</h2>
-          <div className="muted small">
-            {report.type} Report · {formatDate(report.date)}
-          </div>
-          {production?.company && <div className="faint small">{production.company}</div>}
-        </div>
-
-        {report.summary && (
-          <Block title="Summary">
-            <p className="small" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-              {report.summary}
-            </p>
-          </Block>
-        )}
-        {report.workedOn && (
-          <Block title="Worked On / Timing">
-            <p className="small" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-              {report.workedOn}
-            </p>
-          </Block>
-        )}
-
-        {sectionsWithNotes.map((s) => (
-          <Block key={s.id} title={s.title}>
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {s.notes.map((n) => (
-                <li key={n.id} className="small" style={{ marginBottom: 3 }}>
-                  {n.text}
-                </li>
-              ))}
-            </ul>
-          </Block>
-        ))}
-
-        {report.scheduleNote && (
-          <Block title="Schedule / Next Call">
-            <p className="small" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
-              {report.scheduleNote}
-            </p>
-          </Block>
-        )}
-
-        {!report.summary &&
-          !report.workedOn &&
-          sectionsWithNotes.length === 0 &&
-          !report.scheduleNote && <p className="muted small">This report is empty.</p>}
       </div>
 
-      <div className="modal-actions no-print">
-        <button className="btn btn-ghost" onClick={onClose}>
-          Close
-        </button>
-      </div>
-    </Modal>
+      {report.summary && (
+        <Block title="Summary">
+          <p className="small" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{report.summary}</p>
+        </Block>
+      )}
+      {report.workedOn && (
+        <Block title="Worked On / Timing">
+          <p className="small" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{report.workedOn}</p>
+        </Block>
+      )}
+      {sectionsWithNotes.map((s) => (
+        <Block key={s.id} title={s.title}>
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            {s.notes.map((n) => (
+              <li key={n.id} className="small" style={{ marginBottom: 3 }}>{n.text}</li>
+            ))}
+          </ul>
+        </Block>
+      ))}
+      {report.scheduleNote && (
+        <Block title="Schedule / Next Call">
+          <p className="small" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{report.scheduleNote}</p>
+        </Block>
+      )}
+      {empty && <p className="muted small">This report is empty.</p>}
+    </PrintSheet>
   )
 }
 
 function Block({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 14 }}>
-      <div
-        style={{
-          fontSize: '0.74rem',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          color: 'var(--accent-strong)',
-          fontWeight: 700,
-          marginBottom: 5,
-        }}
-      >
-        {title}
-      </div>
+      <div className="rep-block-title">{title}</div>
       {children}
     </div>
   )

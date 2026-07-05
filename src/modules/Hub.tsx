@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { PageHead, Modal } from '../components/ui'
 import { formatDate, formatTime, daysUntil, todayISO } from '../lib/format'
@@ -8,7 +8,9 @@ import type { Production } from '../lib/types'
 
 export function Hub() {
   const { production, updateProduction } = useStore()
+  const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
+  const [quick, setQuick] = useState<null | 'cast' | 'calls'>(null)
   if (!production) return null
 
   const today = todayISO()
@@ -44,22 +46,22 @@ export function Hub() {
       )}
 
       <div className="grid grid-4">
-        <div className="stat">
+        <button type="button" className="stat stat-tap" onClick={() => setQuick('cast')}>
           <div className="stat-value">{production.people.length}</div>
           <div className="stat-label">People</div>
-          <div className="stat-sub">{castCount} cast</div>
-        </div>
-        <div className="stat">
+          <div className="stat-sub">{castCount} cast · tap for list</div>
+        </button>
+        <button type="button" className="stat stat-tap" onClick={() => setQuick('calls')}>
           <div className="stat-value">{upcoming.length}</div>
           <div className="stat-label">Upcoming calls</div>
-          <div className="stat-sub">{production.events.length} total scheduled</div>
-        </div>
-        <div className="stat">
+          <div className="stat-sub">{production.events.length} total · tap to view</div>
+        </button>
+        <button type="button" className="stat stat-tap" onClick={() => navigate('/reports')}>
           <div className="stat-value">{production.reports.length}</div>
           <div className="stat-label">Reports filed</div>
-          <div className="stat-sub">rehearsal & performance</div>
-        </div>
-        <div className="stat">
+          <div className="stat-sub">rehearsal &amp; performance →</div>
+        </button>
+        <button type="button" className="stat stat-tap" onClick={() => navigate('/schedule')}>
           <div className="stat-value">
             {opening === null ? '—' : opening > 0 ? opening : opening === 0 ? '🎉' : '✓'}
           </div>
@@ -73,7 +75,7 @@ export function Hub() {
                   : 'Opened'}
           </div>
           <div className="stat-sub">{formatDate(production.openingNight)}</div>
-        </div>
+        </button>
       </div>
 
       <div className="grid grid-2 mt">
@@ -130,6 +132,57 @@ export function Hub() {
           )}
         </div>
       </div>
+
+      {quick === 'cast' && (
+        <Modal title="Cast & Crew" onClose={() => setQuick(null)}>
+          <ul className="list-reset">
+            {production.people.length === 0 ? (
+              <li className="muted small">No one on the roster yet.</li>
+            ) : (
+              [...production.people]
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((p) => (
+                  <li key={p.id} className="row-between" style={{ padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ fontWeight: 550 }}>{p.name}</span>
+                    <span className="faint small">{p.character || p.role || p.group}</span>
+                  </li>
+                ))
+            )}
+          </ul>
+          <div className="modal-actions">
+            <button className="btn btn-ghost" onClick={() => setQuick(null)}>Close</button>
+            <button className="btn btn-primary" onClick={() => navigate('/people')}>Open People →</button>
+          </div>
+        </Modal>
+      )}
+
+      {quick === 'calls' && (
+        <Modal title="Upcoming Calls" onClose={() => setQuick(null)}>
+          {upcoming.length === 0 ? (
+            <p className="muted small" style={{ marginTop: 0 }}>No upcoming calls.</p>
+          ) : (
+            <ul className="list-reset">
+              {upcoming.map((e) => (
+                <li key={e.id} className="row-between" style={{ padding: '9px 0', borderBottom: '1px solid var(--border)', gap: 10 }}>
+                  <div>
+                    <div style={{ fontWeight: 550 }} className="tcase">{e.title || e.type}</div>
+                    <div className="faint small">
+                      {formatDate(e.date)}
+                      {e.callTime && ` · Call ${formatTime(e.callTime)}`}
+                      {e.location && ` · ${e.location}`}
+                    </div>
+                  </div>
+                  <span className="badge">{e.type}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="modal-actions">
+            <button className="btn btn-ghost" onClick={() => setQuick(null)}>Close</button>
+            <button className="btn btn-primary" onClick={() => navigate('/schedule')}>Open Schedule →</button>
+          </div>
+        </Modal>
+      )}
 
       {editing && (
         <ProductionForm

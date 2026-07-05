@@ -61,6 +61,16 @@ These came up during the base-site revision and are explicitly deferred to Phase
 - **Script-page linking** — scene page numbers pulled from the live uploaded script doc
   (deep-link scene ↔ script). Heavier; revisit after the script viewer is wired to sync.
 
+### Captured from the V2 (Standby-branded) screenshot review
+- **Surface existing productions after sign-in** — once accounts/sync land, land a returning
+  user on their production list rather than the create-new landing (needs 2b back-end).
+- **Email script to cast** — send the uploaded script doc to selected cast members. Needs a
+  send channel; today only the client-side PDF share (reports) is wired. Client-side
+  `navigator.share({files})` shipped for reports/sign-in/cast-list, so the plumbing exists —
+  extend it to the script doc + a recipient picker.
+- **Shareable read-only production link**, **cast availability form**, **call/report
+  reminders** — all require the shared back-end (2b).
+
 ## Cross-cutting still open (no backend needed)
 - Bulk *paste conflicts* per person (only cast-list paste shipped).
 - "Grid" (who's-in-it) scaling for very large casts.

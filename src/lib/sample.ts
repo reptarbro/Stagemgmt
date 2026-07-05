@@ -116,12 +116,12 @@ export function makeSampleProduction(): Production {
 
   // Cues (cue-to-cue) ----------------------------------------------------
   const cues = [
-    { id: newId(), number: 'LX 1', dept: 'LX' as const, placement: "p.1 / top of show",
+    { id: newId(), number: 'LX 1', dept: 'Lighting' as const, placement: "p.1 / top of show",
       action: 'House to half, then out. Preset moonlight.', standby: 'Standby LX 1.',
       status: 'set' as const, notes: '' },
     { id: newId(), number: 'SQ 1', dept: 'Sound' as const, placement: "p.9 / Puck's entrance",
       action: 'Forest ambience up.', standby: 'Standby Sound 1.', status: 'teched' as const, notes: '' },
-    { id: newId(), number: 'LX 12', dept: 'LX' as const, placement: "p.12 / 'I know a bank'",
+    { id: newId(), number: 'LX 12', dept: 'Lighting' as const, placement: "p.12 / 'I know a bank'",
       action: 'UV wash for the flower reveal.', standby: 'Standby LX 12.', status: 'teched' as const,
       notes: 'Confirm timing with SD.' },
     { id: newId(), number: 'FLY 1', dept: 'Fly' as const, placement: 'p.16 / scene shift',

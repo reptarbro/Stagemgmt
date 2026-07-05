@@ -4,17 +4,17 @@ import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar, SortTh, useSort } 
 import { daysToOpening, cueToCueActive, CUE_WINDOW_DAYS } from '../lib/dates'
 import type { Cue, CueDept, CueStatus } from '../lib/types'
 
-const DEPTS: CueDept[] = ['LX', 'Sound', 'Fly', 'Deck', 'Spot', 'Projection', 'Other']
+const DEPTS: CueDept[] = ['Lighting', 'Sound', 'Fly', 'Deck', 'Spot', 'Projection', 'Other']
 const STATUSES: CueStatus[] = ['dry-tech', 'teched', 'set']
 const STATUS_LABEL: Record<CueStatus, string> = {
-  'dry-tech': 'Dry tech',
+  'dry-tech': 'Draft',
   teched: 'Teched',
   set: 'Set',
 }
 
 const BLANK: Omit<Cue, 'id'> = {
   number: '',
-  dept: 'LX',
+  dept: 'Lighting',
   placement: '',
   action: '',
   standby: '',
@@ -82,9 +82,9 @@ export function CueToCue() {
           </span>
         ) : (
           <span className="small muted">
-            💡 The cue-to-cue calling sheet is designed for tech week — it steps forward on its own about{' '}
-            {CUE_WINDOW_DAYS} days before opening.{' '}
-            {d !== null ? `Opening is ${d} days out; it activates in ${d - CUE_WINDOW_DAYS} days.` : 'Set an opening night on the Hub to start the countdown.'}{' '}
+            💡 The cue-to-cue calling sheet is built for tech week — this page will step forward on its
+            own about {CUE_WINDOW_DAYS} days before opening.{' '}
+            {d !== null ? `Opening is ${d} days out; it will activate in ${d - CUE_WINDOW_DAYS} days.` : 'Set an opening night on the Hub to start the countdown.'}{' '}
             You can still draft cues now.
           </span>
         )}

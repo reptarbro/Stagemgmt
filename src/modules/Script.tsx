@@ -82,8 +82,8 @@ export function Script() {
       {!script ? (
         <div className="card">
           <EmptyState mark="📄" title="No script uploaded yet">
-            Upload your script as a single document (PDF works best). For now it's stored privately in
-            this browser so you can open it anytime — annotation &amp; cue tracking arrive in a later update.
+            Upload your script as a single document (PDF works best). It's stored privately in this
+            browser so you can open it anytime.
           </EmptyState>
           <div style={{ textAlign: 'center' }}>
             <button className="btn btn-primary" onClick={() => fileRef.current?.click()} disabled={busy}>
@@ -108,19 +108,21 @@ export function Script() {
               </div>
             </div>
             <div className="row wrap" style={{ gap: 8 }}>
-              <button className="btn btn-primary" onClick={() => open(false)}>
+              <button className="btn btn-primary" style={{ minWidth: 128, justifyContent: 'center' }} onClick={() => open(false)}>
                 👁 View
               </button>
-              <button className="btn" onClick={() => open(true)}>
+              <button className="btn" style={{ minWidth: 128, justifyContent: 'center' }} onClick={() => open(true)}>
                 ⬇ Download
               </button>
-              <ConfirmButton onConfirm={() => void removeScript()}>Remove</ConfirmButton>
+              <ConfirmButton className="btn btn-danger" onConfirm={() => void removeScript()}>
+                Remove
+              </ConfirmButton>
             </div>
           </div>
           <div className="divider" />
           <p className="hint" style={{ margin: 0 }}>
-            Stored on this device only. To use it on another device, keep the original file handy and
-            upload it there too — cloud sync is on the roadmap.
+            Stored on this device. To use it on another device, keep the original file handy and upload
+            it there too.
           </p>
         </div>
       )}

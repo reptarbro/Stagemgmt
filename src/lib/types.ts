@@ -35,7 +35,14 @@ export interface Person {
   conflicts?: Conflict[]
 }
 
-export type EventType = 'Rehearsal' | 'Performance' | 'Tech' | 'Meeting' | 'Fitting' | 'Other'
+export type EventType =
+  | 'Rehearsal'
+  | 'Dress Rehearsal'
+  | 'Performance'
+  | 'Tech'
+  | 'Meeting'
+  | 'Fitting'
+  | 'Other'
 
 export interface ScheduleEvent {
   id: ID
@@ -153,7 +160,7 @@ export interface LineNote {
  * A single technical cue for the calling script / cue-to-cue.
  * Surfaced as tech approaches (roughly three weeks out from opening).
  */
-export type CueDept = 'LX' | 'Sound' | 'Fly' | 'Deck' | 'Spot' | 'Projection' | 'Other'
+export type CueDept = 'Lighting' | 'Sound' | 'Fly' | 'Deck' | 'Spot' | 'Projection' | 'Other'
 export type CueStatus = 'dry-tech' | 'teched' | 'set'
 
 export interface Cue {

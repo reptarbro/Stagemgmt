@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar } from '../components/ui'
+import { PrintSheet } from '../components/PrintSheet'
 import { formatDate, formatTime, todayISO, parseISODate } from '../lib/format'
 import { formatConflict } from './People'
 import { eventsToICS } from '../lib/ics'
@@ -16,7 +16,15 @@ import type {
   ScheduleEvent,
 } from '../lib/types'
 
-const EVENT_TYPES: EventType[] = ['Rehearsal', 'Performance', 'Tech', 'Meeting', 'Fitting', 'Other']
+const EVENT_TYPES: EventType[] = [
+  'Rehearsal',
+  'Dress Rehearsal',
+  'Performance',
+  'Tech',
+  'Meeting',
+  'Fitting',
+  'Other',
+]
 
 const BLANK: Omit<ScheduleEvent, 'id'> = {
   type: 'Rehearsal',
@@ -335,10 +343,11 @@ function sceneLabels(ids: string[] | undefined, scenes: Scene[]): string {
 // Event-type accents, kept within the brand family for a uniform calendar.
 const TYPE_COLOR: Record<EventType, string> = {
   Rehearsal: '#9fb8a6', // sage
+  'Dress Rehearsal': '#6cc3c0', // teal
   Performance: '#2fae6b', // emerald
   Tech: '#d9a441', // amber
-  Meeting: '#6cc3c0', // teal
-  Fitting: '#bcc98a', // olive
+  Meeting: '#b6c98a', // olive
+  Fitting: '#cdbf9a', // sand
   Other: '#7f8d82', // muted
 }
 
@@ -372,6 +381,12 @@ function CalendarView({
     return map
   }, [events])
 
+  const typesPresent = useMemo(() => {
+    const seen = new Set<EventType>()
+    for (const e of events) seen.add(e.type)
+    return EVENT_TYPES.filter((t) => seen.has(t))
+  }, [events])
+
   const firstWeekday = new Date(ym.y, ym.m, 1).getDay()
   const daysInMonth = new Date(ym.y, ym.m + 1, 0).getDate()
   const cells: (number | null)[] = [
@@ -402,6 +417,15 @@ function CalendarView({
           Next ›
         </button>
       </div>
+      {/* Legend — quick key for what the colors mean. */}
+      <div className="cal-legend no-print">
+        {typesPresent.map((t) => (
+          <span key={t} className="cal-legend-item">
+            <span className="cal-swatch" style={{ background: TYPE_COLOR[t] }} />
+            {t}
+          </span>
+        ))}
+      </div>
       <div className="cal-grid cal-head">
         {WEEKDAYS.map((w) => (
           <div key={w} className="cal-weekday">
@@ -420,13 +444,13 @@ function CalendarView({
               {dayEvents.map((e) => (
                 <button
                   key={e.id}
-                  className="cal-chip tcase"
-                  style={{ borderLeftColor: TYPE_COLOR[e.type] }}
+                  className="cal-chip"
+                  style={{ borderLeftColor: TYPE_COLOR[e.type], background: `${TYPE_COLOR[e.type]}22` }}
                   onClick={() => onSelect(e)}
-                  title={`${e.title || e.type}${e.callTime ? ' · Call ' + formatTime(e.callTime) : ''}`}
+                  title={`${e.type} · ${e.title || ''}${e.callTime ? ' · Call ' + formatTime(e.callTime) : ''}`}
                 >
-                  {e.callTime ? formatTime(e.callTime).replace(':00', '') + ' ' : ''}
-                  {e.title || e.type}
+                  {e.callTime && <span style={{ fontWeight: 700 }}>{formatTime(e.callTime).replace(':00', '')} </span>}
+                  <span className="tcase">{e.title || e.type}</span>
                 </button>
               ))}
             </div>
@@ -808,91 +832,53 @@ function SignInSheet({ event, onClose }: { event: ScheduleEvent; onClose: () => 
       ? (production?.people ?? []).filter((p) => event.calledPersonIds.includes(p.id))
       : (production?.people ?? [])
   const rows = [...called].sort((a, b) => a.name.localeCompare(b.name))
+  const scenesText = sceneLabels(event.sceneIds, production?.scenes ?? [])
+  const windowText = event.startTime
+    ? `${formatTime(event.startTime)}${event.endTime ? `–${formatTime(event.endTime)}` : ''}`
+    : ''
 
-  // Escape to close.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
-
-  const print = () => {
-    document.body.classList.add('printing-sheet')
-    const cleanup = () => {
-      document.body.classList.remove('printing-sheet')
-      window.removeEventListener('afterprint', cleanup)
-    }
-    window.addEventListener('afterprint', cleanup)
-    window.print()
-  }
-
-  // Rendered in a body-level portal so it can be printed alone (see .sheet-print-root CSS).
-  return createPortal(
-    <div className="sheet-print-root">
-      <div className="modal-backdrop" onClick={onClose}>
-        <div className="modal" onClick={(e) => e.stopPropagation()}>
-          <div className="row-between no-print" style={{ marginBottom: 12 }}>
-            <span className="hint">Print or save as PDF, then post at the callboard.</span>
-            <button className="btn btn-sm" onClick={print}>
-              🖨 Print / PDF
-            </button>
-          </div>
-          <div className="sheet-doc">
-            <div style={{ borderBottom: '2px solid var(--accent)', paddingBottom: 8, marginBottom: 10 }}>
-              <h2 style={{ margin: 0 }}>{production?.title}</h2>
-              <div className="muted small">
-                {event.type}
-                {event.title ? ` · ${event.title}` : ''} · {formatDate(event.date)}
-                {event.callTime && ` · Call ${formatTime(event.callTime)}`}
-                {event.location && ` · ${event.location}`}
-              </div>
-            </div>
-            <table className="sheet-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '38%' }}>Name</th>
-                  <th>Role / Character</th>
-                  <th style={{ width: 90 }}>Time in</th>
-                  <th style={{ width: 80 }}>Initials</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="muted">No one called — add people or a call list.</td>
-                  </tr>
-                ) : (
-                  rows.map((p) => (
-                    <tr key={p.id}>
-                      <td style={{ fontWeight: 600 }}>{p.name}</td>
-                      <td className="faint">{p.character || p.role || ''}</td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-                  ))
-                )}
-                {rows.length > 0 &&
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <tr key={`blank-${i}`}>
-                      <td>&nbsp;</td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="modal-actions no-print">
-            <button className="btn btn-ghost" onClick={onClose}>
-              Close
-            </button>
-          </div>
+  return (
+    <PrintSheet hint="Print or save the sign-in sheet as a PDF, then post it at the callboard." onClose={onClose}>
+      <div className="sheet-head">
+        <h2>{production?.title} — Sign-in Sheet</h2>
+        <div className="sheet-sub">
+          {event.type}
+          {event.title ? ` · ${event.title}` : ''} · {formatDate(event.date)}
+          {event.callTime ? ` · Call ${formatTime(event.callTime)}` : ''}
+          {windowText ? ` · ${windowText}` : ''}
+          {event.location ? ` · ${event.location}` : ''}
+          {scenesText ? ` · ${scenesText}` : ''}
         </div>
       </div>
-    </div>,
-    document.body,
+      <table className="sheet-table">
+        <thead>
+          <tr>
+            <th style={{ width: '34%' }}>Name</th>
+            <th>Role / Character</th>
+            <th style={{ width: '18%' }}>Time in</th>
+            <th style={{ width: '16%' }}>Initials</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((p) => (
+            <tr key={p.id}>
+              <td style={{ fontWeight: 700 }}>{p.name}</td>
+              <td>{p.character || p.role || ''}</td>
+              <td></td>
+              <td></td>
+            </tr>
+          ))}
+          {/* Always leave blank rows for walk-ins / swings; keeps a complete grid. */}
+          {Array.from({ length: rows.length === 0 ? 12 : 4 }).map((_, i) => (
+            <tr key={`blank-${i}`}>
+              <td>&nbsp;</td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </PrintSheet>
   )
 }

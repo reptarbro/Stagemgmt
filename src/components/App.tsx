@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { NavLink, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { getLastBackup, markBackedUp } from '../lib/storage'
 import { daysToOpening, cueToCueActive, CUE_WINDOW_DAYS } from '../lib/dates'
@@ -59,7 +59,9 @@ export function App() {
 /** Sidebar + top bar layout for the in-production pages. */
 function Shell() {
   const { production, data, setActiveProduction } = useStore()
+  const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [switcher, setSwitcher] = useState(false)
 
   // No active production (e.g. deep link or after deletion) → back to home.
   if (!production) return <Navigate to="/" replace />
@@ -127,14 +129,46 @@ function Shell() {
 
         <div className="sidebar-spacer" />
 
-        <NavLink
-          to="/"
-          onClick={close}
-          className="btn btn-primary"
-          style={{ justifyContent: 'center', margin: '0 4px 10px' }}
-        >
-          + New / Switch Production
-        </NavLink>
+        <div className="prod-switcher">
+          {switcher && (
+            <div className="switch-menu">
+              <div className="switch-label">Switch to</div>
+              {data.productions.map((p) => (
+                <button
+                  key={p.id}
+                  className={`switch-item ${p.id === production.id ? 'active' : ''}`}
+                  onClick={() => {
+                    setActiveProduction(p.id)
+                    setSwitcher(false)
+                    close()
+                    navigate('/hub')
+                  }}
+                >
+                  {p.title}
+                  {p.isSample ? ' · sample' : ''}
+                </button>
+              ))}
+              <div className="divider" style={{ margin: '6px 0' }} />
+              <button
+                className="switch-item"
+                onClick={() => {
+                  setSwitcher(false)
+                  close()
+                  navigate('/')
+                }}
+              >
+                + Start new production
+              </button>
+            </div>
+          )}
+          <button
+            className="btn btn-primary"
+            style={{ justifyContent: 'center', width: '100%' }}
+            onClick={() => setSwitcher((o) => !o)}
+          >
+            + New / Switch Production
+          </button>
+        </div>
         <div className="hint" style={{ padding: '0 10px' }}>
           Saved automatically in this browser.
         </div>

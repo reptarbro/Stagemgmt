@@ -31,7 +31,8 @@ export function normalizeProduction(p: Partial<Production>): Production {
     scenes: p.scenes ?? [],
     props: p.props ?? [],
     lineNotes: p.lineNotes ?? [],
-    cues: p.cues ?? [],
+    // Migrate the old "LX" dept label to "Lighting".
+    cues: (p.cues ?? []).map((c) => ({ ...c, dept: (c.dept as string) === 'LX' ? 'Lighting' : c.dept })),
     script: p.script,
     isSample: p.isSample,
     createdAt: p.createdAt ?? new Date().toISOString(),

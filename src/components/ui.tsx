@@ -152,7 +152,7 @@ export function SortTh<K extends string>({
       style={style}
     >
       {label}
-      <span className="sort-arrow">{active ? (ctrl.dir === 'asc' ? '▲' : '▼') : '↕'}</span>
+      <span className="sort-arrow">{active && ctrl.dir === 'asc' ? '▲' : '▼'}</span>
     </th>
   )
 }

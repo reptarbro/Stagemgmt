@@ -73,34 +73,32 @@ export function Scenes() {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {scenes.map((s) => (
-              <div key={s.id} className="card" style={{ padding: 14 }}>
+              <div key={s.id} className="card row-tap" style={{ padding: 14 }} onClick={() => setViewing(s)}>
                 <div className="row-between wrap" style={{ gap: 10 }}>
-                  <div className="row-tap" style={{ minWidth: 200, borderRadius: 8 }} onClick={() => setViewing(s)}>
-                    <div>
-                      <div className="row" style={{ gap: 8 }}>
-                        <span className="badge">{s.number || '—'}</span>
-                        <strong className="tcase">{s.title || 'Untitled scene'}</strong>
-                        {s.page && <span className="tag">p. {s.page}</span>}
+                  <div style={{ minWidth: 200 }}>
+                    <div className="row" style={{ gap: 8 }}>
+                      <span className="badge">{s.number || '—'}</span>
+                      <strong className="tcase">{s.title || 'Untitled scene'}</strong>
+                      {s.page && <span className="tag">p. {s.page}</span>}
+                    </div>
+                    {s.synopsis && (
+                      <div className="small muted" style={{ marginTop: 6 }}>
+                        {s.synopsis}
                       </div>
-                      {s.synopsis && (
-                        <div className="small muted" style={{ marginTop: 6 }}>
-                          {s.synopsis}
-                        </div>
+                    )}
+                    <div className="row wrap" style={{ gap: 5, marginTop: 8 }}>
+                      {s.characterIds.length === 0 ? (
+                        <span className="faint small">No characters marked</span>
+                      ) : (
+                        s.characterIds.map((id) => (
+                          <span key={id} className="tag">
+                            {nameFor(id)}
+                          </span>
+                        ))
                       )}
-                      <div className="row wrap" style={{ gap: 5, marginTop: 8 }}>
-                        {s.characterIds.length === 0 ? (
-                          <span className="faint small">No characters marked</span>
-                        ) : (
-                          s.characterIds.map((id) => (
-                            <span key={id} className="tag">
-                              {nameFor(id)}
-                            </span>
-                          ))
-                        )}
-                      </div>
                     </div>
                   </div>
-                  <div className="row-actions">
+                  <div className="row-actions" onClick={(e) => e.stopPropagation()}>
                     <button className="icon-btn" onClick={() => setEditing(s)} aria-label="Edit" title="Edit">
                       ✎
                     </button>

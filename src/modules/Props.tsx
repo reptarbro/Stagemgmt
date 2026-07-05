@@ -104,7 +104,7 @@ export function Props() {
                 onClick={() => setFilter(c)}
                 style={{ borderRadius: 999 }}
               >
-                {c} {counts[c]}
+                {c}
               </button>
             ))}
           </div>
@@ -142,15 +142,17 @@ export function Props() {
                         : '—'}
                     </td>
                     <td>
-                      <span
-                        className="badge"
-                        style={{ color: STATUS_COLOR[i.status], borderColor: 'currentColor' }}
-                      >
-                        {i.status}
+                      <span className="row" style={{ gap: 4, whiteSpace: 'nowrap' }}>
+                        <span
+                          className="badge"
+                          style={{ color: STATUS_COLOR[i.status], borderColor: 'currentColor' }}
+                        >
+                          {i.status}
+                        </span>
+                        {needsSort(i) && (
+                          <span className="flag-warn" title="Still to sort — not yet Ready">⚠️</span>
+                        )}
                       </span>
-                      {needsSort(i) && (
-                        <span className="flag-warn" title="Still to sort — not yet Ready">⚠️</span>
-                      )}
                     </td>
                     <td className="no-print">
                       <div className="row-actions" style={{ justifyContent: 'flex-end' }} onClick={(e) => e.stopPropagation()}>
