@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { NavLink, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { getLastBackup, markBackedUp } from '../lib/storage'
 import { daysToOpening, cueToCueActive, CUE_WINDOW_DAYS } from '../lib/dates'
@@ -31,21 +31,45 @@ const NAV: { to: string; icon: IconName; label: string }[] = [
 ]
 
 export function App() {
+  return (
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* Home / landing — every fresh entry starts here. */}
+        <Route path="/" element={<Welcome />} />
+        {/* App pages share the sidebar shell. */}
+        <Route element={<Shell />}>
+          <Route path="/hub" element={<Hub />} />
+          <Route path="/people" element={<People />} />
+          <Route path="/schedule" element={<Schedule />} />
+          <Route path="/scenes" element={<Scenes />} />
+          <Route path="/props" element={<Props />} />
+          <Route path="/line-notes" element={<LineNotes />} />
+          <Route path="/script" element={<Script />} />
+          <Route path="/cues" element={<CueToCue />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
+  )
+}
+
+/** Sidebar + top bar layout for the in-production pages. */
+function Shell() {
   const { production, data, setActiveProduction } = useStore()
   const [menuOpen, setMenuOpen] = useState(false)
 
-  // No productions at all → onboarding.
-  if (data.productions.length === 0) {
-    return <Welcome />
-  }
+  // No active production (e.g. deep link or after deletion) → back to home.
+  if (!production) return <Navigate to="/" replace />
 
   const close = () => setMenuOpen(false)
 
   // Cue-to-cue surfaces as tech nears; show a countdown hint until then.
-  const dOpen = production ? daysToOpening(production) : null
-  const cueActive = production ? cueToCueActive(production) : false
-  const cueHint =
-    dOpen === null || cueActive ? undefined : `in ${dOpen - CUE_WINDOW_DAYS}d`
+  const dOpen = daysToOpening(production)
+  const cueActive = cueToCueActive(production)
+  const cueHint = dOpen === null || cueActive ? undefined : `in ${dOpen - CUE_WINDOW_DAYS}d`
 
   const nav: { to: string; icon: IconName; label: string; hint?: string }[] = [
     ...NAV.slice(0, 7), // Hub … Script
@@ -55,10 +79,9 @@ export function App() {
 
   return (
     <div className="app">
-      <ScrollToTop />
       <div className={`scrim ${menuOpen ? 'open' : ''}`} onClick={close} />
       <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
-        <div className="brand">
+        <NavLink to="/" className="brand" onClick={close} style={{ textDecoration: 'none', color: 'inherit' }}>
           <span className="brand-mark" style={{ display: 'flex' }}>
             <StandbyMark size={30} />
           </span>
@@ -68,7 +91,7 @@ export function App() {
             </div>
             <div className="brand-sub">{APP_TAGLINE}</div>
           </div>
-        </div>
+        </NavLink>
 
         {data.productions.length > 1 && (
           <div className="prod-switch">
@@ -76,7 +99,7 @@ export function App() {
               Production
             </div>
             <select
-              value={production?.id ?? ''}
+              value={production.id}
               onChange={(e) => setActiveProduction(e.target.value)}
             >
               {data.productions.map((p) => (
@@ -105,12 +128,12 @@ export function App() {
         <div className="sidebar-spacer" />
 
         <NavLink
-          to="/new"
+          to="/"
           onClick={close}
           className="btn btn-primary"
           style={{ justifyContent: 'center', margin: '0 4px 10px' }}
         >
-          + New Production
+          + New / Switch Production
         </NavLink>
         <div className="hint" style={{ padding: '0 10px' }}>
           Saved automatically in this browser.
@@ -122,28 +145,14 @@ export function App() {
           <button className="icon-btn" onClick={() => setMenuOpen((o) => !o)} aria-label="Menu">
             ☰
           </button>
-          <strong>{production?.title ?? APP_NAME}</strong>
+          <strong>{production.title}</strong>
           <span style={{ width: 24 }} />
         </div>
 
         <main className="main">
           <div className="main-inner">
             <BackupBanner />
-            <Routes>
-              <Route path="/" element={<Navigate to="/hub" replace />} />
-              <Route path="/hub" element={<Hub />} />
-              <Route path="/people" element={<People />} />
-              <Route path="/schedule" element={<Schedule />} />
-              <Route path="/scenes" element={<Scenes />} />
-              <Route path="/props" element={<Props />} />
-              <Route path="/line-notes" element={<LineNotes />} />
-              <Route path="/script" element={<Script />} />
-              <Route path="/cues" element={<CueToCue />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/new" element={<Welcome inShell />} />
-              <Route path="*" element={<Navigate to="/hub" replace />} />
-            </Routes>
+            <Outlet />
           </div>
         </main>
       </div>
@@ -176,7 +185,7 @@ function BackupBanner() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `stage-manager-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `standby-backup-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
     markBackedUp()

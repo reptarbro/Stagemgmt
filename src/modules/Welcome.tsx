@@ -4,12 +4,16 @@ import { useStore } from '../lib/store'
 import { ReqStar } from '../components/ui'
 import { StandbyMark, APP_NAME } from '../components/Brand'
 
-export function Welcome({ inShell = false }: { inShell?: boolean }) {
-  const { createProduction, loadSampleProduction } = useStore()
+export function Welcome() {
+  const { createProduction, loadSampleProduction, setActiveProduction, data } = useStore()
   const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [company, setCompany] = useState('')
   const [venue, setVenue] = useState('')
+
+  const realProductions = data.productions.filter((p) => !p.isSample)
+  const sample = data.productions.find((p) => p.isSample)
+  const [openId, setOpenId] = useState(realProductions[0]?.id ?? '')
 
   const canSubmit = title.trim() !== '' && venue.trim() !== ''
 
@@ -20,108 +24,120 @@ export function Welcome({ inShell = false }: { inShell?: boolean }) {
     navigate('/hub')
   }
 
-  return (
-    <div
-      style={{
-        minHeight: inShell ? 'auto' : '100dvh',
-        display: 'grid',
-        placeItems: 'center',
-        padding: inShell ? 0 : 20,
-      }}
-    >
-      <div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}>
-        {!inShell && (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
-              <StandbyMark size={76} />
-            </div>
-            <h1
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: '2.5rem',
-                margin: '0 0 4px',
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-              }}
-            >
-              {APP_NAME}
-            </h1>
-            <p className="muted" style={{ marginTop: 0 }}>
-              Your prompt book, contact sheet, calling script, and report desk — in one place.
-            </p>
-          </>
-        )}
+  const openExisting = () => {
+    if (!openId) return
+    setActiveProduction(openId)
+    navigate('/hub')
+  }
 
-        <form onSubmit={submit} className="card" style={{ textAlign: 'left', marginTop: inShell ? 0 : 22 }}>
-          <div className="card-title">Start a New Production</div>
-          <label className="field">
-            <span className="field-label">
-              Show title <ReqStar />
-            </span>
-            <input
-              autoFocus
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. A Midsummer Night's Dream"
-            />
-          </label>
-          <div className="form-row">
-            <label className="field">
-              <span className="field-label">Company</span>
-              <input
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                placeholder="Theatre / troupe"
-              />
-            </label>
+  const openSample = () => {
+    if (sample) setActiveProduction(sample.id)
+    else loadSampleProduction()
+    navigate('/hub')
+  }
+
+  const Divider = ({ label }: { label: string }) => (
+    <div className="row" style={{ gap: 10, alignItems: 'center', margin: '16px 0' }}>
+      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+      <span className="hint">{label}</span>
+      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+    </div>
+  )
+
+  return (
+    <div style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', padding: 20 }}>
+      <div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+          <StandbyMark size={76} />
+        </div>
+        <h1
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '2.5rem',
+            margin: '0 0 4px',
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+          }}
+        >
+          {APP_NAME}
+        </h1>
+        <p className="muted" style={{ marginTop: 0 }}>
+          Your prompt book, contact sheet, calling script, and report desk — in one place.
+        </p>
+
+        <div className="card" style={{ textAlign: 'left', marginTop: 22 }}>
+          {/* 1) Create a new production */}
+          <form onSubmit={submit}>
+            <div className="card-title">Start a New Production</div>
             <label className="field">
               <span className="field-label">
-                Venue <ReqStar />
+                Show title <ReqStar />
               </span>
               <input
-                value={venue}
-                onChange={(e) => setVenue(e.target.value)}
-                placeholder="Main Stage"
+                autoFocus
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. A Midsummer Night's Dream"
               />
             </label>
-          </div>
-          <button className="btn btn-primary" style={{ width: '100%' }} disabled={!canSubmit}>
-            Create Production →
-          </button>
-
-          {inShell ? (
-            <button
-              type="button"
-              className="btn btn-ghost"
-              style={{ width: '100%', marginTop: 10 }}
-              onClick={() => navigate('/hub')}
-            >
-              Cancel
+            <div className="form-row">
+              <label className="field">
+                <span className="field-label">Company</span>
+                <input
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="Theatre / troupe"
+                />
+              </label>
+              <label className="field">
+                <span className="field-label">
+                  Venue <ReqStar />
+                </span>
+                <input
+                  value={venue}
+                  onChange={(e) => setVenue(e.target.value)}
+                  placeholder="Main Stage"
+                />
+              </label>
+            </div>
+            <button className="btn btn-primary" style={{ width: '100%' }} disabled={!canSubmit}>
+              Create Production →
             </button>
-          ) : (
+          </form>
+
+          {/* 2) Open an existing production (only if you already have some) */}
+          {realProductions.length > 0 && (
             <>
-              <div className="row" style={{ gap: 10, alignItems: 'center', margin: '14px 0' }}>
-                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-                <span className="hint">or</span>
-                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              <Divider label="or open an existing production" />
+              <div className="row" style={{ gap: 8, alignItems: 'stretch' }}>
+                <select
+                  value={openId}
+                  onChange={(e) => setOpenId(e.target.value)}
+                  style={{ flex: 1 }}
+                  aria-label="Choose a production to open"
+                >
+                  {realProductions.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" className="btn" onClick={openExisting} disabled={!openId}>
+                  Open →
+                </button>
               </div>
-              <button
-                type="button"
-                className="btn"
-                style={{ width: '100%' }}
-                onClick={() => {
-                  loadSampleProduction()
-                  navigate('/hub')
-                }}
-              >
-                ✨ Explore a Sample Production
-              </button>
-              <p className="hint" style={{ textAlign: 'center', marginBottom: 0 }}>
-                Everything is stored privately in this browser. You can export a backup anytime.
-              </p>
             </>
           )}
-        </form>
+
+          {/* 3) Sample — always the last option */}
+          <Divider label="or" />
+          <button type="button" className="btn" style={{ width: '100%' }} onClick={openSample}>
+            {sample ? '✨ Open the sample production' : '✨ Explore a Sample Production'}
+          </button>
+          <p className="hint" style={{ textAlign: 'center', margin: '12px 0 0' }}>
+            Everything is stored privately in this browser. You can export a backup anytime.
+          </p>
+        </div>
       </div>
     </div>
   )
