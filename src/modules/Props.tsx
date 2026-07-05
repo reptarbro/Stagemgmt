@@ -8,7 +8,7 @@ const STATUSES: PropStatus[] = ['Needed', 'In progress', 'Ready', 'Cut']
 
 const STATUS_COLOR: Record<PropStatus, string> = {
   Needed: 'var(--danger)',
-  'In progress': 'var(--accent-warm)',
+  'In progress': 'var(--warn)',
   Ready: 'var(--success)',
   Cut: 'var(--text-faint)',
 }

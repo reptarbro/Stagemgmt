@@ -31,7 +31,7 @@ export function Welcome({ inShell = false }: { inShell?: boolean }) {
       <div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}>
         {!inShell && (
           <>
-            <div style={{ fontSize: '3.4rem', filter: 'drop-shadow(0 0 14px rgba(224,182,77,.4))' }}>
+            <div style={{ fontSize: '3.4rem', filter: 'drop-shadow(0 0 14px rgba(47,174,107,.4))' }}>
               🎭
             </div>
             <h1 style={{ fontSize: '2rem', marginBottom: 4 }}>Stage Manager</h1>

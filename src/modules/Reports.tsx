@@ -443,7 +443,7 @@ function Block({ title, children }: { title: string; children: React.ReactNode }
           fontSize: '0.74rem',
           textTransform: 'uppercase',
           letterSpacing: '0.08em',
-          color: 'var(--accent-warm)',
+          color: 'var(--accent-strong)',
           fontWeight: 700,
           marginBottom: 5,
         }}

@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import { StoreProvider } from './lib/store'
 import { App } from './components/App'
+import '@fontsource-variable/raleway'
+import '@fontsource-variable/montserrat'
 import './styles/global.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
