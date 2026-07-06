@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router-dom'
 
 export function Modal({
@@ -18,7 +19,10 @@ export function Modal({
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  return (
+  // Portal to <body> so the fixed backdrop is anchored to the viewport — not
+  // trapped inside .main (a scroll container), which on iOS Safari would clip
+  // the modal behind the sidebar. Centers over the whole screen every time.
+  return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
@@ -29,7 +33,8 @@ export function Modal({
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

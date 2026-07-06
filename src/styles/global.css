@@ -481,8 +481,21 @@ textarea {
 /* ---------- Tables ---------- */
 .table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  /* Horizontal-scroll affordance (Lea Verou technique): the two "cover"
+     gradients (local) sit flush at each edge and vanish only when there's more
+     to scroll toward; the radial "shadows" (scroll) then peek out, signalling
+     the table pans sideways — so a clipped column reads as intentional, not
+     broken. Cells are transparent, so these show through the body rows. */
+  background:
+    linear-gradient(to right, var(--bg-elev) 28%, rgba(21, 27, 24, 0)) 0 0 / 34px 100% no-repeat,
+    linear-gradient(to left, var(--bg-elev) 28%, rgba(21, 27, 24, 0)) 100% 0 / 34px 100% no-repeat,
+    radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0)) 0 0 / 16px 100% no-repeat,
+    radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0)) 100% 0 / 16px 100% no-repeat;
+  background-color: var(--bg-elev);
+  background-attachment: local, local, scroll, scroll;
 }
 table {
   width: 100%;

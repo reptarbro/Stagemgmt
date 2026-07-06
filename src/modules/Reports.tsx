@@ -54,15 +54,18 @@ export function Reports() {
                   <button className="btn btn-sm" onClick={() => setViewing(r)}>
                     View
                   </button>
-                  <div className="row-tap" style={{ flex: 1, minWidth: 160, borderRadius: 8 }} onClick={() => setViewing(r)}>
+                  <div className="row-tap" style={{ flex: 1, minWidth: 0, borderRadius: 8 }} onClick={() => setViewing(r)}>
                     <div>
-                      <div className="row" style={{ gap: 8 }}>
+                      <div className="row wrap" style={{ gap: 8 }}>
                         <span className="badge">{r.type}</span>
-                        <strong>{formatDate(r.date)}</strong>
+                        <strong style={{ whiteSpace: 'nowrap' }}>{formatDate(r.date)}</strong>
                       </div>
-                      <div className="faint small" style={{ marginTop: 4 }}>
+                      <div
+                        className="faint small"
+                        style={{ marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                      >
                         {noteCount} note{noteCount === 1 ? '' : 's'}
-                        {r.summary && ` · ${r.summary.slice(0, 80)}${r.summary.length > 80 ? '…' : ''}`}
+                        {r.summary && ` · ${r.summary}`}
                       </div>
                     </div>
                   </div>
