@@ -5,7 +5,7 @@ import { PrintSheet } from '../components/PrintSheet'
 import { formatDate, todayISO } from '../lib/format'
 import { newId } from '../lib/storage'
 import { reportToText } from '../lib/exporters'
-import { downloadReportPDF } from '../lib/reportPdf'
+import { downloadReportPDF, reportSubject } from '../lib/reportPdf'
 import type { Report, ReportSection, ReportType } from '../lib/types'
 
 const REPORT_TYPES: ReportType[] = ['Rehearsal', 'Dress Rehearsal', 'Performance']
@@ -363,6 +363,13 @@ function ReportViewer({ report, onClose }: { report: Report; onClose: () => void
     if (production) downloadReportPDF(report, production)
   }
 
+  // Open a mail draft with the subject pre-filled and an empty body, so the
+  // downloaded PDF can be attached and sent without retyping the subject.
+  const emailDraft = () => {
+    if (!production) return
+    window.location.href = `mailto:?subject=${encodeURIComponent(reportSubject(report, production))}`
+  }
+
   const empty =
     !report.summary && !report.workedOn && sectionsWithNotes.length === 0 && !report.scheduleNote
 
@@ -374,6 +381,9 @@ function ReportViewer({ report, onClose }: { report: Report; onClose: () => void
         <>
           <button className="btn btn-sm btn-primary" onClick={download}>
             ⤓ Download PDF
+          </button>
+          <button className="btn btn-sm" onClick={emailDraft} title="Open an email with the subject pre-filled — attach the downloaded PDF">
+            ✉ Email
           </button>
           <button className="btn btn-sm" onClick={copy}>
             {copied ? '✓ Copied' : '⧉ Copy'}

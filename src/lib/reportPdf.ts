@@ -3,8 +3,8 @@ import type { Production, Report } from './types'
 import { formatDate } from './format'
 import { slug } from './exporters'
 
-/** Clean, human-readable title used as the PDF's document title ("subject"). */
-function reportTitle(report: Report, production: Production): string {
+/** Clean, human-readable title used as the PDF's document title & email subject. */
+export function reportSubject(report: Report, production: Production): string {
   return `${production.title} — ${report.type} Report — ${formatDate(report.date)}`
 }
 
@@ -12,7 +12,7 @@ function reportTitle(report: Report, production: Production): string {
 export function buildReportPDF(report: Report, production: Production): Blob {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' })
   // Document title (shown in viewer tab / file info) — the report's "subject".
-  doc.setProperties({ title: reportTitle(report, production) })
+  doc.setProperties({ title: reportSubject(report, production) })
   const margin = 54
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
