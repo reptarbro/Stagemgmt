@@ -3,9 +3,16 @@ import type { Production, Report } from './types'
 import { formatDate } from './format'
 import { slug } from './exporters'
 
+/** Clean, human-readable title used as the PDF's document title ("subject"). */
+function reportTitle(report: Report, production: Production): string {
+  return `${production.title} — ${report.type} Report — ${formatDate(report.date)}`
+}
+
 /** Build a clean, page-filling PDF of a rehearsal/performance report. */
 export function buildReportPDF(report: Report, production: Production): Blob {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' })
+  // Document title (shown in viewer tab / file info) — the report's "subject".
+  doc.setProperties({ title: reportTitle(report, production) })
   const margin = 54
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
@@ -96,31 +103,17 @@ function reportFilename(report: Report, production: Production): string {
 }
 
 /**
- * Share the report PDF — on iOS/iPadOS this opens the share sheet (pick Mail to
- * attach it). Falls back to downloading the PDF where file-sharing isn't supported.
+ * Download the report as a clean PDF file. On iOS/iPadOS Safari this opens the
+ * PDF in the viewer (from there it can be saved to Files or attached to an
+ * email with a clean subject and no auto-filled body).
  */
-export async function shareReportPDF(report: Report, production: Production): Promise<'shared' | 'downloaded'> {
+export function downloadReportPDF(report: Report, production: Production): void {
   const blob = buildReportPDF(report, production)
-  const filename = reportFilename(report, production)
-  const file = new File([blob], filename, { type: 'application/pdf' })
-  const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean }
-  if (nav.canShare && nav.canShare({ files: [file] })) {
-    try {
-      await navigator.share({
-        files: [file],
-        title: filename,
-        text: `${production.title} — ${report.type} Report — ${formatDate(report.date)}`,
-      })
-      return 'shared'
-    } catch {
-      return 'shared' // user cancelled the sheet
-    }
-  }
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = filename
+  a.download = reportFilename(report, production)
   a.click()
-  URL.revokeObjectURL(url)
-  return 'downloaded'
+  // Revoke a tick later so the download/open has time to start.
+  setTimeout(() => URL.revokeObjectURL(url), 4000)
 }

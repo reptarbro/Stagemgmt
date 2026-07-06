@@ -5,7 +5,7 @@ import { PrintSheet } from '../components/PrintSheet'
 import { formatDate, todayISO } from '../lib/format'
 import { newId } from '../lib/storage'
 import { reportToText } from '../lib/exporters'
-import { shareReportPDF } from '../lib/reportPdf'
+import { downloadReportPDF } from '../lib/reportPdf'
 import type { Report, ReportSection, ReportType } from '../lib/types'
 
 const REPORT_TYPES: ReportType[] = ['Rehearsal', 'Dress Rehearsal', 'Performance']
@@ -345,7 +345,6 @@ function SectionEditor({
 function ReportViewer({ report, onClose }: { report: Report; onClose: () => void }) {
   const { production } = useStore()
   const [copied, setCopied] = useState(false)
-  const [sending, setSending] = useState(false)
   const sectionsWithNotes = report.sections.filter((s) => s.notes.length > 0)
 
   const asText = () => (production ? reportToText(report, production) : '')
@@ -360,14 +359,8 @@ function ReportViewer({ report, onClose }: { report: Report; onClose: () => void
     }
   }
 
-  const email = async () => {
-    if (!production) return
-    setSending(true)
-    try {
-      await shareReportPDF(report, production)
-    } finally {
-      setSending(false)
-    }
+  const download = () => {
+    if (production) downloadReportPDF(report, production)
   }
 
   const empty =
@@ -375,12 +368,12 @@ function ReportViewer({ report, onClose }: { report: Report; onClose: () => void
 
   return (
     <PrintSheet
-      hint="Ready to distribute — email the PDF, copy the text, or print."
+      hint="Ready to distribute — download the PDF, copy the text, or print."
       onClose={onClose}
       actions={
         <>
-          <button className="btn btn-sm btn-primary" onClick={email} disabled={sending}>
-            {sending ? '…' : '✉ Email PDF'}
+          <button className="btn btn-sm btn-primary" onClick={download}>
+            ⤓ Download PDF
           </button>
           <button className="btn btn-sm" onClick={copy}>
             {copied ? '✓ Copied' : '⧉ Copy'}
