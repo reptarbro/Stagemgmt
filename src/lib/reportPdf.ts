@@ -12,9 +12,20 @@ export function buildReportPDF(report: Report, production: Production): Blob {
   const maxW = pageW - margin * 2
   let y = margin
 
+  // Paint an explicit white page. jsPDF pages are transparent by default, so in
+  // a dark-mode viewer (e.g. the iOS Mail compose preview) the "paper" shows
+  // through black and the text becomes near-invisible. A white fill guarantees
+  // black-on-white everywhere. Must run before any content on each page.
+  const paintBg = () => {
+    doc.setFillColor(255, 255, 255)
+    doc.rect(0, 0, pageW, pageH, 'F')
+  }
+  paintBg()
+
   const ensure = (h: number) => {
     if (y + h > pageH - margin) {
       doc.addPage()
+      paintBg()
       y = margin
     }
   }
