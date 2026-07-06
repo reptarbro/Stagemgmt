@@ -46,18 +46,25 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url || steps.deployment-retry.outputs.page_url }}
+      url: ${{ steps.deploy1.outputs.page_url || steps.deploy2.outputs.page_url || steps.deploy3.outputs.page_url }}
     steps:
-      # First attempt. GitHub Pages occasionally returns a transient
-      # "Deployment failed, try again later" — so don't fail the job on it.
-      - id: deployment
+      # GitHub Pages intermittently returns a transient "Deployment failed, try
+      # again later" that can persist for a couple of minutes. Retry up to three
+      # times with growing back-off; only the final attempt is allowed to fail
+      # the job, so the deploy self-heals without a manual re-run.
+      - id: deploy1
         uses: actions/deploy-pages@v4
         continue-on-error: true
-      - name: Wait before retry
-        if: steps.deployment.outcome == 'failure'
-        run: sleep 25
-      # Second attempt only if the first hit the transient error. This makes the
-      # deploy self-healing instead of needing a manual re-run.
-      - id: deployment-retry
-        if: steps.deployment.outcome == 'failure'
+      - name: Wait before attempt 2
+        if: steps.deploy1.outcome == 'failure'
+        run: sleep 30
+      - id: deploy2
+        if: steps.deploy1.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - name: Wait before attempt 3
+        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
+        run: sleep 60
+      - id: deploy3
+        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
         uses: actions/deploy-pages@v4
