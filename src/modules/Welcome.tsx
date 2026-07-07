@@ -24,6 +24,7 @@ export function Welcome() {
   const [cloudReady, setCloudReady] = useState(false)
   const [pulling, setPulling] = useState(false)
   const [cloudMsg, setCloudMsg] = useState<string | null>(null)
+  const [showSignIn, setShowSignIn] = useState(false)
 
   useEffect(() => {
     if (!CLOUD_ENABLED) return
@@ -146,13 +147,29 @@ export function Welcome() {
           {APP_NAME}
         </h1>
         <p className="muted" style={{ marginTop: 0 }}>
-          Your prompt book, contact sheet, calling script, and report desk — in one place.
+          Your prompt book, contact sheet, calling script, and report desk, all in one place.
         </p>
 
-        <div className="card" style={{ textAlign: 'left', marginTop: 22 }}>
-          {/* 1) Create a new production */}
+        {/* Signed in with a cloud copy → load it (fresh-device / returning landing) */}
+        {CLOUD_ENABLED && cloudStage === 'in' && cloudReady && (
+          <div
+            className="card"
+            style={{ textAlign: 'left', marginTop: 18, borderColor: 'var(--accent-strong)', background: 'var(--bg-elev-2)' }}
+          >
+            <div className="card-title" style={{ color: 'var(--accent-strong)' }}>Your synced shows</div>
+            <div className="small" style={{ marginBottom: 10 }}>
+              Signed in as <strong>{cloudEmail}</strong>.
+            </div>
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={loadFromCloud} disabled={pulling}>
+              {pulling ? 'Loading…' : '⤵ Load My Shows'}
+            </button>
+          </div>
+        )}
+
+        {/* Create a new production */}
+        <div className="card" style={{ textAlign: 'left', marginTop: 18 }}>
           <form onSubmit={submit}>
-            <div className="card-title">Start a New Production</div>
+            <div className="card-title">Start a new production</div>
             <label className="field">
               <span className="field-label">
                 Show title <ReqStar />
@@ -167,100 +184,24 @@ export function Welcome() {
             <div className="form-row">
               <label className="field">
                 <span className="field-label">Company</span>
-                <input
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  placeholder="Theatre / troupe"
-                />
+                <input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Theatre / troupe" />
               </label>
               <label className="field">
                 <span className="field-label">
                   Venue <ReqStar />
                 </span>
-                <input
-                  value={venue}
-                  onChange={(e) => setVenue(e.target.value)}
-                  placeholder="Main Stage"
-                />
+                <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="Main Stage" />
               </label>
             </div>
-            <button className="btn btn-primary" style={{ width: '100%' }} disabled={!canSubmit}>
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={!canSubmit}>
               Create Production →
             </button>
           </form>
 
-          {/* 1b) Cross-device sync: sign in and load shows saved from another device */}
-          {CLOUD_ENABLED && cloudStage !== 'checking' && (
-            <>
-              <Divider label="or sync across your devices" />
-              {cloudStage === 'out' && (
-                <>
-                  <button
-                    className="btn"
-                    style={{ width: '100%', justifyContent: 'center' }}
-                    onClick={signInGoogle}
-                  >
-                    <GoogleG /> Continue with Google
-                  </button>
-                  <div className="row" style={{ gap: 10, alignItems: 'center', margin: '10px 0' }}>
-                    <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-                    <span className="hint">or use email</span>
-                    <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-                  </div>
-                  <div className="row" style={{ gap: 8, alignItems: 'flex-end' }}>
-                    <label className="field" style={{ marginBottom: 0, flex: 1 }}>
-                      <span className="field-label">Email</span>
-                      <input
-                        type="email"
-                        value={cloudEmail}
-                        onChange={(e) => setCloudEmail(e.target.value)}
-                        placeholder="you@example.com"
-                        autoComplete="email"
-                      />
-                    </label>
-                    <button className="btn" onClick={sendLink} disabled={pulling || !cloudEmail.trim()}>
-                      {pulling ? '…' : 'Sign in'}
-                    </button>
-                  </div>
-                  <p className="hint" style={{ margin: '6px 0 0' }}>
-                    Sign in to load shows you saved from another device.
-                  </p>
-                </>
-              )}
-              {cloudStage === 'sent' && (
-                <p className="hint" style={{ textAlign: 'center', margin: 0 }}>
-                  Sign-in link sent to <strong>{cloudEmail}</strong>. Open it on this device and you will
-                  come back here signed in.
-                </p>
-              )}
-              {cloudStage === 'in' && cloudReady && (
-                <div className="card" style={{ background: 'var(--bg-elev-2)', borderColor: 'var(--accent-strong)' }}>
-                  <div className="small" style={{ marginBottom: 8 }}>
-                    Signed in as <strong>{cloudEmail}</strong>.
-                  </div>
-                  <button className="btn btn-primary" style={{ width: '100%' }} onClick={loadFromCloud} disabled={pulling}>
-                    {pulling ? 'Loading…' : '⤵ Load My Shows'}
-                  </button>
-                </div>
-              )}
-              {cloudStage === 'in' && !cloudReady && (
-                <p className="hint" style={{ textAlign: 'center', margin: 0 }}>
-                  Signed in as <strong>{cloudEmail}</strong>. No shows are saved in the cloud yet. Push
-                  from the device that has them, then come back here.
-                </p>
-              )}
-              {cloudMsg && (
-                <p className="hint" style={{ color: 'var(--danger)', textAlign: 'center', margin: '6px 0 0' }}>
-                  {cloudMsg}
-                </p>
-              )}
-            </>
-          )}
-
-          {/* 2) Open an existing production (only if you already have some) */}
+          {/* Open an existing local production, only when this device has some */}
           {realProductions.length > 0 && (
             <>
-              <Divider label="or open an existing production" />
+              <Divider label="or open an existing show" />
               <div className="row" style={{ gap: 8, alignItems: 'stretch' }}>
                 <select
                   value={openId}
@@ -280,40 +221,80 @@ export function Welcome() {
               </div>
             </>
           )}
-
-          {/* 3) Restore from a backup — how you move a show onto a new device */}
-          <Divider label="or move a show onto this device" />
-          <button
-            type="button"
-            className="btn"
-            style={{ width: '100%' }}
-            onClick={() => fileRef.current?.click()}
-          >
-            ⬆ Import a backup file
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="application/json,.json"
-            onChange={onImport}
-            style={{ display: 'none' }}
-          />
-          {importErr && (
-            <p className="hint" style={{ color: 'var(--danger)', textAlign: 'center', margin: '8px 0 0' }}>
-              {importErr}
-            </p>
-          )}
-
-          {/* 4) Sample — always the last option */}
-          <Divider label="or" />
-          <button type="button" className="btn" style={{ width: '100%' }} onClick={openSample}>
-            ✨ Explore a Sample Production
-          </button>
-          <p className="hint" style={{ textAlign: 'center', margin: '12px 0 0' }}>
-            Everything is stored privately in this browser. Export a full backup anytime to move it to
-            another device.
-          </p>
         </div>
+
+        {/* Compact secondary actions */}
+        <p className="hint" style={{ margin: '16px 0 8px' }}>
+          Already using Standby, or moving from another device?
+        </p>
+        <div className="row" style={{ gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {CLOUD_ENABLED &&
+            (cloudStage === 'in' ? (
+              <span className="hint" style={{ alignSelf: 'center' }}>
+                Signed in as {cloudEmail || 'your account'}
+              </span>
+            ) : (
+              <button type="button" className="btn btn-sm" onClick={() => setShowSignIn((s) => !s)}>
+                <GoogleG /> Sign in
+              </button>
+            ))}
+          <button type="button" className="btn btn-sm" onClick={() => fileRef.current?.click()}>
+            ⬆ Import backup
+          </button>
+          <button type="button" className="btn btn-sm" onClick={openSample}>
+            ✨ Sample
+          </button>
+        </div>
+        <input ref={fileRef} type="file" accept="application/json,.json" onChange={onImport} style={{ display: 'none' }} />
+
+        {/* Inline sign-in panel (opens under the row) */}
+        {CLOUD_ENABLED && showSignIn && (cloudStage === 'out' || cloudStage === 'sent') && (
+          <div className="card" style={{ textAlign: 'left', marginTop: 10 }}>
+            {cloudStage === 'out' ? (
+              <>
+                <button className="btn" style={{ width: '100%', justifyContent: 'center' }} onClick={signInGoogle}>
+                  <GoogleG /> Continue with Google
+                </button>
+                <div className="row" style={{ gap: 10, alignItems: 'center', margin: '10px 0' }}>
+                  <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                  <span className="hint">or use email</span>
+                  <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                </div>
+                <div className="row" style={{ gap: 8, alignItems: 'flex-end' }}>
+                  <label className="field" style={{ marginBottom: 0, flex: 1 }}>
+                    <span className="field-label">Email</span>
+                    <input
+                      type="email"
+                      value={cloudEmail}
+                      onChange={(e) => setCloudEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                    />
+                  </label>
+                  <button className="btn" onClick={sendLink} disabled={pulling || !cloudEmail.trim()}>
+                    {pulling ? '…' : 'Send link'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="hint" style={{ margin: 0 }}>
+                Sign-in link sent to <strong>{cloudEmail}</strong>. Open it on this device and you will
+                come back here signed in.
+              </p>
+            )}
+          </div>
+        )}
+
+        {(importErr || cloudMsg) && (
+          <p className="hint" style={{ color: 'var(--danger)', textAlign: 'center', margin: '8px 0 0' }}>
+            {importErr || cloudMsg}
+          </p>
+        )}
+
+        <p className="hint" style={{ textAlign: 'center', margin: '14px 0 0' }}>
+          Everything is stored privately in this browser. Export a full backup anytime to move it to
+          another device.
+        </p>
       </div>
       </div>
     </div>
