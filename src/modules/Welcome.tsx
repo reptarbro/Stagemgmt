@@ -16,11 +16,13 @@ export function Welcome() {
   const [venue, setVenue] = useState('')
   const [importErr, setImportErr] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
-  // When a magic-link sign-in lands here (a fresh device shows Welcome), surface
-  // the account and a one-tap restore of the shows saved in the cloud.
-  const [cloudEmail, setCloudEmail] = useState<string | null>(null)
+  // A fresh device with no production lands here and can't reach Settings, so
+  // Welcome is also the sign-in + restore entry point for cross-device sync.
+  const [cloudStage, setCloudStage] = useState<'checking' | 'out' | 'sent' | 'in'>('checking')
+  const [cloudEmail, setCloudEmail] = useState('')
   const [cloudReady, setCloudReady] = useState(false)
   const [pulling, setPulling] = useState(false)
+  const [cloudMsg, setCloudMsg] = useState<string | null>(null)
 
   useEffect(() => {
     if (!CLOUD_ENABLED) return
@@ -28,11 +30,14 @@ export function Welcome() {
     const check = async () => {
       try {
         const { data: u } = await supa().auth.getUser()
-        if (!alive || !u.user) return
-        setCloudEmail(u.user.email ?? '')
-        setCloudReady(await cloudHasData())
+        if (!alive) return
+        if (u.user) {
+          setCloudEmail(u.user.email ?? '')
+          setCloudStage('in')
+          setCloudReady(await cloudHasData())
+        } else setCloudStage('out')
       } catch {
-        /* offline or signed out */
+        if (alive) setCloudStage('out')
       }
     }
     void check()
@@ -43,13 +48,26 @@ export function Welcome() {
     }
   }, [])
 
+  const sendLink = async () => {
+    if (!cloudEmail.trim()) return
+    setPulling(true)
+    setCloudMsg(null)
+    const { error } = await supa().auth.signInWithOtp({
+      email: cloudEmail.trim(),
+      options: { shouldCreateUser: true, emailRedirectTo: window.location.href.split('#')[0].split('?')[0] },
+    })
+    setPulling(false)
+    if (error) setCloudMsg(error.message)
+    else setCloudStage('sent')
+  }
+
   const loadFromCloud = async () => {
     setPulling(true)
     setImportErr(null)
     const r = await pullAll(importJSON)
     setPulling(false)
     if (r.ok) navigate('/hub')
-    else setImportErr(r.error ?? 'Could not load your cloud shows.')
+    else setImportErr(r.error ?? 'Could not load your saved shows.')
   }
 
   const onImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,23 +179,59 @@ export function Welcome() {
             </button>
           </form>
 
-          {/* 1b) Signed in with cloud data → load it right here (fresh-device landing) */}
-          {cloudEmail && cloudReady && (
+          {/* 1b) Cross-device sync: sign in and load shows saved from another device */}
+          {CLOUD_ENABLED && cloudStage !== 'checking' && (
             <>
-              <Divider label="or load your synced shows" />
-              <div className="card" style={{ background: 'var(--bg-elev-2)', borderColor: 'var(--accent-strong)' }}>
-                <div className="small" style={{ marginBottom: 8 }}>
-                  Signed in as <strong>{cloudEmail}</strong>. Your saved shows are in the cloud.
+              <Divider label="or sync across your devices" />
+              {cloudStage === 'out' && (
+                <>
+                  <div className="row" style={{ gap: 8, alignItems: 'flex-end' }}>
+                    <label className="field" style={{ marginBottom: 0, flex: 1 }}>
+                      <span className="field-label">Email</span>
+                      <input
+                        type="email"
+                        value={cloudEmail}
+                        onChange={(e) => setCloudEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                      />
+                    </label>
+                    <button className="btn" onClick={sendLink} disabled={pulling || !cloudEmail.trim()}>
+                      {pulling ? '…' : 'Sign in'}
+                    </button>
+                  </div>
+                  <p className="hint" style={{ margin: '6px 0 0' }}>
+                    Sign in to load shows you saved from another device.
+                  </p>
+                </>
+              )}
+              {cloudStage === 'sent' && (
+                <p className="hint" style={{ textAlign: 'center', margin: 0 }}>
+                  Sign-in link sent to <strong>{cloudEmail}</strong>. Open it on this device and you will
+                  come back here signed in.
+                </p>
+              )}
+              {cloudStage === 'in' && cloudReady && (
+                <div className="card" style={{ background: 'var(--bg-elev-2)', borderColor: 'var(--accent-strong)' }}>
+                  <div className="small" style={{ marginBottom: 8 }}>
+                    Signed in as <strong>{cloudEmail}</strong>.
+                  </div>
+                  <button className="btn btn-primary" style={{ width: '100%' }} onClick={loadFromCloud} disabled={pulling}>
+                    {pulling ? 'Loading…' : '⤵ Load My Shows'}
+                  </button>
                 </div>
-                <button
-                  className="btn btn-primary"
-                  style={{ width: '100%' }}
-                  onClick={loadFromCloud}
-                  disabled={pulling}
-                >
-                  {pulling ? 'Loading…' : '⤵ Load my shows from the cloud'}
-                </button>
-              </div>
+              )}
+              {cloudStage === 'in' && !cloudReady && (
+                <p className="hint" style={{ textAlign: 'center', margin: 0 }}>
+                  Signed in as <strong>{cloudEmail}</strong>. No shows are saved in the cloud yet. Push
+                  from the device that has them, then come back here.
+                </p>
+              )}
+              {cloudMsg && (
+                <p className="hint" style={{ color: 'var(--danger)', textAlign: 'center', margin: '6px 0 0' }}>
+                  {cloudMsg}
+                </p>
+              )}
             </>
           )}
 
