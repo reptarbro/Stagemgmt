@@ -2,6 +2,8 @@ import { useRef, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, ConfirmButton } from '../components/ui'
 import { markBackedUp } from '../lib/storage'
+import { slug } from '../lib/exporters'
+import { buildBundleString, applyBackupText } from '../lib/backup'
 
 export function Settings() {
   const {
@@ -14,6 +16,7 @@ export function Settings() {
     setActiveProduction,
   } = useStore()
   const [msg, setMsg] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const sample = data.productions.find((p) => p.isSample)
@@ -21,25 +24,61 @@ export function Settings() {
   const totalPeople = data.productions.reduce((n, p) => n + p.people.length, 0)
   const totalEvents = data.productions.reduce((n, p) => n + p.events.length, 0)
 
-  const download = () => {
-    const blob = new Blob([exportJSON()], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `stage-manager-backup-${new Date().toISOString().slice(0, 10)}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-    markBackedUp()
-    setMsg('Backup downloaded.')
+  // A COMPLETE, portable backup: the data model + every binary (uploaded script
+  // PDF, sign-in photos) base64-packed into one file, so it fully rehydrates on
+  // another device. Prefers the native share sheet (AirDrop/Messages/Files).
+  const exportAll = async () => {
+    if (busy) return
+    setBusy(true)
+    try {
+      const json = await buildBundleString(exportJSON())
+      const name = `standby-${slug(production?.title ?? 'backup')}-${new Date()
+        .toISOString()
+        .slice(0, 10)}.json`
+      const blob = new Blob([json], { type: 'application/json' })
+      const file = new File([blob], name, { type: 'application/json' })
+      markBackedUp()
+
+      const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean }
+      if (nav.canShare && nav.canShare({ files: [file] })) {
+        try {
+          await nav.share!({ files: [file], title: 'Standby backup' } as ShareData)
+          setMsg('Backup shared — open it on the other device and Import.')
+          return
+        } catch (err) {
+          if ((err as Error).name === 'AbortError') {
+            setMsg(null)
+            return
+          }
+          // otherwise fall through to a normal download
+        }
+      }
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = name
+      a.click()
+      URL.revokeObjectURL(url)
+      const kb = Math.round(blob.size / 1024)
+      setMsg(`Full backup downloaded (${kb} KB — includes your script & photos).`)
+    } catch (e) {
+      setMsg(`Export failed: ${(e as Error).message}`)
+    } finally {
+      setBusy(false)
+    }
   }
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    setBusy(true)
     const reader = new FileReader()
-    reader.onload = () => {
-      const res = importJSON(String(reader.result))
-      setMsg(res.ok ? 'Backup restored.' : `Import failed: ${res.error}`)
+    reader.onload = async () => {
+      const res = await applyBackupText(String(reader.result), importJSON)
+      if (!res.ok) setMsg(`Import failed: ${res.error}`)
+      else if (res.bundle) setMsg(`Restored everything — ${res.files} file(s) included.`)
+      else setMsg('Restored (data only — this file had no bundled script/photos).')
+      setBusy(false)
     }
     reader.readAsText(file)
     e.target.value = ''
@@ -108,16 +147,18 @@ export function Settings() {
       </div>
 
       <div className="card">
-        <div className="card-title">Backup & restore</div>
+        <div className="card-title">Backup &amp; move to another device</div>
         <p className="small muted">
-          Your data lives only in this browser. Export a backup to keep it safe or move it to another
-          device, then import it there.
+          Your data lives only in this browser. Export a <strong>complete backup</strong> — every
+          production plus your uploaded script and sign-in photos, all in one file — then import it on
+          another device (iPad → desktop → phone). On phones/tablets, Export opens the share sheet so you
+          can AirDrop or message it straight over.
         </p>
         <div className="row wrap" style={{ gap: 10 }}>
-          <button className="btn btn-primary" onClick={download}>
-            ⬇ Export backup (.json)
+          <button className="btn btn-primary" onClick={exportAll} disabled={busy}>
+            {busy ? '… working' : '⤴ Export / Share (full backup)'}
           </button>
-          <button className="btn" onClick={() => fileRef.current?.click()}>
+          <button className="btn" onClick={() => fileRef.current?.click()} disabled={busy}>
             ⬆ Import backup
           </button>
           <input
@@ -128,6 +169,10 @@ export function Settings() {
             style={{ display: 'none' }}
           />
         </div>
+        <p className="hint" style={{ marginTop: 10 }}>
+          Import <strong>replaces</strong> everything currently in this browser — so export here first if
+          this device has changes you want to keep.
+        </p>
       </div>
 
       <div className="card">

@@ -138,6 +138,26 @@ export async function getScriptFile(key: string): Promise<Blob | null> {
   return result
 }
 
+/** Every stored binary (script PDFs, sign-in photos) with its key — used to
+    pack a complete, portable backup that includes files, not just the model. */
+export async function getAllFiles(): Promise<{ key: string; blob: Blob }[]> {
+  const db = await openFileDB()
+  const result = await new Promise<{ key: string; blob: Blob }[]>((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readonly')
+    const store = tx.objectStore(DB_STORE)
+    const keysReq = store.getAllKeys()
+    const valsReq = store.getAll()
+    tx.oncomplete = () => {
+      const keys = keysReq.result as IDBValidKey[]
+      const vals = valsReq.result as Blob[]
+      resolve(keys.map((k, i) => ({ key: String(k), blob: vals[i] })))
+    }
+    tx.onerror = () => reject(tx.error)
+  })
+  db.close()
+  return result
+}
+
 /** Delete a stored script file. */
 export async function deleteScriptFile(key: string): Promise<void> {
   const db = await openFileDB()

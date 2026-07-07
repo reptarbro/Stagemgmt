@@ -1,15 +1,32 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { ReqStar } from '../components/ui'
 import { StandbyMark, APP_NAME } from '../components/Brand'
+import { applyBackupText } from '../lib/backup'
 
 export function Welcome() {
-  const { createProduction, loadSampleProduction, setActiveProduction, data } = useStore()
+  const { createProduction, loadSampleProduction, setActiveProduction, importJSON, data } = useStore()
   const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [company, setCompany] = useState('')
   const [venue, setVenue] = useState('')
+  const [importErr, setImportErr] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const onImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImportErr(null)
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const res = await applyBackupText(String(reader.result), importJSON)
+      if (res.ok) navigate('/hub')
+      else setImportErr(res.error ?? 'Could not read that file.')
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
 
   const realProductions = data.productions.filter((p) => !p.isSample)
   const sample = data.productions.find((p) => p.isSample)
@@ -130,13 +147,37 @@ export function Welcome() {
             </>
           )}
 
-          {/* 3) Sample — always the last option */}
+          {/* 3) Restore from a backup — how you move a show onto a new device */}
+          <Divider label="or move a show onto this device" />
+          <button
+            type="button"
+            className="btn"
+            style={{ width: '100%' }}
+            onClick={() => fileRef.current?.click()}
+          >
+            ⬆ Import a backup file
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={onImport}
+            style={{ display: 'none' }}
+          />
+          {importErr && (
+            <p className="hint" style={{ color: 'var(--danger)', textAlign: 'center', margin: '8px 0 0' }}>
+              {importErr}
+            </p>
+          )}
+
+          {/* 4) Sample — always the last option */}
           <Divider label="or" />
           <button type="button" className="btn" style={{ width: '100%' }} onClick={openSample}>
             ✨ Explore a Sample Production
           </button>
           <p className="hint" style={{ textAlign: 'center', margin: '12px 0 0' }}>
-            Everything is stored privately in this browser. You can export a backup anytime.
+            Everything is stored privately in this browser. Export a full backup anytime to move it to
+            another device.
           </p>
         </div>
       </div>
