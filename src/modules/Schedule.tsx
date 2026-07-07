@@ -44,10 +44,26 @@ function timeOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string)
   return aStart < bEnd && bStart < aEnd
 }
 
-/** Return the conflict a person has against an event (date + optional time overlap), or null. */
+/** Does a conflict's date coverage include this event date? Handles a single
+    day, an inclusive date range, and a recurring-weekly window. */
+export function conflictCoversDate(c: Conflict, evDate: string): boolean {
+  if (evDate < c.date) return false
+  // End of the window: explicit endDate, else the single day — unless it's an
+  // open-ended weekly pattern (no endDate = ongoing).
+  const end = c.endDate && c.endDate >= c.date ? c.endDate : c.repeatWeekly ? null : c.date
+  if (end && evDate > end) return false
+  if (c.repeatWeekly && c.weekdays?.length) {
+    const d = parseISODate(evDate)
+    return !!d && c.weekdays.includes(d.getDay())
+  }
+  return true
+}
+
+/** Return the conflict a person has against an event (date coverage + optional
+    time overlap), or null. */
 export function eventConflict(person: Person, ev: { date: string; callTime?: string; startTime?: string; endTime?: string }): Conflict | null {
   for (const c of person.conflicts ?? []) {
-    if (c.date !== ev.date) continue
+    if (!conflictCoversDate(c, ev.date)) continue
     if (!c.startTime || !c.endTime) return c // all-day conflict
     const es = ev.startTime || ev.callTime
     const ee = ev.endTime || ev.startTime || ev.callTime

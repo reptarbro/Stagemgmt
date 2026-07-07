@@ -3,7 +3,7 @@ import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar, SortTh, useSort } from '../components/ui'
 import { PrintSheet } from '../components/PrintSheet'
 import { newId } from '../lib/storage'
-import { formatDateShort, formatTime } from '../lib/format'
+import { formatDateShort, formatTime, todayISO } from '../lib/format'
 import { contactsCSV, downloadText, slug } from '../lib/exporters'
 import type { Conflict, Person, PersonGroup, Production } from '../lib/types'
 
@@ -30,9 +30,25 @@ const BLANK: Omit<Person, 'id'> = {
   conflicts: [],
 }
 
-/** "Jul 6 · 6:00–8:00 PM · reason" — times optional (absent = all day). */
+const WEEKDAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+/**
+ * Human label for a conflict:
+ *  · single day   → "Jul 6 · 6:00–8:00 PM · reason"
+ *  · date range   → "Aug 7 – Aug 14 · reason"
+ *  · weekly       → "Tue/Thu · 10:00 AM–2:00 PM · reason" (+ "thru Sep 30")
+ */
 export function formatConflict(c: Conflict): string {
-  const parts = [formatDateShort(c.date)]
+  let when: string
+  if (c.repeatWeekly && c.weekdays?.length) {
+    when = [...c.weekdays].sort((a, b) => a - b).map((d) => WEEKDAY_ABBR[d]).join('/')
+    if (c.endDate) when += ` thru ${formatDateShort(c.endDate)}`
+  } else if (c.endDate && c.endDate !== c.date) {
+    when = `${formatDateShort(c.date)} – ${formatDateShort(c.endDate)}`
+  } else {
+    when = formatDateShort(c.date)
+  }
+  const parts = [when]
   if (c.startTime) {
     parts.push(`${formatTime(c.startTime)}${c.endTime ? `–${formatTime(c.endTime)}` : ''}`)
   }
@@ -59,6 +75,7 @@ export function People() {
   const [editing, setEditing] = useState<Person | 'new' | null>(null)
   const [viewing, setViewing] = useState<Person | null>(null)
   const [bulk, setBulk] = useState(false)
+  const [avail, setAvail] = useState(false)
   const [printing, setPrinting] = useState(false)
   const [filter, setFilter] = useState<'All' | PersonGroup>('All')
   const [q, setQ] = useState('')
@@ -116,6 +133,11 @@ export function People() {
               <button className="btn btn-sm" onClick={() => setBulk(true)}>
                 ⧉ Add Multiple
               </button>
+              {people.length > 0 && (
+                <button className="btn btn-sm" onClick={() => setAvail(true)} title="Add unavailability for the whole company">
+                  🗓 Availability
+                </button>
+              )}
             </div>
             <button className="btn btn-primary" onClick={() => setEditing('new')}>
               + Add Person
@@ -248,10 +270,19 @@ export function People() {
       {bulk && (
         <MultiAddModal
           onClose={() => setBulk(false)}
-          onAdd={(rows) => {
+          onAdd={(rows, thenAvailability) => {
             rows.forEach((r) => addPerson(r))
             setBulk(false)
+            if (thenAvailability) setAvail(true)
           }}
+        />
+      )}
+
+      {avail && production && (
+        <AvailabilityModal
+          people={production.people}
+          onClose={() => setAvail(false)}
+          updatePerson={updatePerson}
         />
       )}
 
@@ -484,7 +515,7 @@ function MultiAddModal({
   onAdd,
 }: {
   onClose: () => void
-  onAdd: (rows: Omit<Person, 'id'>[]) => void
+  onAdd: (rows: Omit<Person, 'id'>[], thenAvailability?: boolean) => void
 }) {
   const [rows, setRows] = useState<DraftRow[]>(() => [blankRow(), blankRow(), blankRow()])
 
@@ -495,7 +526,7 @@ function MultiAddModal({
     setRows((rs) => (rs.length > 1 ? rs.filter((r) => r.key !== key) : rs))
 
   const ready = rows.filter((r) => r.name.trim())
-  const save = () => {
+  const save = (thenAvailability = false) => {
     if (ready.length === 0) return
     onAdd(
       ready.map((r) => ({
@@ -505,6 +536,7 @@ function MultiAddModal({
         role: r.role.trim(),
         character: r.character.trim(),
       })),
+      thenAvailability,
     )
   }
 
@@ -620,8 +652,84 @@ function MultiAddModal({
         <button className="btn btn-ghost" onClick={onClose}>
           Cancel
         </button>
-        <button className="btn btn-primary" disabled={ready.length === 0} onClick={save}>
+        <button
+          className="btn"
+          disabled={ready.length === 0}
+          onClick={() => save(true)}
+          title="Add everyone, then set their availability"
+        >
+          Add &amp; set availability →
+        </button>
+        <button className="btn btn-primary" disabled={ready.length === 0} onClick={() => save(false)}>
           Add {ready.length || ''} {ready.length === 1 ? 'person' : 'people'}
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
+/**
+ * The "availability pass": one screen listing everyone, each expandable to add
+ * unavailability (single day, range, or weekly). Edits save immediately.
+ */
+function AvailabilityModal({
+  people,
+  onClose,
+  updatePerson,
+}: {
+  people: Person[]
+  onClose: () => void
+  updatePerson: (id: string, patch: Partial<Person>) => void
+}) {
+  // Cast first, then everyone else — same tidy order as the roster.
+  const ordered = [...people].sort(
+    (a, b) => (a.group === 'Cast' ? 0 : 1) - (b.group === 'Cast' ? 0 : 1) || a.name.localeCompare(b.name),
+  )
+  const [openId, setOpenId] = useState<string | null>(ordered[0]?.id ?? null)
+
+  return (
+    <Modal title="Cast &amp; Crew Availability" onClose={onClose} className="modal-wide">
+      <p className="small muted" style={{ marginTop: 0 }}>
+        Add the dates each person can't attend — a single day, a range (vacation,
+        another show), or a weekly pattern (work, class). These flag automatically
+        on the Schedule when someone's called.
+      </p>
+      <div className="avail-list">
+        {ordered.map((p) => {
+          const open = openId === p.id
+          const list = p.conflicts ?? []
+          return (
+            <div key={p.id} className={`avail-row ${open ? 'open' : ''}`}>
+              <button
+                type="button"
+                className="avail-head"
+                onClick={() => setOpenId(open ? null : p.id)}
+                aria-expanded={open}
+              >
+                <span>
+                  <strong>{p.name}</strong>{' '}
+                  <span className="faint small">{p.character || p.role || p.group}</span>
+                </span>
+                <span className="faint small" style={{ flexShrink: 0 }}>
+                  {list.length ? `${list.length} logged` : 'none'} {open ? '▲' : '▼'}
+                </span>
+              </button>
+              {open && (
+                <div className="avail-body">
+                  <ConflictsEditor
+                    conflicts={list}
+                    onChange={(next) => updatePerson(p.id, { conflicts: next })}
+                    hideLabel
+                  />
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <div className="modal-actions">
+        <button className="btn btn-primary" onClick={onClose}>
+          Done
         </button>
       </div>
     </Modal>
@@ -743,36 +851,59 @@ function PersonForm({
   )
 }
 
+type ConflictMode = 'single' | 'range' | 'weekly'
+
 function ConflictsEditor({
   conflicts,
   onChange,
+  hideLabel,
 }: {
   conflicts: Conflict[]
   onChange: (list: Conflict[]) => void
+  /** Hide the section header (used inside the Availability accordion). */
+  hideLabel?: boolean
 }) {
+  const [mode, setMode] = useState<ConflictMode>('single')
   const [date, setDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [weekdays, setWeekdays] = useState<number[]>([])
   const [timed, setTimed] = useState(false)
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   const [note, setNote] = useState('')
 
+  const toggleDay = (d: number) =>
+    setWeekdays((w) => (w.includes(d) ? w.filter((x) => x !== d) : [...w, d]))
+
+  // Weekly needs at least one weekday; single/range need a start date.
+  const canAdd = mode === 'weekly' ? weekdays.length > 0 : !!date
+
+  const reset = () => {
+    setDate('')
+    setEndDate('')
+    setWeekdays([])
+    setStart('')
+    setEnd('')
+    setNote('')
+    setTimed(false)
+  }
+
   const add = () => {
-    if (!date) return
+    if (!canAdd) return
     onChange([
       ...conflicts,
       {
         id: newId(),
-        date,
+        date: date || todayISO(),
+        endDate: (mode === 'range' || mode === 'weekly') && endDate ? endDate : undefined,
+        repeatWeekly: mode === 'weekly' ? true : undefined,
+        weekdays: mode === 'weekly' ? [...weekdays].sort((a, b) => a - b) : undefined,
         startTime: timed && start ? start : undefined,
         endTime: timed && end ? end : undefined,
         note: note.trim() || undefined,
       },
     ])
-    setDate('')
-    setStart('')
-    setEnd('')
-    setNote('')
-    setTimed(false)
+    reset()
   }
   const remove = (id: string) => onChange(conflicts.filter((c) => c.id !== id))
 
@@ -780,14 +911,17 @@ function ConflictsEditor({
 
   return (
     <div>
-      <div className="field-label">
-        Availability conflicts{' '}
-        <span className="faint">(dates/times they can't attend — flagged on the schedule)</span>
-      </div>
+      {!hideLabel && (
+        <div className="field-label">
+          Availability conflicts{' '}
+          <span className="faint">(when they can't attend — flagged on the schedule)</span>
+        </div>
+      )}
       {sorted.length > 0 && (
-        <div className="row wrap" style={{ gap: 6, marginBottom: 10 }}>
+        <div className="row wrap" style={{ gap: 6, marginBottom: 12 }}>
           {sorted.map((c) => (
             <span key={c.id} className="tag" style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+              {c.repeatWeekly ? '↻ ' : ''}
               {formatConflict(c)}
               <button
                 type="button"
@@ -802,45 +936,104 @@ function ConflictsEditor({
           ))}
         </div>
       )}
-      <div className="row" style={{ gap: 6, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          style={{ maxWidth: 170 }}
-        />
-        <input
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="reason (optional)"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              add()
-            }
-          }}
-          style={{ flex: 1, minWidth: 140 }}
-        />
-        <button type="button" className="btn btn-sm" onClick={add} disabled={!date}>
-          Add
-        </button>
+
+      <div className="row" style={{ gap: 4, marginBottom: 8, flexWrap: 'wrap' }}>
+        {([
+          ['single', 'One day'],
+          ['range', 'Date range'],
+          ['weekly', 'Weekly'],
+        ] as [ConflictMode, string][]).map(([m, label]) => (
+          <button
+            key={m}
+            type="button"
+            className={`btn btn-sm ${mode === m ? 'btn-primary' : 'btn-ghost'}`}
+            style={{ borderRadius: 999 }}
+            onClick={() => setMode(m)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
-      <label className="row" style={{ gap: 6, margin: '8px 0 0', cursor: 'pointer' }}>
+
+      {mode === 'weekly' ? (
+        <>
+          <div className="row wrap" style={{ gap: 4, marginBottom: 8 }}>
+            {WEEKDAY_ABBR.map((lbl, i) => (
+              <button
+                key={i}
+                type="button"
+                className={`btn btn-sm ${weekdays.includes(i) ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ borderRadius: 999, minWidth: 46 }}
+                onClick={() => toggleDay(i)}
+                aria-pressed={weekdays.includes(i)}
+              >
+                {lbl}
+              </button>
+            ))}
+          </div>
+          <div className="form-row">
+            <label className="field" style={{ marginBottom: 0 }}>
+              <span className="field-label">From <span className="faint">(optional)</span></span>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </label>
+            <label className="field" style={{ marginBottom: 0 }}>
+              <span className="field-label">Until <span className="faint">(optional)</span></span>
+              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            </label>
+          </div>
+        </>
+      ) : mode === 'range' ? (
+        <div className="form-row">
+          <label className="field" style={{ marginBottom: 0 }}>
+            <span className="field-label">From</span>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </label>
+          <label className="field" style={{ marginBottom: 0 }}>
+            <span className="field-label">To</span>
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          </label>
+        </div>
+      ) : (
+        <label className="field" style={{ marginBottom: 0, maxWidth: 220 }}>
+          <span className="field-label">Date</span>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </label>
+      )}
+
+      <label className="row" style={{ gap: 6, margin: '10px 0 0', cursor: 'pointer' }}>
         <input
           type="checkbox"
           checked={timed}
           onChange={(e) => setTimed(e.target.checked)}
           style={{ width: 'auto' }}
         />
-        <span className="small muted">Only part of the day (add a time range)</span>
+        <span className="small muted">Only part of the day (add a time window)</span>
       </label>
       {timed && (
         <div className="row" style={{ gap: 6, marginTop: 6, alignItems: 'center' }}>
-          <input type="time" value={start} onChange={(e) => setStart(e.target.value)} style={{ maxWidth: 140 }} />
+          <input type="time" value={start} onChange={(e) => setStart(e.target.value)} style={{ maxWidth: 150 }} />
           <span className="faint">to</span>
-          <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} style={{ maxWidth: 140 }} />
+          <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} style={{ maxWidth: 150 }} />
         </div>
       )}
+
+      <div className="row" style={{ gap: 6, marginTop: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <input
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="reason (optional) — e.g. vacation, work, other show"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              add()
+            }
+          }}
+          style={{ flex: 1, minWidth: 160 }}
+        />
+        <button type="button" className="btn btn-sm btn-primary" onClick={add} disabled={!canAdd}>
+          Add
+        </button>
+      </div>
     </div>
   )
 }

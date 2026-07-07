@@ -6,11 +6,19 @@ export type ID = string
 /** Broad grouping used for filtering the contact sheet and building call lists. */
 export type PersonGroup = 'Cast' | 'Crew' | 'Creative' | 'Production' | 'Musician' | 'Front of House' | 'Other'
 
-/** A date (or range note) a person is unavailable. */
+/** A date, range, or recurring window a person is unavailable. */
 export interface Conflict {
   id: ID
-  /** ISO date. */
+  /** ISO date. The single day, or the START of a range / recurring window. */
   date: string
+  /** Optional ISO end date (inclusive). Present = multi-day range or the end of
+      a recurring window. Absent = single day (or open-ended if repeatWeekly). */
+  endDate?: string
+  /** When true, the conflict applies only on `weekdays`, every week from `date`
+      through `endDate` (or ongoing if no `endDate`). For "every Tue/Thu" cases. */
+  repeatWeekly?: boolean
+  /** Weekdays it applies to when repeatWeekly (0 = Sunday … 6 = Saturday). */
+  weekdays?: number[]
   /** Optional "HH:MM" start of the unavailable window. Absent = all day. */
   startTime?: string
   /** Optional "HH:MM" end of the unavailable window. */

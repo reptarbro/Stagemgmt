@@ -738,6 +738,42 @@ tbody tr:hover {
   margin-top: 20px;
 }
 
+/* ---------- Availability pass (accordion) ---------- */
+.avail-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.avail-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.avail-row.open {
+  border-color: var(--accent-strong);
+}
+.avail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-elev-2);
+  border: none;
+  color: var(--text);
+  font: inherit;
+  padding: 11px 13px;
+  cursor: pointer;
+}
+.avail-head:hover {
+  background: var(--bg-elev);
+}
+.avail-body {
+  padding: 13px;
+  border-top: 1px solid var(--border);
+}
+
 /* ---------- Emergency-contact badge ---------- */
 /* Roster shows only the 🚑 marker; the name/number reveal on hover or tap. */
 .ice-badge {
