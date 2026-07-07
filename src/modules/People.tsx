@@ -114,7 +114,7 @@ export function People() {
                 </>
               )}
               <button className="btn btn-sm" onClick={() => setBulk(true)}>
-                ⧉ Paste List
+                ⧉ Add Multiple
               </button>
             </div>
             <button className="btn btn-primary" onClick={() => setEditing('new')}>
@@ -192,8 +192,11 @@ export function People() {
                         </div>
                       )}
                       {p.emergencyContactName && (
-                        <div className="faint" style={{ fontSize: '0.72rem' }}>
-                          🚑 {p.emergencyContactName} {p.emergencyContactPhone}
+                        <div style={{ fontSize: '0.72rem', marginTop: 2 }}>
+                          <EmergencyBadge
+                            name={p.emergencyContactName}
+                            phone={p.emergencyContactPhone}
+                          />
                         </div>
                       )}
                       {!p.email && !p.phone && !p.emergencyContactName && (
@@ -243,7 +246,7 @@ export function People() {
       )}
 
       {bulk && (
-        <BulkAddModal
+        <MultiAddModal
           onClose={() => setBulk(false)}
           onAdd={(rows) => {
             rows.forEach((r) => addPerson(r))
@@ -383,6 +386,36 @@ function PersonDetail({
   )
 }
 
+/**
+ * Compact emergency-contact indicator for the roster: shows only the 🚑 marker.
+ * The name + number stay hidden until you hover (desktop) or tap it (touch),
+ * keeping sensitive info off the printed-looking contact sheet at a glance.
+ */
+function EmergencyBadge({ name, phone }: { name: string; phone?: string }) {
+  const [open, setOpen] = useState(false)
+  const detail = `${name}${phone ? ` · ${phone}` : ''}`
+  const toggle = (e: React.SyntheticEvent) => {
+    e.stopPropagation()
+    setOpen((o) => !o)
+  }
+  return (
+    <span
+      className={`ice-badge ${open ? 'open' : ''}`}
+      role="button"
+      tabIndex={0}
+      title={`Emergency contact: ${detail}`}
+      aria-label={`Emergency contact: ${detail}`}
+      onClick={toggle}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') toggle(e)
+      }}
+    >
+      <span aria-hidden="true">🚑</span>
+      <span className="ice-detail faint">{detail}</span>
+    </span>
+  )
+}
+
 function DetailRow({ label, value }: { label: string; value?: React.ReactNode }) {
   return (
     <div className="row-between" style={{ padding: '6px 0', gap: 12 }}>
@@ -392,63 +425,209 @@ function DetailRow({ label, value }: { label: string; value?: React.ReactNode })
   )
 }
 
-function BulkAddModal({
+/** Common theatre roles offered in the multi-add dropdown (custom still typeable). */
+const ROLE_OPTIONS = [
+  'Actor',
+  'Understudy',
+  'Swing',
+  'Ensemble',
+  'Director',
+  'Assistant Director',
+  'Co-Director',
+  'Stage Manager',
+  'Assistant Stage Manager',
+  'Production Manager',
+  'Producer',
+  'Co-Producer',
+  'Company Manager',
+  'Choreographer',
+  'Music Director',
+  'Dramaturg',
+  'Fight / Intimacy Director',
+  'Set Designer',
+  'Lighting Designer',
+  'Sound Designer',
+  'Costume Designer',
+  'Projection Designer',
+  'Props Master',
+  'Master Electrician',
+  'Deck Crew',
+  'Board Operator',
+  'Wardrobe',
+  'Dresser',
+  'Musician',
+  'Conductor',
+  'House Manager',
+  'Box Office',
+  'Photographer',
+]
+
+interface DraftRow {
+  key: string
+  name: string
+  group: PersonGroup
+  role: string
+  character: string
+  /** True when the role is being typed freehand instead of picked from the list. */
+  custom: boolean
+}
+
+/** A fresh row that inherits the previous row's group/role so a whole cast can
+    be entered by only typing names. */
+function blankRow(prev?: DraftRow): DraftRow {
+  return {
+    key: newId(),
+    name: '',
+    group: prev?.group ?? 'Cast',
+    role: prev?.role ?? 'Actor',
+    character: '',
+    custom: prev?.custom ?? false,
+  }
+}
+
+function MultiAddModal({
   onClose,
   onAdd,
 }: {
   onClose: () => void
   onAdd: (rows: Omit<Person, 'id'>[]) => void
 }) {
-  const [group, setGroup] = useState<PersonGroup>('Cast')
-  const [text, setText] = useState('')
+  const [rows, setRows] = useState<DraftRow[]>(() => [blankRow(), blankRow(), blankRow()])
 
-  const parsed: Omit<Person, 'id'>[] = text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [name, role, character] = line.split(',').map((s) => s.trim())
-      return { ...BLANK, group, name, role: role || '', character: character || '' }
-    })
-    .filter((p) => p.name)
+  const update = (key: string, patch: Partial<DraftRow>) =>
+    setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)))
+  const addRow = () => setRows((rs) => [...rs, blankRow(rs[rs.length - 1])])
+  const removeRow = (key: string) =>
+    setRows((rs) => (rs.length > 1 ? rs.filter((r) => r.key !== key) : rs))
+
+  const ready = rows.filter((r) => r.name.trim())
+  const save = () => {
+    if (ready.length === 0) return
+    onAdd(
+      ready.map((r) => ({
+        ...BLANK,
+        name: r.name.trim(),
+        group: r.group,
+        role: r.role.trim(),
+        character: r.character.trim(),
+      })),
+    )
+  }
 
   return (
-    <Modal title="Paste a Cast/Crew List" onClose={onClose}>
+    <Modal title="Add Multiple People" onClose={onClose} className="modal-wide">
       <p className="small muted" style={{ marginTop: 0 }}>
-        One person per line. Optionally add role and character, comma-separated:
-        <br />
-        <code style={{ fontSize: '0.8rem' }}>Name, Role, Character</code> — e.g.{' '}
-        <code style={{ fontSize: '0.8rem' }}>Robin Okafor, Actor, Puck</code>
+        Pick a group and role from the dropdowns, type each name (and character for
+        cast). New rows keep the row above's group &amp; role, so you can add a whole
+        cast by only typing names.
       </p>
-      <label className="field">
-        <span className="field-label">Add all as</span>
-        <select value={group} onChange={(e) => setGroup(e.target.value as PersonGroup)}>
-          {GROUPS.map((g) => (
-            <option key={g} value={g}>
-              {g}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="field">
-        <span className="field-label">Names</span>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={8}
-          autoFocus
-          placeholder={'Robin Okafor, Actor, Puck\nDaniel Reyes, Actor, Oberon\nGrace Lin'}
-        />
-      </label>
-      <p className="hint" style={{ marginTop: 0 }}>
-        Tip: add email &amp; phone (required) afterward by tapping each person.
+
+      <div className="multi-add-list">
+        <div className="multi-add-row multi-add-header">
+          <span>Name</span>
+          <span>Group</span>
+          <span>Role</span>
+          <span>Character</span>
+          <span />
+        </div>
+
+        {rows.map((r) => (
+          <div className="multi-add-row" key={r.key}>
+            <div className="multi-add-name">
+              <span className="field-label">Name</span>
+              <input
+                value={r.name}
+                placeholder="Full name"
+                onChange={(e) => update(r.key, { name: e.target.value })}
+              />
+            </div>
+            <div>
+              <span className="field-label">Group</span>
+              <select
+                value={r.group}
+                onChange={(e) => update(r.key, { group: e.target.value as PersonGroup })}
+              >
+                {GROUPS.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <span className="field-label">Role</span>
+              {r.custom ? (
+                <div className="row" style={{ gap: 4 }}>
+                  <input
+                    autoFocus
+                    value={r.role}
+                    placeholder="Type role"
+                    onChange={(e) => update(r.key, { role: e.target.value })}
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    title="Pick from list"
+                    style={{ minWidth: 32, minHeight: 32, padding: 4 }}
+                    onClick={() => update(r.key, { custom: false, role: 'Actor' })}
+                  >
+                    ▾
+                  </button>
+                </div>
+              ) : (
+                <select
+                  value={ROLE_OPTIONS.includes(r.role) ? r.role : ''}
+                  onChange={(e) => {
+                    if (e.target.value === '__other__') update(r.key, { custom: true, role: '' })
+                    else update(r.key, { role: e.target.value })
+                  }}
+                >
+                  <option value="">Role…</option>
+                  {ROLE_OPTIONS.map((o) => (
+                    <option key={o} value={o}>
+                      {o}
+                    </option>
+                  ))}
+                  <option value="__other__">Other…</option>
+                </select>
+              )}
+            </div>
+            <div>
+              <span className="field-label">Character</span>
+              <input
+                value={r.character}
+                placeholder={r.group === 'Cast' ? 'e.g. Puck' : '—'}
+                onChange={(e) => update(r.key, { character: e.target.value })}
+              />
+            </div>
+            <button
+              type="button"
+              className="icon-btn danger multi-add-remove"
+              onClick={() => removeRow(r.key)}
+              aria-label="Remove row"
+              title="Remove row"
+              disabled={rows.length === 1}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <button type="button" className="btn btn-sm" onClick={addRow}>
+        + Add another row
+      </button>
+
+      <p className="hint" style={{ marginTop: 12 }}>
+        Tip: add email &amp; phone afterward by tapping each person.
       </p>
       <div className="modal-actions">
         <button className="btn btn-ghost" onClick={onClose}>
           Cancel
         </button>
-        <button className="btn btn-primary" disabled={parsed.length === 0} onClick={() => onAdd(parsed)}>
-          Add {parsed.length || ''} {parsed.length === 1 ? 'person' : 'people'}
+        <button className="btn btn-primary" disabled={ready.length === 0} onClick={save}>
+          Add {ready.length || ''} {ready.length === 1 ? 'person' : 'people'}
         </button>
       </div>
     </Modal>

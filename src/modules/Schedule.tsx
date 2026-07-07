@@ -328,10 +328,10 @@ function EventRow({
                 : '🖊 Sign-in · Upload'
               : '🖊 Sign-in Sheet'}
           </button>
+          <button className="btn btn-sm btn-ghost" onClick={onView} title="View details">
+            View
+          </button>
           <div className="row-actions">
-            <button className="icon-btn" onClick={onView} aria-label="View" title="View">
-              👁
-            </button>
             <ConfirmButton className="icon-btn danger" onConfirm={onDelete}>🗑</ConfirmButton>
           </div>
         </div>
@@ -1007,7 +1007,7 @@ function SignedSheetPanel({ event }: { event: ScheduleEvent }) {
           </label>
           {uploadedAt && url && (
             <a className="btn btn-sm" href={url} target="_blank" rel="noreferrer">
-              👁 View full size
+              View full size
             </a>
           )}
           {uploadedAt && (

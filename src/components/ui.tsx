@@ -6,10 +6,13 @@ export function Modal({
   title,
   onClose,
   children,
+  className,
 }: {
   title: string
   onClose: () => void
   children: ReactNode
+  /** Extra class on the .modal panel, e.g. "modal-wide" for wider forms. */
+  className?: string
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -24,7 +27,7 @@ export function Modal({
   // the modal behind the sidebar. Centers over the whole screen every time.
   return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className={`modal ${className ?? ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <h2 style={{ margin: 0 }}>{title}</h2>
           <button className="icon-btn" onClick={onClose} aria-label="Close">

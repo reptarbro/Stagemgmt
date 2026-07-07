@@ -109,7 +109,7 @@ export function Script() {
             </div>
             <div className="row wrap" style={{ gap: 8 }}>
               <button className="btn btn-primary" style={{ minWidth: 128, justifyContent: 'center' }} onClick={() => open(false)}>
-                👁 View
+                View
               </button>
               <button className="btn" style={{ minWidth: 128, justifyContent: 'center' }} onClick={() => open(true)}>
                 ⬇ Download

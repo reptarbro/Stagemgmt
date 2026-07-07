@@ -82,7 +82,7 @@ export function Settings() {
                 setMsg('Viewing the sample — see the Production Hub.')
               }}
             >
-              👁 View sample
+              View sample
             </button>
             <ConfirmButton
               className="btn btn-danger"
