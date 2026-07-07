@@ -284,17 +284,16 @@ function CastListSheet({
       <table className="sheet-table">
         <thead>
           <tr>
-            <th style={{ width: '20%' }}>Name</th>
-            <th style={{ width: '13%' }}>Group</th>
-            <th style={{ width: '22%' }}>Role / Character</th>
-            <th style={{ width: '25%' }}>Contact</th>
-            <th style={{ width: '20%' }}>Emergency</th>
+            <th style={{ width: '24%' }}>Name</th>
+            <th style={{ width: '15%' }}>Group</th>
+            <th style={{ width: '28%' }}>Role / Character</th>
+            <th style={{ width: '33%' }}>Contact</th>
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={5} className="muted">No one on the roster yet.</td>
+              <td colSpan={4} className="muted">No one on the roster yet.</td>
             </tr>
           ) : (
             rows.map((p) => (
@@ -314,11 +313,6 @@ function CastListSheet({
                   {p.email || ''}
                   {p.email && p.phone ? <br /> : null}
                   {p.phone || (!p.email ? '—' : '')}
-                </td>
-                <td>
-                  {p.emergencyContactName
-                    ? `${p.emergencyContactName}${p.emergencyContactPhone ? ` · ${p.emergencyContactPhone}` : ''}`
-                    : '—'}
                 </td>
               </tr>
             ))
