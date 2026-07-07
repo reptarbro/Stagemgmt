@@ -4,6 +4,8 @@ import { PageHead, ConfirmButton } from '../components/ui'
 import { markBackedUp } from '../lib/storage'
 import { slug } from '../lib/exporters'
 import { buildBundleString, applyBackupText } from '../lib/backup'
+import { CloudSync } from '../components/CloudSync'
+import { CLOUD_ENABLED } from '../lib/cloud/config'
 
 export function Settings() {
   const {
@@ -174,6 +176,8 @@ export function Settings() {
           this device has changes you want to keep.
         </p>
       </div>
+
+      {CLOUD_ENABLED && <CloudSync />}
 
       <div className="card">
         <div className="card-title">Help &amp; feedback</div>
