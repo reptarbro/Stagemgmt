@@ -3,6 +3,7 @@ import { useStore } from '../lib/store'
 import { supa } from '../lib/cloud/client'
 import { pushAll, pullAll, lastSyncedAt, cloudHasData } from '../lib/cloud/sync'
 import { ConfirmButton } from './ui'
+import { GoogleG } from './GoogleG'
 
 type Stage = 'loading' | 'email' | 'sent' | 'in'
 
@@ -98,6 +99,16 @@ export function CloudSync() {
     }
   }
 
+  const signInGoogle = async () => {
+    setMsg(null)
+    const { error } = await supa().auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: appBaseUrl() },
+    })
+    // On success the browser redirects to Google; only errors return here.
+    if (error) setMsg(error.message)
+  }
+
   const signOut = async () => {
     await supa().auth.signOut()
     setMsg('Signed out. Your data stays on this device.')
@@ -146,21 +157,31 @@ export function CloudSync() {
       {stage === 'loading' && <p className="small muted">Checking sign-in…</p>}
 
       {stage === 'email' && (
-        <div className="row wrap" style={{ gap: 8, alignItems: 'flex-end' }}>
-          <label className="field" style={{ marginBottom: 0, flex: 1, minWidth: 200 }}>
-            <span className="field-label">Email</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-            />
-          </label>
-          <button className="btn btn-primary" onClick={sendLink} disabled={busy || !email.trim()}>
-            {busy ? '…' : 'Email me a sign-in link'}
+        <>
+          <button className="btn" style={{ width: '100%', justifyContent: 'center' }} onClick={signInGoogle}>
+            <GoogleG /> Continue with Google
           </button>
-        </div>
+          <div className="row" style={{ gap: 10, alignItems: 'center', margin: '10px 0' }}>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            <span className="hint">or use email</span>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+          </div>
+          <div className="row wrap" style={{ gap: 8, alignItems: 'flex-end' }}>
+            <label className="field" style={{ marginBottom: 0, flex: 1, minWidth: 200 }}>
+              <span className="field-label">Email</span>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+            </label>
+            <button className="btn btn-primary" onClick={sendLink} disabled={busy || !email.trim()}>
+              {busy ? '…' : 'Email me a sign-in link'}
+            </button>
+          </div>
+        </>
       )}
 
       {stage === 'sent' && (

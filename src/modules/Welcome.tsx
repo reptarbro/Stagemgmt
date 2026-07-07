@@ -7,6 +7,7 @@ import { applyBackupText } from '../lib/backup'
 import { CLOUD_ENABLED } from '../lib/cloud/config'
 import { supa } from '../lib/cloud/client'
 import { cloudHasData, pullAll } from '../lib/cloud/sync'
+import { GoogleG } from '../components/GoogleG'
 
 export function Welcome() {
   const { createProduction, loadSampleProduction, setActiveProduction, importJSON, data } = useStore()
@@ -59,6 +60,15 @@ export function Welcome() {
     setPulling(false)
     if (error) setCloudMsg(error.message)
     else setCloudStage('sent')
+  }
+
+  const signInGoogle = async () => {
+    setCloudMsg(null)
+    const { error } = await supa().auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.href.split('#')[0].split('?')[0] },
+    })
+    if (error) setCloudMsg(error.message)
   }
 
   const loadFromCloud = async () => {
@@ -185,6 +195,18 @@ export function Welcome() {
               <Divider label="or sync across your devices" />
               {cloudStage === 'out' && (
                 <>
+                  <button
+                    className="btn"
+                    style={{ width: '100%', justifyContent: 'center' }}
+                    onClick={signInGoogle}
+                  >
+                    <GoogleG /> Continue with Google
+                  </button>
+                  <div className="row" style={{ gap: 10, alignItems: 'center', margin: '10px 0' }}>
+                    <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                    <span className="hint">or use email</span>
+                    <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                  </div>
                   <div className="row" style={{ gap: 8, alignItems: 'flex-end' }}>
                     <label className="field" style={{ marginBottom: 0, flex: 1 }}>
                       <span className="field-label">Email</span>
