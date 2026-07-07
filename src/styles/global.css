@@ -749,8 +749,8 @@ tbody tr:hover {
   padding: 1px 4px;
   line-height: 1.4;
 }
-.ice-badge:hover,
-.ice-badge:focus-visible {
+.ice-badge:focus-visible,
+.ice-badge.open {
   background: var(--bg-elev-2);
   outline: none;
 }
@@ -759,10 +759,21 @@ tbody tr:hover {
   font-size: 0.72rem;
   white-space: nowrap;
 }
-.ice-badge:hover .ice-detail,
-.ice-badge:focus-visible .ice-detail,
-.ice-badge.open .ice-detail {
+/* The click/tap toggle (.open) is the source of truth so a second tap always
+   hides it. Hover-preview is layered on ONLY for real pointer devices — on
+   touch, iOS keeps a sticky :hover after a tap, which would otherwise pin the
+   contact open until you tapped elsewhere. */
+.ice-badge.open .ice-detail,
+.ice-badge:focus-visible .ice-detail {
   display: inline;
+}
+@media (hover: hover) {
+  .ice-badge:hover {
+    background: var(--bg-elev-2);
+  }
+  .ice-badge:hover .ice-detail {
+    display: inline;
+  }
 }
 
 /* ---------- Misc ---------- */
