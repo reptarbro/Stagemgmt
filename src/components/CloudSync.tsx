@@ -4,7 +4,12 @@ import { supa } from '../lib/cloud/client'
 import { pushAll, pullAll, lastSyncedAt } from '../lib/cloud/sync'
 import { ConfirmButton } from './ui'
 
-type Stage = 'loading' | 'email' | 'code' | 'in'
+type Stage = 'loading' | 'email' | 'sent' | 'in'
+
+/** The app's base URL (no hash route), used as the magic-link return target. */
+function appBaseUrl(): string {
+  return window.location.href.split('#')[0].split('?')[0]
+}
 
 /** Optional account-backed sync. Signed out, it changes nothing — the app stays
     local-first. Signed in, you can Push this device's data to the cloud and Pull
@@ -13,7 +18,6 @@ export function CloudSync() {
   const { exportJSON, importJSON } = useStore()
   const [stage, setStage] = useState<Stage>('loading')
   const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [synced, setSynced] = useState<string | null>(lastSyncedAt())
@@ -47,46 +51,24 @@ export function CloudSync() {
     }
   }, [])
 
-  const sendCode = async () => {
+  const sendLink = async () => {
     if (!email.trim()) return
     setBusy(true)
     setMsg(null)
     const { error } = await supa().auth.signInWithOtp({
       email: email.trim(),
-      options: { shouldCreateUser: true },
+      options: { shouldCreateUser: true, emailRedirectTo: appBaseUrl() },
     })
     setBusy(false)
     if (error) setMsg(error.message)
     else {
-      setStage('code')
-      setMsg('Check your email for a 6-digit code and enter it below.')
+      setStage('sent')
+      setMsg(null)
     }
-  }
-
-  const verify = async () => {
-    if (!code.trim()) return
-    setBusy(true)
-    setMsg(null)
-    // A first-time email sends a "signup" OTP; a returning email sends an "email"
-    // (magic-link) OTP. Try both so the same code box works either way.
-    const token = code.trim()
-    let lastErr: string | null = null
-    for (const type of ['email', 'signup'] as const) {
-      const { error } = await supa().auth.verifyOtp({ email: email.trim(), token, type })
-      if (!error) {
-        lastErr = null
-        break
-      }
-      lastErr = error.message
-    }
-    setBusy(false)
-    if (lastErr) setMsg(lastErr)
-    else setMsg(null) // onAuthStateChange flips to 'in'
   }
 
   const signOut = async () => {
     await supa().auth.signOut()
-    setCode('')
     setMsg('Signed out. Your data stays on this device.')
   }
 
@@ -144,30 +126,26 @@ export function CloudSync() {
               autoComplete="email"
             />
           </label>
-          <button className="btn btn-primary" onClick={sendCode} disabled={busy || !email.trim()}>
-            {busy ? '…' : 'Email me a code'}
+          <button className="btn btn-primary" onClick={sendLink} disabled={busy || !email.trim()}>
+            {busy ? '…' : 'Email me a sign-in link'}
           </button>
         </div>
       )}
 
-      {stage === 'code' && (
-        <div className="row wrap" style={{ gap: 8, alignItems: 'flex-end' }}>
-          <label className="field" style={{ marginBottom: 0, flex: 1, minWidth: 160 }}>
-            <span className="field-label">6-digit code (from your email)</span>
-            <input
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="123456"
-            />
-          </label>
-          <button className="btn btn-primary" onClick={verify} disabled={busy || !code.trim()}>
-            {busy ? '…' : 'Verify & sign in'}
-          </button>
-          <button className="btn btn-ghost" onClick={() => setStage('email')} disabled={busy}>
-            Back
-          </button>
+      {stage === 'sent' && (
+        <div>
+          <p className="small" style={{ margin: '2px 0 10px' }}>
+            📩 Sign-in link sent to <strong>{email}</strong>. Open it <strong>on this device</strong> —
+            you'll come back here signed in. (Same tab or a new one is fine.)
+          </p>
+          <div className="row wrap" style={{ gap: 8 }}>
+            <button className="btn btn-ghost" onClick={sendLink} disabled={busy}>
+              {busy ? '…' : 'Resend link'}
+            </button>
+            <button className="btn btn-ghost" onClick={() => setStage('email')} disabled={busy}>
+              Use a different email
+            </button>
+          </div>
         </div>
       )}
 

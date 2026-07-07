@@ -3,15 +3,19 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config'
 
 let client: SupabaseClient | null = null
 
-/** Lazy singleton Supabase client. OTP (email-code) sign-in, so we don't parse
-    the URL for a session — that keeps it clear of the app's HashRouter hash. */
+/** Lazy singleton Supabase client. Magic-link sign-in via the PKCE flow: the
+    email link returns to the app with `?code=` (a query param, so it doesn't
+    collide with the app's HashRouter `#` route), which the client exchanges for
+    a session automatically on load. Uses the default email — no custom SMTP or
+    template needed. */
 export function supa(): SupabaseClient {
   if (!client) {
     client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: false,
+        detectSessionInUrl: true,
+        flowType: 'pkce',
         storageKey: 'standby.auth',
       },
     })
