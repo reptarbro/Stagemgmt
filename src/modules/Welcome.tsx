@@ -1,9 +1,12 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { ReqStar } from '../components/ui'
 import { StandbyMark, APP_NAME } from '../components/Brand'
 import { applyBackupText } from '../lib/backup'
+import { CLOUD_ENABLED } from '../lib/cloud/config'
+import { supa } from '../lib/cloud/client'
+import { cloudHasData, pullAll } from '../lib/cloud/sync'
 
 export function Welcome() {
   const { createProduction, loadSampleProduction, setActiveProduction, importJSON, data } = useStore()
@@ -13,6 +16,41 @@ export function Welcome() {
   const [venue, setVenue] = useState('')
   const [importErr, setImportErr] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  // When a magic-link sign-in lands here (a fresh device shows Welcome), surface
+  // the account and a one-tap restore of the shows saved in the cloud.
+  const [cloudEmail, setCloudEmail] = useState<string | null>(null)
+  const [cloudReady, setCloudReady] = useState(false)
+  const [pulling, setPulling] = useState(false)
+
+  useEffect(() => {
+    if (!CLOUD_ENABLED) return
+    let alive = true
+    const check = async () => {
+      try {
+        const { data: u } = await supa().auth.getUser()
+        if (!alive || !u.user) return
+        setCloudEmail(u.user.email ?? '')
+        setCloudReady(await cloudHasData())
+      } catch {
+        /* offline or signed out */
+      }
+    }
+    void check()
+    const { data: sub } = supa().auth.onAuthStateChange(() => void check())
+    return () => {
+      alive = false
+      sub.subscription.unsubscribe()
+    }
+  }, [])
+
+  const loadFromCloud = async () => {
+    setPulling(true)
+    setImportErr(null)
+    const r = await pullAll(importJSON)
+    setPulling(false)
+    if (r.ok) navigate('/hub')
+    else setImportErr(r.error ?? 'Could not load your cloud shows.')
+  }
 
   const onImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -122,6 +160,26 @@ export function Welcome() {
               Create Production →
             </button>
           </form>
+
+          {/* 1b) Signed in with cloud data → load it right here (fresh-device landing) */}
+          {cloudEmail && cloudReady && (
+            <>
+              <Divider label="or load your synced shows" />
+              <div className="card" style={{ background: 'var(--bg-elev-2)', borderColor: 'var(--accent-strong)' }}>
+                <div className="small" style={{ marginBottom: 8 }}>
+                  Signed in as <strong>{cloudEmail}</strong>. Your saved shows are in the cloud.
+                </div>
+                <button
+                  className="btn btn-primary"
+                  style={{ width: '100%' }}
+                  onClick={loadFromCloud}
+                  disabled={pulling}
+                >
+                  {pulling ? 'Loading…' : '⤵ Load my shows from the cloud'}
+                </button>
+              </div>
+            </>
+          )}
 
           {/* 2) Open an existing production (only if you already have some) */}
           {realProductions.length > 0 && (

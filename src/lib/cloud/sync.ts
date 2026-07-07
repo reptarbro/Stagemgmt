@@ -17,6 +17,14 @@ export async function currentUser() {
 export function lastSyncedAt(): string | null {
   return localStorage.getItem(LAST_SYNC_KEY)
 }
+
+/** Whether the signed-in account already has a saved copy in the cloud. */
+export async function cloudHasData(): Promise<boolean> {
+  const user = await currentUser()
+  if (!user) return false
+  const { data } = await supa().from('app_state').select('user_id').eq('user_id', user.id).maybeSingle()
+  return !!data
+}
 function markSynced() {
   localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString())
 }

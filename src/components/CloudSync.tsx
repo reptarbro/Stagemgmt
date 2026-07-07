@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../lib/store'
 import { supa } from '../lib/cloud/client'
-import { pushAll, pullAll, lastSyncedAt } from '../lib/cloud/sync'
+import { pushAll, pullAll, lastSyncedAt, cloudHasData } from '../lib/cloud/sync'
 import { ConfirmButton } from './ui'
 
 type Stage = 'loading' | 'email' | 'sent' | 'in'
@@ -15,12 +15,39 @@ function appBaseUrl(): string {
     local-first. Signed in, you can Push this device's data to the cloud and Pull
     it onto another (data model + uploaded script/photos). */
 export function CloudSync() {
-  const { exportJSON, importJSON } = useStore()
+  const { exportJSON, importJSON, data } = useStore()
   const [stage, setStage] = useState<Stage>('loading')
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [synced, setSynced] = useState<string | null>(lastSyncedAt())
+  const handledSignIn = useRef(false)
+
+  // When a session appears (fresh sign-in or restored), guide the next step:
+  // a brand-new device with no shows auto-loads the cloud copy; a device that
+  // already has shows is asked to choose Push or Pull so nothing is clobbered.
+  const onSignedIn = async () => {
+    if (handledSignIn.current) return
+    handledSignIn.current = true
+    const hasLocal = data.productions.some((p) => !p.isSample)
+    let cloud = false
+    try {
+      cloud = await cloudHasData()
+    } catch {
+      /* offline or transient */
+    }
+    if (cloud && !hasLocal) {
+      setBusy(true)
+      const r = await pullAll(importJSON)
+      setBusy(false)
+      setSynced(lastSyncedAt())
+      setMsg(r.ok ? `Loaded your shows from the cloud (${r.files} file(s)).` : r.error ?? 'Could not load.')
+    } else if (cloud && hasLocal) {
+      setMsg('Signed in. A cloud copy exists — Pull to load it here, or Push to overwrite it with this device.')
+    } else {
+      setMsg('Signed in. Tap Push to save this device to the cloud.')
+    }
+  }
 
   useEffect(() => {
     let alive = true
@@ -31,6 +58,7 @@ export function CloudSync() {
         if (data.user) {
           setEmail(data.user.email ?? '')
           setStage('in')
+          void onSignedIn()
         } else setStage('email')
       })
       .catch(() => {
@@ -41,14 +69,17 @@ export function CloudSync() {
       if (session?.user) {
         setEmail(session.user.email ?? '')
         setStage('in')
+        void onSignedIn()
       } else {
         setStage('email')
+        handledSignIn.current = false
       }
     })
     return () => {
       alive = false
       sub.subscription.unsubscribe()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const sendLink = async () => {
