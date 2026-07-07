@@ -332,7 +332,7 @@ function EventRow({
             View
           </button>
           <div className="row-actions">
-            <ConfirmButton className="icon-btn danger" onConfirm={onDelete}>🗑</ConfirmButton>
+            <ConfirmButton className="icon-btn danger" ariaLabel="Delete event" onConfirm={onDelete}>🗑</ConfirmButton>
           </div>
         </div>
       </div>

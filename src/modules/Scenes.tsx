@@ -102,7 +102,7 @@ export function Scenes() {
                     <button className="icon-btn" onClick={() => setEditing(s)} aria-label="Edit" title="Edit">
                       ✎
                     </button>
-                    <ConfirmButton className="icon-btn danger" onConfirm={() => deleteScene(s.id)}>🗑</ConfirmButton>
+                    <ConfirmButton className="icon-btn danger" ariaLabel="Delete scene" onConfirm={() => deleteScene(s.id)}>🗑</ConfirmButton>
                   </div>
                 </div>
               </div>

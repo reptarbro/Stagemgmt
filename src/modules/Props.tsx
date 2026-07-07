@@ -159,7 +159,7 @@ export function Props() {
                         <button className="icon-btn" onClick={() => setEditing(i)} aria-label="Edit" title="Edit">
                           ✎
                         </button>
-                        <ConfirmButton className="icon-btn danger" onConfirm={() => deleteProp(i.id)}>🗑</ConfirmButton>
+                        <ConfirmButton className="icon-btn danger" ariaLabel="Delete item" onConfirm={() => deleteProp(i.id)}>🗑</ConfirmButton>
                       </div>
                     </td>
                   </tr>

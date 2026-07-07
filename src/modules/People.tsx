@@ -208,7 +208,7 @@ export function People() {
                         <button className="icon-btn" onClick={() => setEditing(p)} aria-label="Edit" title="Edit">
                           ✎
                         </button>
-                        <ConfirmButton className="icon-btn danger" onConfirm={() => deletePerson(p.id)}>
+                        <ConfirmButton className="icon-btn danger" ariaLabel="Delete person" onConfirm={() => deletePerson(p.id)}>
                           🗑
                         </ConfirmButton>
                       </div>

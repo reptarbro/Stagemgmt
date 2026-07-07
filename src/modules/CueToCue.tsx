@@ -140,7 +140,7 @@ export function CueToCue() {
                         <button className="icon-btn" onClick={() => setEditing(c)} aria-label="Edit" title="Edit">
                           ✎
                         </button>
-                        <ConfirmButton className="icon-btn danger" onConfirm={() => deleteCue(c.id)}>
+                        <ConfirmButton className="icon-btn danger" ariaLabel="Delete cue" onConfirm={() => deleteCue(c.id)}>
                           🗑
                         </ConfirmButton>
                       </div>

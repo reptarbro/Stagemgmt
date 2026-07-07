@@ -144,7 +144,7 @@ export function LineNotes() {
                         <button className="icon-btn" onClick={() => setEditing(n)} aria-label="Edit">
                           ✎
                         </button>
-                        <ConfirmButton className="icon-btn danger" onConfirm={() => deleteLineNote(n.id)}>🗑</ConfirmButton>
+                        <ConfirmButton className="icon-btn danger" ariaLabel="Delete note" onConfirm={() => deleteLineNote(n.id)}>🗑</ConfirmButton>
                       </div>
                     </td>
                   </tr>

@@ -46,10 +46,16 @@ export function ConfirmButton({
   onConfirm,
   children = 'Delete',
   className = 'btn btn-danger btn-sm',
+  ariaLabel,
+  title,
 }: {
   onConfirm: () => void
   children?: ReactNode
   className?: string
+  /** Accessible name — set for icon-only buttons (🗑) that otherwise have none.
+      Leave unset when `children` is meaningful text (that becomes the name). */
+  ariaLabel?: string
+  title?: string
 }) {
   const [armed, setArmed] = useState(false)
 
@@ -62,6 +68,8 @@ export function ConfirmButton({
   return (
     <button
       className={className}
+      aria-label={ariaLabel}
+      title={title ?? ariaLabel}
       onClick={() => {
         if (armed) {
           onConfirm()

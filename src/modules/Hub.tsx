@@ -78,7 +78,7 @@ export function Hub() {
         </button>
       </div>
 
-      <div className="grid grid-2 mt">
+      <div className="grid grid-2 mt" style={{ alignItems: 'start' }}>
         <div className="card">
           <div className="row-between mb">
             <div className="card-title" style={{ margin: 0 }}>

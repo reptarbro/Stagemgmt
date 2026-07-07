@@ -73,7 +73,7 @@ export function Reports() {
                     <button className="icon-btn" onClick={() => setEditing(r)} aria-label="Edit" title="Edit">
                       ✎
                     </button>
-                    <ConfirmButton className="icon-btn danger" onConfirm={() => deleteReport(r.id)}>🗑</ConfirmButton>
+                    <ConfirmButton className="icon-btn danger" ariaLabel="Delete report" onConfirm={() => deleteReport(r.id)}>🗑</ConfirmButton>
                   </div>
                 </div>
               </div>
