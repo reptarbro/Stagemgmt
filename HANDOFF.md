@@ -72,6 +72,22 @@ happened vs. what you expected · a screenshot if handy.
   scroll affordance, Reports card fix); report PDF **white background**;
   Reports action → **Download PDF** (clean title) + **Email** (mailto with the
   subject pre-filled, no body).
+- v3.6 (branch `claude/modal-form-ui-fixes-xjfci8`): sidebar no longer
+  `position:sticky` so modals never split behind it (z-index 1000); **Add
+  Multiple People** modal (Group/Role dropdowns, Name/Character text, rows
+  inherit prior group/role); emergency contact reduced to a 🚑 marker
+  (name/number on hover-tap + detail view) and dropped from the printed cast
+  sheet; removed the eye (👁) emoji app-wide; date/time inputs render as
+  full-width left-aligned boxes on every engine (no iOS "skinny/empty box");
+  full-bleed dark app/browser icons (no white edges); a11y names on all
+  icon-only buttons; responsive/overlap sweep at 390/412/834/1194/1440 (clean).
+
+## Branding
+The app name is **Standby** everywhere in-app and in the PWA manifest / titles.
+The GitHub repo stays named `Stagemgmt` on purpose — renaming it would change
+the live Pages URL (`reptarbro.github.io/Stagemgmt/`). To make search results
+say "Standby", edit the repo **description** in GitHub settings (external, not
+in this codebase).
 
 ## Backlog
 See `PHASE2.md` for the parked Phase 2 items (cross-device sync/accounts,
