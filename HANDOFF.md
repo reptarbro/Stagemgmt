@@ -3,6 +3,27 @@
 Snapshot for continuing work in a fresh session. **Standby** is a local-first
 stage-management web app (a digital prompt book) for stage managers.
 
+## Start a new session (copy/paste this)
+
+Open a new session on the `reptarbro/Stagemgmt` repo and paste this as the first
+message:
+
+> Continue work on the Standby stage-manager app. Read `HANDOFF.md` first — it
+> has the architecture, branch, and everything shipped so far. Work on branch
+> `claude/stage-manager-app-mr0q9w` (it mirrors `main`). The app is live at
+> https://reptarbro.github.io/Stagemgmt/. I used it on a real show and found
+> bugs to fix. I'll describe each bug (and can attach a backup JSON to
+> reproduce). After fixing, verify, commit, push to `main`, mirror the dev
+> branch, and confirm the Pages deploy is green.
+
+**Before starting, export your data:** in the app, **Settings → Export backup**
+saves a `.json` of your production. Attach it to the new session so the bugs can
+be reproduced (data lives only in your browser; a fresh session won't have it).
+New deploys do **not** erase your data, but export anyway as insurance.
+
+**Report each bug like this:** where (page/module) · what you did · what
+happened vs. what you expected · a screenshot if handy.
+
 ## Where it lives
 - **Live site:** https://reptarbro.github.io/Stagemgmt/
 - **Repo:** reptarbro/Stagemgmt
