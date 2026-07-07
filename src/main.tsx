@@ -23,9 +23,26 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>,
 )
 
-// Register the service worker for offline support (production only).
+// Register the service worker for offline support (production only), and make
+// new deploys self-update: when a new SW takes control, reload once so devices
+// never get stuck on a stale cached build. (The first-ever install doesn't
+// reload — only genuine updates do.)
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  const hadController = !!navigator.serviceWorker.controller
+  let refreshing = false
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || refreshing) return
+    refreshing = true
+    window.location.reload()
+  })
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {})
+    navigator.serviceWorker
+      .register(`${import.meta.env.BASE_URL}sw.js`)
+      .then((reg) => {
+        reg.update()
+        // Re-check for a new deploy periodically while the app is open.
+        setInterval(() => reg.update().catch(() => {}), 60 * 1000)
+      })
+      .catch(() => {})
   })
 }
