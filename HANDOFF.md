@@ -59,7 +59,7 @@ happened vs. what you expected · a screenshot if handy.
   driving Chromium at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`
   against `npx vite preview`. Ad-hoc scripts live in the scratchpad.
 
-## Shipped so far (through v3.5)
+## Shipped so far (through v4.0 — cross-device sync)
 - v1: base modules + screenshot-driven revisions.
 - Rebrand to sage/emerald; renamed to **Standby**; favicon-matched colors.
 - Home landing page (create / open existing / sample); deploy hardening.
@@ -80,7 +80,26 @@ happened vs. what you expected · a screenshot if handy.
   sheet; removed the eye (👁) emoji app-wide; date/time inputs render as
   full-width left-aligned boxes on every engine (no iOS "skinny/empty box");
   full-bleed dark app/browser icons (no white edges); a11y names on all
-  icon-only buttons; responsive/overlap sweep at 390/412/834/1194/1440 (clean).
+  icon-only buttons; responsive/overlap sweep at 390/412/834/1194/1440 (clean);
+  availability conflicts extended to **date ranges + recurring weekly** with an
+  Availability pass; **How Sign-In Works** explainer added to `pitch/`.
+- **v4.0 — CROSS-DEVICE SYNC (milestone, tag `v4.0`).** The app is no longer
+  local-only. Verified live: a production moved iPad → cloud → desktop.
+  - **Cloud Sync (beta)** via **Supabase** (`src/lib/cloud/`): a per-user
+    `app_state` jsonb row + a private Storage bucket for the script PDF /
+    sign-in photos, guarded by row-level security. Manual Push / Pull for v1
+    (last-write-wins, no silent clobber).
+  - **Auth is passwordless:** email magic link (implicit flow, works
+    cross-device) **and Google OAuth** ("Continue with Google"). Google client
+    lives in Supabase (Auth → Providers → Google) — **secret is NOT in the
+    repo** (public). Publishable Supabase creds are in `src/lib/cloud/config.ts`.
+  - **Complete file backup** (`src/lib/backup.ts`): Export/Import now bundles
+    the data model **plus** IndexedDB binaries; a fresh device can Import or
+    sign in and **Load My Shows** straight from the Welcome page.
+  - **Welcome condensed** ("the fold"): one create card + a compact
+    Sign-in / Import / Sample row; **PWA auto-updates** on each deploy.
+  - Supabase project ref: `owqthtxmwsjxqdmehkgz`. Next: auto-sync (push on
+    change, realtime), per-production cloud rows, archiving, teams/sharing.
 
 ## Branding
 The app name is **Standby** everywhere in-app and in the PWA manifest / titles.
