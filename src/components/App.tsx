@@ -5,6 +5,7 @@ import { getLastBackup, markBackedUp } from '../lib/storage'
 import { daysToOpening, cueToCueActive, CUE_WINDOW_DAYS } from '../lib/dates'
 import { ScrollToTop } from './ui'
 import { CloudAutoSync } from './CloudAutoSync'
+import { useSyncStatus } from '../lib/cloud/status'
 import { StandbyMark, APP_NAME, APP_TAGLINE } from './Brand'
 import { NavIcon, type IconName } from './icons'
 import { Welcome } from '../modules/Welcome'
@@ -187,11 +188,34 @@ function Shell() {
 
         <main className="main">
           <div className="main-inner">
+            <SyncConflictBanner />
             <BackupBanner />
             <Outlet />
           </div>
         </main>
       </div>
+    </div>
+  )
+}
+
+/** Shown only when auto-sync detects a real conflict (this device and the cloud
+    both changed since the last sync). Auto-sync stops rather than clobber; the
+    fix is a manual Push or Pull in Settings → Cloud Sync. */
+function SyncConflictBanner() {
+  const { state } = useSyncStatus()
+  const navigate = useNavigate()
+  if (state !== 'conflict') return null
+  return (
+    <div className="backup-banner sync-conflict no-print">
+      <span>
+        ⚠️ This device and your cloud copy have both changed since they last synced,
+        so Standby paused auto-sync to avoid losing either. Choose which one wins.
+      </span>
+      <span className="row" style={{ gap: 8, flexShrink: 0 }}>
+        <button className="btn btn-sm btn-primary" onClick={() => navigate('/settings')}>
+          Resolve in Settings
+        </button>
+      </span>
     </div>
   )
 }

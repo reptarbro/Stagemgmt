@@ -62,8 +62,12 @@ what you expected · a screenshot if handy · which device/browser.
   - `supabase/delete_account.sql` — one-time SQL to install the `delete_account`
     RPC so account deletion also removes the auth user (run in the SQL editor).
   - `src/components/CloudAutoSync.tsx` — Stage 2.1 engine (renders null):
-    reconcile-on-signin + debounced push-on-change, never auto-clobbers when
-    both sides changed. Mounted in `App.tsx`.
+    reconcile on sign-in / focus / return-to-foreground / 30s poll, debounced
+    push-on-change with a flush on hide/close, never auto-clobbers when both
+    sides changed. Mounted in `App.tsx`.
+  - `src/lib/cloud/status.ts` — observable sync state (`useSyncStatus`):
+    idle/syncing/synced/conflict/error. Drives the amber **sync-conflict
+    banner** (`App.tsx`) and the live status + resolve-guidance in `CloudSync`.
   - `src/components/GoogleG.tsx` — Google "G" mark.
 - **UI:** `src/components/App.tsx` (routes + `Shell` sidebar layout),
   `src/components/ui.tsx` (`Modal` — body-portaled), `PrintSheet.tsx`
@@ -138,6 +142,11 @@ what you expected · a screenshot if handy · which device/browser.
   still never auto-clobbers when both sides changed — that's left to manual
   Push/Pull. **Pending my two-device verification** — could not E2E test
   multi-device from the build environment (needs my inbox + signed-in devices).
+- **Sync conflicts are now visible, not silent.** When auto-sync detects that
+  both this device and the cloud changed since the last sync, it surfaces an
+  amber banner (Resolve in Settings) and a callout in the Cloud Sync card
+  explaining Push (this device wins) vs Pull (cloud wins). Resolving via Push or
+  Pull clears it automatically.
 - **Delete my account & data — shipped (code).** Settings → Cloud Sync (signed
   in) has a guarded **Delete account & cloud data** button: it removes the cloud
   data row + all Storage binaries, deletes the auth user via the `delete_account`

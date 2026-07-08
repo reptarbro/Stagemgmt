@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../lib/store'
 import { supa } from '../lib/cloud/client'
 import { pushAll, pullAll, lastSyncedAt, cloudHasData, deleteCloudData, deleteAuthAccount } from '../lib/cloud/sync'
+import { useSyncStatus, setSyncStatus } from '../lib/cloud/status'
 import { ConfirmButton } from './ui'
 import { GoogleG } from './GoogleG'
 
@@ -22,6 +23,7 @@ export function CloudSync() {
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [synced, setSynced] = useState<string | null>(lastSyncedAt())
+  const status = useSyncStatus()
   const handledSignIn = useRef(false)
 
   // When a session appears (fresh sign-in or restored), guide the next step:
@@ -111,6 +113,7 @@ export function CloudSync() {
 
   const signOut = async () => {
     await supa().auth.signOut()
+    setSyncStatus('idle')
     setMsg('Signed out. Your data stays on this device.')
   }
 
@@ -136,6 +139,7 @@ export function CloudSync() {
       const accountGone = await deleteAuthAccount()
       await supa().auth.signOut()
       setSynced(null)
+      setSyncStatus('idle')
       setMsg(
         accountGone
           ? `Account and cloud data deleted (${r.files} file(s) removed). Your copy on this device is untouched — export a backup if you want to keep it.`
@@ -225,10 +229,30 @@ export function CloudSync() {
         <>
           <p className="small" style={{ margin: '2px 0 12px' }}>
             Signed in as <strong>{email}</strong>
-            {synced && (
+            {status.state === 'syncing' && <span className="faint"> · syncing…</span>}
+            {status.state !== 'syncing' && synced && (
               <span className="faint"> · last synced {new Date(synced).toLocaleString()}</span>
             )}
           </p>
+
+          {status.state === 'conflict' && (
+            <div
+              className="card"
+              style={{
+                marginBottom: 12,
+                background: 'rgba(224, 168, 70, 0.10)',
+                borderColor: 'rgba(224, 168, 70, 0.5)',
+              }}
+            >
+              <p className="small" style={{ margin: 0 }}>
+                ⚠️ <strong>Sync conflict.</strong> This device and your cloud copy both changed since
+                they last synced. Pick which one to keep: <strong>Push</strong> to make this device win
+                (overwrites the cloud), or <strong>Pull</strong> to make the cloud win (replaces this
+                device). Export a backup first if you're unsure.
+              </p>
+            </div>
+          )}
+
           <div className="row wrap" style={{ gap: 10 }}>
             <button className="btn btn-primary" onClick={doPush} disabled={busy}>
               ⤴ Push this device → cloud

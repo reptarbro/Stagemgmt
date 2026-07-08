@@ -1193,6 +1193,12 @@ tbody tr:hover {
   color: var(--text);
 }
 
+/* Warning variant — sync conflict (amber, distinct from the sage backup nudge). */
+.backup-banner.sync-conflict {
+  background: linear-gradient(90deg, rgba(224, 168, 70, 0.16), rgba(224, 168, 70, 0.04));
+  border-color: rgba(224, 168, 70, 0.5);
+}
+
 /* ---------- Mobile ergonomics ---------- */
 @media (max-width: 720px) {
   /* 16px inputs prevent iOS Safari from zooming in on focus */

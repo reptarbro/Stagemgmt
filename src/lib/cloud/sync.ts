@@ -3,6 +3,7 @@
 // guarded so it never auto-clobbers when both sides changed.
 import { supa } from './client'
 import { getAllFiles, putFile } from '../storage'
+import { setSyncStatus } from './status'
 
 const BUCKET = 'files'
 const LAST_SYNC_KEY = 'standby.cloud.lastSync'
@@ -54,42 +55,54 @@ export async function cloudHasData(): Promise<boolean> {
   return !!data
 }
 function markSynced() {
-  localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString())
+  const at = new Date().toISOString()
+  localStorage.setItem(LAST_SYNC_KEY, at)
+  setSyncStatus('synced', at)
 }
 
 /** Upload the data model (as one jsonb row) and every stored binary. */
 export async function pushAll(dataJson: string): Promise<{ files: number }> {
   const user = await currentUser()
   if (!user) throw new Error('Not signed in')
+  setSyncStatus('syncing')
 
-  const { error } = await supa()
-    .from('app_state')
-    .upsert({ user_id: user.id, data: JSON.parse(dataJson), updated_at: new Date().toISOString() })
-  if (error) throw new Error(error.message)
+  try {
+    const { error } = await supa()
+      .from('app_state')
+      .upsert({ user_id: user.id, data: JSON.parse(dataJson), updated_at: new Date().toISOString() })
+    if (error) throw new Error(error.message)
 
-  const files = await getAllFiles()
-  for (const f of files) {
-    const path = `${user.id}/${encodeURIComponent(f.key)}`
-    const { error: upErr } = await supa()
-      .storage.from(BUCKET)
-      .upload(path, f.blob, { upsert: true, contentType: f.blob.type || 'application/octet-stream' })
-    if (upErr) throw new Error(upErr.message)
+    const files = await getAllFiles()
+    for (const f of files) {
+      const path = `${user.id}/${encodeURIComponent(f.key)}`
+      const { error: upErr } = await supa()
+        .storage.from(BUCKET)
+        .upload(path, f.blob, { upsert: true, contentType: f.blob.type || 'application/octet-stream' })
+      if (upErr) throw new Error(upErr.message)
+    }
+    markSynced()
+    return { files: files.length }
+  } catch (e) {
+    setSyncStatus('error')
+    throw e
   }
-  markSynced()
-  return { files: files.length }
 }
 
 /** Pull the cloud copy over this device (restores data model + binaries). */
 export async function pullAll(importJSON: ImportFn): Promise<{ ok: boolean; error?: string; files: number }> {
   const user = await currentUser()
   if (!user) return { ok: false, error: 'Not signed in', files: 0 }
+  setSyncStatus('syncing')
 
   const { data, error } = await supa()
     .from('app_state')
     .select('data')
     .eq('user_id', user.id)
     .maybeSingle()
-  if (error) return { ok: false, error: error.message, files: 0 }
+  if (error) {
+    setSyncStatus('error')
+    return { ok: false, error: error.message, files: 0 }
+  }
   if (!data) {
     return { ok: false, error: 'Nothing in the cloud yet — Push from a device that has your show first.', files: 0 }
   }

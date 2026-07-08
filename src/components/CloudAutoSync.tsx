@@ -11,6 +11,7 @@ import {
   setSyncedSignature,
   lastSyncedAt,
 } from '../lib/cloud/sync'
+import { setSyncStatus } from '../lib/cloud/status'
 import type { AppData } from '../lib/types'
 
 const DEBOUNCE_MS = 2500
@@ -70,6 +71,7 @@ export function CloudAutoSync() {
       const cloudSig = dataSignature(JSON.stringify(cloud.data))
       if (cloudSig === localSig) {
         setSyncedSignature(localSig)
+        setSyncStatus('synced')
         return
       }
       const synced = syncedSignature()
@@ -80,7 +82,10 @@ export function CloudAutoSync() {
         return
       }
       // Never synced here, and both sides have (different) data → real conflict.
-      if (synced === null) return
+      if (synced === null) {
+        setSyncStatus('conflict')
+        return
+      }
       // Local unchanged since last sync, cloud moved on → safe to pull.
       if (localSig === synced) {
         const r = await pullAll(importRef.current)
@@ -90,7 +95,10 @@ export function CloudAutoSync() {
       // Local changed since last sync. If the cloud also moved on, that's a
       // conflict → leave it to manual. Otherwise push our edits up.
       const cloudNewer = cloud.updatedAt > (lastSyncedAt() ?? '')
-      if (cloudNewer) return
+      if (cloudNewer) {
+        setSyncStatus('conflict')
+        return
+      }
       await pushAll(localJson)
       setSyncedSignature(localSig)
     } catch {
