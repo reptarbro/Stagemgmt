@@ -108,7 +108,9 @@ the live Pages URL (`reptarbro.github.io/Stagemgmt/`). To make search results
 say "Standby", edit the repo **description** in GitHub settings (external, not
 in this codebase).
 
-## Backlog
-See `PHASE2.md` for the parked Phase 2 items (cross-device sync/accounts,
-shareable read-only link, cast availability form, reminders, company
-registration/subscription, script-page linking, email script to cast, etc.).
+## Roadmap / backlog
+See **`ROADMAP.md`** (canonical) for the forward plan: stages **2.1 harden →
+2.2 go public → 2.3 monetize → 2.4 teams**, plus a closed-beta invite and a
+free-vs-paid split. Cross-device sync/accounts (old "2b") shipped in v4.0.
+`PHASE2.md` is kept as historical context (shareable link, availability form,
+reminders, company registration, script-page linking, email script to cast).

@@ -1,4 +1,11 @@
-# Phase 2 — Roadmap
+# Phase 2 — Roadmap (historical; see ROADMAP.md)
+
+> **Superseded by `ROADMAP.md`.** Item **2b (accounts + cross-device sync)
+> shipped in v4.0**, along with passwordless sign-in and complete backups. The
+> current forward plan, renumbered as stages **2.1 through 2.4** (harden, go
+> public, monetize, teams), lives in `ROADMAP.md`. The remaining ideas below
+> (2a shareable link, 2c availability form, 2d reminders) are folded into those
+> stages. This file is kept for context.
 
 Phase 2 is one shift: the app stops being a private notebook on one device and starts
 talking to a small backend so it can **share, sync, and remind**. Everything below hangs

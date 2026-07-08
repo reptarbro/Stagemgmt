@@ -4,6 +4,7 @@ import { useStore } from '../lib/store'
 import { getLastBackup, markBackedUp } from '../lib/storage'
 import { daysToOpening, cueToCueActive, CUE_WINDOW_DAYS } from '../lib/dates'
 import { ScrollToTop } from './ui'
+import { CloudAutoSync } from './CloudAutoSync'
 import { StandbyMark, APP_NAME, APP_TAGLINE } from './Brand'
 import { NavIcon, type IconName } from './icons'
 import { Welcome } from '../modules/Welcome'
@@ -34,6 +35,7 @@ export function App() {
   return (
     <>
       <ScrollToTop />
+      <CloudAutoSync />
       <Routes>
         {/* Home / landing — every fresh entry starts here. */}
         <Route path="/" element={<Welcome />} />

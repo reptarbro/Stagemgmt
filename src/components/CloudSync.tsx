@@ -226,8 +226,10 @@ export function CloudSync() {
             </button>
           </div>
           <p className="hint" style={{ marginTop: 10 }}>
-            Pull <strong>replaces</strong> this device's data with the cloud copy. Push overwrites the
-            cloud with this device. (Beta: manual, last-write-wins — automatic sync comes next.)
+            Standby syncs automatically while you are signed in: changes upload on their own, and this
+            device catches up when you open it. Push and Pull are manual overrides. Pull{' '}
+            <strong>replaces</strong> this device with the cloud copy, and Push overwrites the cloud with
+            this device.
           </p>
         </>
       )}

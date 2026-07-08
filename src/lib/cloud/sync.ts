@@ -1,11 +1,39 @@
-// Cloud Sync (beta): manual push/pull of the whole app state + binaries.
-// v1 is deliberately explicit (no background sync) so nothing is ever clobbered
-// without the user asking — it's account-backed export/import, essentially.
+// Cloud Sync (beta): the whole app state + binaries. Manual Push/Pull plus an
+// auto-sync engine (see CloudAutoSync) that pushes on change and pulls on open,
+// guarded so it never auto-clobbers when both sides changed.
 import { supa } from './client'
 import { getAllFiles, putFile } from '../storage'
 
 const BUCKET = 'files'
 const LAST_SYNC_KEY = 'standby.cloud.lastSync'
+const SIG_KEY = 'standby.cloud.sig'
+
+/** Fast, stable signature of a JSON string (djb2) to detect real data changes. */
+export function dataSignature(s: string): string {
+  let h = 5381
+  for (let i = 0; i < s.length; i++) h = (((h << 5) + h) + s.charCodeAt(i)) | 0
+  return String(h >>> 0)
+}
+/** The signature stored at the last successful sync (push or pull). */
+export function syncedSignature(): string | null {
+  return localStorage.getItem(SIG_KEY)
+}
+export function setSyncedSignature(sig: string) {
+  localStorage.setItem(SIG_KEY, sig)
+}
+
+/** Peek at the cloud copy (data + updated_at) without importing it. */
+export async function fetchCloudState(): Promise<{ data: unknown; updatedAt: string } | null> {
+  const user = await currentUser()
+  if (!user) return null
+  const { data, error } = await supa()
+    .from('app_state')
+    .select('data, updated_at')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (error || !data) return null
+  return { data: data.data, updatedAt: data.updated_at as string }
+}
 
 export type ImportFn = (json: string) => { ok: boolean; error?: string }
 
