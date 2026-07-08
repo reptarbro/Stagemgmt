@@ -11,7 +11,7 @@ import {
   setSyncedSignature,
   lastSyncedAt,
 } from '../lib/cloud/sync'
-import { setSyncStatus } from '../lib/cloud/status'
+import { setSyncStatus, getSyncStatus } from '../lib/cloud/status'
 import type { AppData } from '../lib/types'
 
 const DEBOUNCE_MS = 2500
@@ -115,6 +115,9 @@ export function CloudAutoSync() {
       clearTimeout(pushTimer.current)
       pushTimer.current = null
     }
+    // Never overwrite the cloud on the way out when a conflict is already known —
+    // the user must resolve it with a manual Push/Pull, same as reconcile.
+    if (getSyncStatus().state === 'conflict') return
     const json = exportRef.current()
     const sig = dataSignature(json)
     if (sig === syncedSignature()) return // nothing new
@@ -164,13 +167,13 @@ export function CloudAutoSync() {
     if (sig === syncedSignature()) return // nothing new since last sync
     if (!hasRealData(json)) return // don't push an empty state over the cloud
     if (pushTimer.current) clearTimeout(pushTimer.current)
-    pushTimer.current = setTimeout(async () => {
-      try {
-        await pushAll(json)
-        setSyncedSignature(sig)
-      } catch {
-        /* transient; recovered on next change, on hide (flush), or reopen */
-      }
+    pushTimer.current = setTimeout(() => {
+      pushTimer.current = null
+      // Reconcile instead of a blind push: it re-checks the cloud against our
+      // last sync and flags a conflict (rather than clobbering) if the cloud
+      // moved on meanwhile. It reads the latest local state and respects the
+      // shared sync lock, so it can't race a poll/focus reconcile.
+      void reconcile()
     }, DEBOUNCE_MS)
     return () => {
       if (pushTimer.current) clearTimeout(pushTimer.current)
