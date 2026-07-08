@@ -9,11 +9,36 @@ const BUCKET = 'files'
 const LAST_SYNC_KEY = 'standby.cloud.lastSync'
 const SIG_KEY = 'standby.cloud.sig'
 
-/** Fast, stable signature of a JSON string (djb2) to detect real data changes. */
-export function dataSignature(s: string): string {
+function djb2(s: string): string {
   let h = 5381
   for (let i = 0; i < s.length; i++) h = (((h << 5) + h) + s.charCodeAt(i)) | 0
   return String(h >>> 0)
+}
+
+/** Serialize a value with object keys sorted recursively, so two structurally
+    identical values always produce the same string regardless of key insertion
+    order or whitespace. Arrays keep their order (it's meaningful). */
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null'
+  if (Array.isArray(value)) return '[' + value.map(stableStringify).join(',') + ']'
+  const obj = value as Record<string, unknown>
+  const keys = Object.keys(obj).sort()
+  return '{' + keys.map((k) => JSON.stringify(k) + ':' + stableStringify(obj[k])).join(',') + '}'
+}
+
+/** Fast, stable signature (djb2) of the app data, used to detect real changes.
+    Input is a JSON string; it's canonicalized first (keys sorted, whitespace
+    stripped) so a pretty-printed local copy and a compact, key-reordered copy
+    round-tripped through Postgres jsonb hash to the SAME value for identical
+    data — otherwise the "already in sync" check never matches and the auto-sync
+    engine churns (pull/push on every poll and focus). Falls back to hashing the
+    raw string if it isn't valid JSON. */
+export function dataSignature(s: string): string {
+  try {
+    return djb2(stableStringify(JSON.parse(s)))
+  } catch {
+    return djb2(s)
+  }
 }
 /** The signature stored at the last successful sync (push or pull). */
 export function syncedSignature(): string | null {
