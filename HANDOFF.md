@@ -12,12 +12,15 @@ message:
 > file) — it has the architecture, branch, and everything shipped so far — then
 > read `ROADMAP.md` for the forward plan. Work on branch
 > `claude/modal-form-ui-fixes-xjfci8` (it mirrors `main`). The app is live at
-> https://reptarbro.github.io/Stagemgmt/ and is at **v4.0**: cross-device Cloud
-> Sync is live (Supabase + Google/email sign-in, verified iPad → desktop) and
-> **Stage 2.1 auto-sync is deployed** but still pending my two-device
-> verification. We're working through **ROADMAP.md Stage 2.1** (harden the beta).
-> After any change: verify, commit (with the required trailers), push to `main`,
-> mirror the dev branch, and confirm the Pages deploy is green.
+> https://reptarbro.github.io/Stagemgmt/ and is at **v4.0+**. **Stage 2.1 (harden
+> the beta) is done:** cross-device auto-sync is verified on two devices, sync
+> conflicts surface a banner, and "Delete account & data" works end-to-end.
+> **Stage 2.2 (go public) is underway:** Privacy Policy + Terms are live
+> (`/privacy`, `/terms`) and a marketing one-pager is live at `/site/`. **Next
+> up:** pick and wire a custom domain (see "Domain decision" in HANDOFF), then
+> publish Google OAuth out of "Testing." After any change: verify, commit (with
+> the required trailers), push to `main`, mirror the dev branch, and confirm the
+> Pages deploy is green.
 
 **Backups are safe but optional now:** your data lives in this browser AND (when
 signed in) in the cloud. **Settings → Export backup** saves a full bundle
@@ -138,29 +141,51 @@ what you expected · a screenshot if handy · which device/browser.
     (client in Supabase Auth → Providers → Google; **client secret is NOT in
     the repo** — it's public — kept only in Supabase + a password manager).
 
-## Current state (Stage 2.1, in progress)
-- **Auto-sync is deployed and hardened** (`CloudAutoSync`): pushes on change
-  (2.5s debounce), **flushes the pending push when the app is hidden/closing**
-  (so the last desktop edits are never stranded), and reconciles on sign-in,
-  **on focus/return to the foreground, and on a 30s poll while open** (so a
-  device left open still catches another device's changes without a reload). It
-  still never auto-clobbers when both sides changed — that's left to manual
-  Push/Pull. **Pending my two-device verification** — could not E2E test
-  multi-device from the build environment (needs my inbox + signed-in devices).
-- **Sync conflicts are now visible, not silent.** When auto-sync detects that
-  both this device and the cloud changed since the last sync, it surfaces an
-  amber banner (Resolve in Settings) and a callout in the Cloud Sync card
-  explaining Push (this device wins) vs Pull (cloud wins). Resolving via Push or
-  Pull clears it automatically.
-- **Delete my account & data — shipped and live.** Settings → Cloud Sync (signed
-  in) has a guarded **Delete account & cloud data** button: it removes the cloud
-  data row + all Storage binaries, deletes the auth user via the `delete_account`
-  RPC, and signs out. The local device copy is left intact (local-first). The
-  `delete_account` RPC (`supabase/delete_account.sql`) **is installed** in the
-  Supabase project, so full auth-account deletion works end-to-end.
-- **Remaining Stage 2.1 work** (see `ROADMAP.md`): publish Google OAuth out of
-  "Testing", wire Resend email for magic links, add error monitoring; optionally
-  realtime sync (one Supabase publication setting).
+## Current state (Stage 2.1 done · Stage 2.2 underway)
+**Stage 2.1 — harden the beta — DONE:**
+- **Auto-sync deployed, hardened, and two-device verified** (`CloudAutoSync`):
+  pushes on change (2.5s debounce), **flushes the pending push when the app is
+  hidden/closing**, and reconciles on sign-in, **on focus/return to the
+  foreground, and on a 30s poll while open**. Never auto-clobbers when both sides
+  changed — that's left to manual Push/Pull. (Fixed the reported "desktop edits
+  didn't reach the iPad" bug: the receiving device used to reconcile only once at
+  sign-in, and the debounced push could be lost on close.)
+- **Sync conflicts are visible, not silent** (`src/lib/cloud/status.ts` +
+  `useSyncStatus`): amber banner (Resolve in Settings) + a Cloud Sync callout
+  explaining Push (this device wins) vs Pull (cloud wins). Push/Pull clears it.
+- **Delete my account & data — live end-to-end.** Guarded button in Cloud Sync
+  removes the cloud row + all Storage binaries, deletes the auth user via the
+  `delete_account` RPC, and signs out (local copy left intact). The RPC
+  (`supabase/delete_account.sql`) **is installed** in Supabase.
+
+**Stage 2.2 — go public — underway:**
+- **Privacy Policy + Terms are live** as in-app routes `/privacy` and `/terms`
+  (`src/modules/Legal.tsx`), linked from Welcome + Settings. Contact +
+  last-updated are constants at the top of that file (contact =
+  `Tiffany.rexach@gmail.com`). **Still needs a lawyer review before charging money.**
+- **Marketing one-pager is live** at `/site/` (`public/site/index.html`) — a
+  self-contained static page built from the pitch deck, with self-hosted fonts
+  (`public/site/fonts/`) and live-app screenshots (`public/site/shots/`). Tagline
+  used throughout: **"a digital binder for stage managers."** Re-capture shots by
+  driving `vite preview` with playwright-core (see the scratchpad scripts pattern).
+
+**Remaining before a public/paid launch** (see `ROADMAP.md`): custom domain
+(decision below), publish Google OAuth out of "Testing" (now has a privacy-policy
+URL to submit), Resend email, Sentry (hold until just before the closed beta),
+Stripe + a free/paid gate, Supabase Pro.
+
+## Domain decision (pending my purchase)
+Hosting stays free on GitHub Pages (HTTPS + custom domain included), so the whole
+~$50 budget covers the domain (~$10–35/yr). Options ranked: **`standby.show`**
+(theatre-native, top pick), **`getstandby.app`** (safe SaaS pattern),
+`onstandby.app`, `promptbook.app`, `standbybinder.com`. Registrar: Cloudflare
+(cheapest, at-cost, must use their nameservers, thin support) vs Namecheap
+(balanced, any DNS, real support, rising renewals) vs GoDaddy (works, ~2×, pushy
+upsells, but consolidates with my existing photography domain) — Porkbun is a
+cheap third option. **When a domain is bought:** add a `CNAME` file (repo root /
+`public/`) with the domain, set the DNS records at the registrar, and confirm
+HTTPS in GitHub Pages settings.
+
 - Environment quirks to expect: git **tags can't push** through this
   environment's proxy (branch pushes only — the `v4.0` tag is local); GitHub
   Actions MCP output can be too large (save to file + parse); `playwright-core`
