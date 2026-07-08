@@ -19,6 +19,7 @@ import { Script } from '../modules/Script'
 import { CueToCue } from '../modules/CueToCue'
 import { Reports } from '../modules/Reports'
 import { Settings } from '../modules/Settings'
+import { PrivacyPolicy, Terms } from '../modules/Legal'
 
 const NAV: { to: string; icon: IconName; label: string }[] = [
   { to: '/hub', icon: 'hub', label: 'Production Hub' },
@@ -40,6 +41,9 @@ export function App() {
       <Routes>
         {/* Home / landing — every fresh entry starts here. */}
         <Route path="/" element={<Welcome />} />
+        {/* Standalone legal pages — linkable without an active production. */}
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<Terms />} />
         {/* App pages share the sidebar shell. */}
         <Route element={<Shell />}>
           <Route path="/hub" element={<Hub />} />

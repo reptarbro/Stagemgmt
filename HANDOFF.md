@@ -73,7 +73,12 @@ what you expected · a screenshot if handy · which device/browser.
   `src/components/ui.tsx` (`Modal` — body-portaled), `PrintSheet.tsx`
   (print/PDF sheets), `src/styles/global.css` (theme + responsive rules).
 - **Modules** (`src/modules/`): Welcome, Hub, People, Schedule, Scenes, Props,
-  LineNotes, Script, CueToCue, Reports, Settings.
+  LineNotes, Script, CueToCue, Reports, Settings, Legal (Privacy/Terms).
+- **Legal:** `src/modules/Legal.tsx` renders standalone `/privacy` and `/terms`
+  pages (top-level routes, no active production needed), linked from Welcome and
+  Settings. Plain-language, app-specific. Update `UPDATED`/`CONTACT` constants
+  there when the text or contact changes. Needs counsel review before monetizing
+  (see ROADMAP Stage 2.2).
 - **Theme:** T-REX × brooklynONE palette (near-black bg, ivory text, sage +
   emerald accents); Montserrat (display) + Raleway (body) via @fontsource.
 

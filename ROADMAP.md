@@ -40,10 +40,14 @@ Estimate: 1 to 2 weeks plus outside help.*
 
 - **Custom domain** (for example getstandby.app). Better URL, email delivery,
   and sign-in branding. About 15 dollars a year.
-- **Privacy Policy and Terms of Service. Hard blocker.** The app stores other
-  people's personal data (cast emails, phone numbers, emergency contacts), so a
-  public launch needs both, and Google's OAuth publishing will ask for them.
-  Start with a reputable generator, then have a lawyer review before taking money.
+- **Privacy Policy and Terms of Service. Hard blocker — drafted and live.**
+  Plain-language, app-specific pages ship at `/privacy` and `/terms` (in-app
+  routes; linked from Welcome + Settings), covering local-first storage,
+  Supabase as processor, Google/email sign-in, third-party personal data, and
+  the export/delete rights that already exist. **Still to do:** have a lawyer
+  review before taking money, and set the contact address (currently the account
+  email). Note: these are JS-rendered routes — if Google's OAuth verifier needs
+  a no-JS-crawlable URL, add static mirrors under `public/` at that point.
 - **Data rights.** Document what is stored, for how long, and how to export or
   delete it. The export and delete building blocks already exist.
 - **Supabase Pro** (about 25 dollars a month) once real users arrive, so the

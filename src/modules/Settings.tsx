@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { PageHead, ConfirmButton } from '../components/ui'
 import { markBackedUp } from '../lib/storage'
@@ -218,6 +219,12 @@ export function Settings() {
           </ConfirmButton>
         </div>
       )}
+
+      <p className="hint" style={{ textAlign: 'center', marginTop: 4 }}>
+        <Link to="/privacy">Privacy Policy</Link>
+        <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+        <Link to="/terms">Terms of Service</Link>
+      </p>
     </>
   )
 }

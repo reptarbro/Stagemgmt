@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { ReqStar } from '../components/ui'
 import { StandbyMark, APP_NAME } from '../components/Brand'
@@ -294,6 +294,11 @@ export function Welcome() {
         <p className="hint" style={{ textAlign: 'center', margin: '14px 0 0' }}>
           Everything is stored privately in this browser. Export a full backup anytime to move it to
           another device.
+        </p>
+        <p className="hint" style={{ textAlign: 'center', margin: '10px 0 0' }}>
+          <Link to="/privacy">Privacy</Link>
+          <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+          <Link to="/terms">Terms</Link>
         </p>
       </div>
       </div>
