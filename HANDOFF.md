@@ -8,36 +8,58 @@ stage-management web app (a digital prompt book) for stage managers.
 Open a new session on the `reptarbro/Stagemgmt` repo and paste this as the first
 message:
 
-> Continue work on the Standby stage-manager app. Read `HANDOFF.md` first — it
-> has the architecture, branch, and everything shipped so far. Work on branch
-> `claude/stage-manager-app-mr0q9w` (it mirrors `main`). The app is live at
-> https://reptarbro.github.io/Stagemgmt/. I used it on a real show and found
-> bugs to fix. I'll describe each bug (and can attach a backup JSON to
-> reproduce). After fixing, verify, commit, push to `main`, mirror the dev
-> branch, and confirm the Pages deploy is green.
+> Continue work on the Standby stage-manager app. Read `HANDOFF.md` first (this
+> file) — it has the architecture, branch, and everything shipped so far — then
+> read `ROADMAP.md` for the forward plan. Work on branch
+> `claude/modal-form-ui-fixes-xjfci8` (it mirrors `main`). The app is live at
+> https://reptarbro.github.io/Stagemgmt/ and is at **v4.0**: cross-device Cloud
+> Sync is live (Supabase + Google/email sign-in, verified iPad → desktop) and
+> **Stage 2.1 auto-sync is deployed** but still pending my two-device
+> verification. We're working through **ROADMAP.md Stage 2.1** (harden the beta).
+> After any change: verify, commit (with the required trailers), push to `main`,
+> mirror the dev branch, and confirm the Pages deploy is green.
 
-**Before starting, export your data:** in the app, **Settings → Export backup**
-saves a `.json` of your production. Attach it to the new session so the bugs can
-be reproduced (data lives only in your browser; a fresh session won't have it).
-New deploys do **not** erase your data, but export anyway as insurance.
+**Backups are safe but optional now:** your data lives in this browser AND (when
+signed in) in the cloud. **Settings → Export backup** saves a full bundle
+(data + uploaded script/photos) as insurance. New deploys do **not** erase local
+data.
 
-**Report each bug like this:** where (page/module) · what you did · what
-happened vs. what you expected · a screenshot if handy.
+**When reporting a bug:** where (page/module) · what you did · what happened vs.
+what you expected · a screenshot if handy · which device/browser.
 
 ## Where it lives
 - **Live site:** https://reptarbro.github.io/Stagemgmt/
 - **Repo:** reptarbro/Stagemgmt
 - **Default branch:** `main` (deploys to GitHub Pages on every push)
-- **Dev branch:** `claude/stage-manager-app-mr0q9w` (kept in sync with `main`)
+- **Dev branch:** `claude/modal-form-ui-fixes-xjfci8` (kept in sync with `main`)
 
 ## Stack & architecture
 - React 18 + TypeScript + Vite; `HashRouter`; `base: './'`.
-- **Local-first, no back-end:** app state → `localStorage`; binary files
-  (uploaded script, signed sign-in sheets) → IndexedDB.
+- **Local-first, optional cloud:** app state → `localStorage`; binary files
+  (uploaded script, signed sign-in sheets) → IndexedDB. Signed in, the same
+  state syncs to Supabase (see below); signed out, nothing leaves the device.
   - `src/lib/store.tsx` — React context store + actions.
   - `src/lib/storage.ts` — persistence, migrations (`normalizeProduction`),
-    IndexedDB helpers (`putFile`/`getFile`/`deleteFile`, `signInKey`).
+    IndexedDB helpers (`putFile`/`getFile`/`deleteFile`, `getAllFiles`,
+    `signInKey`).
   - `src/lib/types.ts` — domain model.
+  - `src/lib/backup.ts` — full bundle export/import (data model **+** IndexedDB
+    binaries as base64): `buildBundleString`, `applyBackupText`.
+- **Cloud Sync (`src/lib/cloud/`):**
+  - `config.ts` — Supabase URL + **publishable** anon key + `CLOUD_ENABLED`
+    (browser-safe; committed on purpose).
+  - `client.ts` — lazy Supabase client (`flowType:'implicit'`,
+    `detectSessionInUrl`, storageKey `standby.auth`); created at boot in
+    `main.tsx` so magic-link/OAuth tokens are consumed on any route.
+  - `sync.ts` — `pushAll` / `pullAll` (data row + Storage binaries),
+    `fetchCloudState`, `cloudHasData`, `dataSignature` (djb2),
+    `syncedSignature`/`setSyncedSignature`, `lastSyncedAt`.
+  - `src/components/CloudSync.tsx` — Settings card: sign in (Google + email),
+    manual Push/Pull, sign out.
+  - `src/components/CloudAutoSync.tsx` — Stage 2.1 engine (renders null):
+    reconcile-on-signin + debounced push-on-change, never auto-clobbers when
+    both sides changed. Mounted in `App.tsx`.
+  - `src/components/GoogleG.tsx` — Google "G" mark.
 - **UI:** `src/components/App.tsx` (routes + `Shell` sidebar layout),
   `src/components/ui.tsx` (`Modal` — body-portaled), `PrintSheet.tsx`
   (print/PDF sheets), `src/styles/global.css` (theme + responsive rules).
@@ -51,8 +73,8 @@ happened vs. what you expected · a screenshot if handy.
 - Deploy: push to `main` → `.github/workflows/deploy.yml` (main-only,
   no-cancel concurrency, **3 deploy attempts** with back-off for transient
   GitHub Pages errors).
-- Sync dev branch after a push: `git branch -f claude/stage-manager-app-mr0q9w main`
-  then `git push -f origin claude/stage-manager-app-mr0q9w`.
+- Sync dev branch after a push: `git branch -f claude/modal-form-ui-fixes-xjfci8 main`
+  then `git push -f origin claude/modal-form-ui-fixes-xjfci8`.
 
 ## Verification harness (no test framework)
 - `playwright-core` (reinstall with `npm i playwright-core --no-save` if pruned)
@@ -98,8 +120,23 @@ happened vs. what you expected · a screenshot if handy.
     sign in and **Load My Shows** straight from the Welcome page.
   - **Welcome condensed** ("the fold"): one create card + a compact
     Sign-in / Import / Sample row; **PWA auto-updates** on each deploy.
-  - Supabase project ref: `owqthtxmwsjxqdmehkgz`. Next: auto-sync (push on
-    change, realtime), per-production cloud rows, archiving, teams/sharing.
+  - Supabase project ref: `owqthtxmwsjxqdmehkgz`. Google OAuth is configured
+    (client in Supabase Auth → Providers → Google; **client secret is NOT in
+    the repo** — it's public — kept only in Supabase + a password manager).
+
+## Current state (Stage 2.1, in progress)
+- **Auto-sync is deployed** (`CloudAutoSync`): pushes on change (2.5s debounce)
+  and reconciles on sign-in/open. **Pending my two-device verification** — could
+  not E2E test multi-device from the build environment (needs my inbox +
+  signed-in devices). Manual Push/Pull remain as overrides.
+- **Remaining Stage 2.1 work** (see `ROADMAP.md`): publish Google OAuth out of
+  "Testing", wire Resend email for magic links, add "delete my account and
+  data", add error monitoring; optionally realtime sync (one Supabase
+  publication setting).
+- Environment quirks to expect: git **tags can't push** through this
+  environment's proxy (branch pushes only — the `v4.0` tag is local); GitHub
+  Actions MCP output can be too large (save to file + parse); `playwright-core`
+  may be pruned by npm (reinstall `--no-save`); `vite preview` is flaky (retry).
 
 ## Branding
 The app name is **Standby** everywhere in-app and in the PWA manifest / titles.
