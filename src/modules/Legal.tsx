@@ -5,7 +5,7 @@ import { StandbyMark, APP_NAME } from '../components/Brand'
 /** Human-readable "last updated" — bump when the text below changes. */
 const UPDATED = 'July 8, 2026'
 /** Where people reach a human about privacy or these terms. */
-const CONTACT = 'Tiffany@directpromos.com'
+const CONTACT = 'Tiffany.rexach@gmail.com'
 
 /** Shared centered, scrollable shell for the standalone legal pages. */
 function LegalPage({ title, children }: { title: string; children: ReactNode }) {
