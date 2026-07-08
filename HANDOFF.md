@@ -147,13 +147,12 @@ what you expected · a screenshot if handy · which device/browser.
   amber banner (Resolve in Settings) and a callout in the Cloud Sync card
   explaining Push (this device wins) vs Pull (cloud wins). Resolving via Push or
   Pull clears it automatically.
-- **Delete my account & data — shipped (code).** Settings → Cloud Sync (signed
+- **Delete my account & data — shipped and live.** Settings → Cloud Sync (signed
   in) has a guarded **Delete account & cloud data** button: it removes the cloud
   data row + all Storage binaries, deletes the auth user via the `delete_account`
-  RPC, and signs out. The local device copy is left intact (local-first). **One
-  manual step:** run `supabase/delete_account.sql` once in the Supabase SQL
-  editor to install the RPC; until then the app still deletes cloud data + signs
-  out, but the empty auth account lingers.
+  RPC, and signs out. The local device copy is left intact (local-first). The
+  `delete_account` RPC (`supabase/delete_account.sql`) **is installed** in the
+  Supabase project, so full auth-account deletion works end-to-end.
 - **Remaining Stage 2.1 work** (see `ROADMAP.md`): publish Google OAuth out of
   "Testing", wire Resend email for magic links, add error monitoring; optionally
   realtime sync (one Supabase publication setting).
