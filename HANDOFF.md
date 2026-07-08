@@ -55,7 +55,12 @@ what you expected · a screenshot if handy · which device/browser.
     `fetchCloudState`, `cloudHasData`, `dataSignature` (djb2),
     `syncedSignature`/`setSyncedSignature`, `lastSyncedAt`.
   - `src/components/CloudSync.tsx` — Settings card: sign in (Google + email),
-    manual Push/Pull, sign out.
+    manual Push/Pull, sign out, and a guarded **Delete account & cloud data**
+    action (danger zone).
+  - `sync.ts` also has `deleteCloudData` (removes the app_state row + all
+    Storage binaries) and `deleteAuthAccount` (calls the `delete_account` RPC).
+  - `supabase/delete_account.sql` — one-time SQL to install the `delete_account`
+    RPC so account deletion also removes the auth user (run in the SQL editor).
   - `src/components/CloudAutoSync.tsx` — Stage 2.1 engine (renders null):
     reconcile-on-signin + debounced push-on-change, never auto-clobbers when
     both sides changed. Mounted in `App.tsx`.
@@ -129,10 +134,16 @@ what you expected · a screenshot if handy · which device/browser.
   and reconciles on sign-in/open. **Pending my two-device verification** — could
   not E2E test multi-device from the build environment (needs my inbox +
   signed-in devices). Manual Push/Pull remain as overrides.
+- **Delete my account & data — shipped (code).** Settings → Cloud Sync (signed
+  in) has a guarded **Delete account & cloud data** button: it removes the cloud
+  data row + all Storage binaries, deletes the auth user via the `delete_account`
+  RPC, and signs out. The local device copy is left intact (local-first). **One
+  manual step:** run `supabase/delete_account.sql` once in the Supabase SQL
+  editor to install the RPC; until then the app still deletes cloud data + signs
+  out, but the empty auth account lingers.
 - **Remaining Stage 2.1 work** (see `ROADMAP.md`): publish Google OAuth out of
-  "Testing", wire Resend email for magic links, add "delete my account and
-  data", add error monitoring; optionally realtime sync (one Supabase
-  publication setting).
+  "Testing", wire Resend email for magic links, add error monitoring; optionally
+  realtime sync (one Supabase publication setting).
 - Environment quirks to expect: git **tags can't push** through this
   environment's proxy (branch pushes only — the `v4.0` tag is local); GitHub
   Actions MCP output can be too large (save to file + parse); `playwright-core`

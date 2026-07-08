@@ -26,7 +26,9 @@ Estimate: 1 to 2 focused weeks.*
   Google account works, not only listed test users.
 - **Real email.** Add a sending service (Resend) with a verified domain so magic
   links are not rate-limited and do not land in spam.
-- **Account basics.** "Delete my account and data," and a clear "signed in as."
+- **Account basics.** "Delete my account and data" (shipped — a guarded delete
+  in Settings → Cloud Sync; needs `supabase/delete_account.sql` installed once
+  for full auth-user removal), and a clear "signed in as" (shipped).
 - **Safety net.** Error monitoring (Sentry free tier).
 
 **Done when:** a brand-new account can sign in, sync across two devices, and

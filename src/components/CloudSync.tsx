@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../lib/store'
 import { supa } from '../lib/cloud/client'
-import { pushAll, pullAll, lastSyncedAt, cloudHasData } from '../lib/cloud/sync'
+import { pushAll, pullAll, lastSyncedAt, cloudHasData, deleteCloudData, deleteAuthAccount } from '../lib/cloud/sync'
 import { ConfirmButton } from './ui'
 import { GoogleG } from './GoogleG'
 
@@ -128,6 +128,26 @@ export function CloudSync() {
     }
   }
 
+  const doDeleteAccount = async () => {
+    setBusy(true)
+    setMsg(null)
+    try {
+      const r = await deleteCloudData()
+      const accountGone = await deleteAuthAccount()
+      await supa().auth.signOut()
+      setSynced(null)
+      setMsg(
+        accountGone
+          ? `Account and cloud data deleted (${r.files} file(s) removed). Your copy on this device is untouched — export a backup if you want to keep it.`
+          : `Cloud data deleted (${r.files} file(s) removed) and you're signed out. Your copy on this device is untouched.`,
+      )
+    } catch (e) {
+      setMsg(`Delete failed: ${(e as Error).message}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const doPull = async () => {
     setBusy(true)
     setMsg(null)
@@ -231,6 +251,28 @@ export function CloudSync() {
             <strong>replaces</strong> this device with the cloud copy, and Push overwrites the cloud with
             this device.
           </p>
+
+          <div
+            style={{
+              marginTop: 16,
+              paddingTop: 12,
+              borderTop: '1px solid var(--border)',
+            }}
+          >
+            <div className="row wrap" style={{ gap: 10, alignItems: 'center' }}>
+              <ConfirmButton
+                className="btn btn-danger"
+                title="Permanently delete your account and everything stored in the cloud"
+                onConfirm={doDeleteAccount}
+              >
+                🗑 Delete account &amp; cloud data
+              </ConfirmButton>
+            </div>
+            <p className="hint" style={{ marginTop: 8 }}>
+              Removes your cloud copy and account for good. This <strong>cannot be undone.</strong> The
+              copy on this device stays put — export a backup first if you want to keep it.
+            </p>
+          </div>
         </>
       )}
 

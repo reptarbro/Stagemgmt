@@ -111,3 +111,43 @@ export async function pullAll(importJSON: ImportFn): Promise<{ ok: boolean; erro
   if (res.ok) markSynced()
   return { ...res, files: count }
 }
+
+/** Delete everything this account has stored in the cloud: every uploaded
+    binary under the user's folder and the app_state data row. Runs while the
+    session is still valid (call before deleting the auth account / signing
+    out). Does NOT touch this device's local copy — that stays local-first.
+    Returns the number of files removed. */
+export async function deleteCloudData(): Promise<{ files: number }> {
+  const user = await currentUser()
+  if (!user) throw new Error('Not signed in')
+
+  // Remove stored binaries first (script PDF, sign-in photos).
+  let removed = 0
+  const list = await supa().storage.from(BUCKET).list(user.id, { limit: 1000 })
+  if (!list.error && list.data) {
+    const paths = list.data.filter((o) => !o.name.startsWith('.')).map((o) => `${user.id}/${o.name}`)
+    if (paths.length) {
+      const { error } = await supa().storage.from(BUCKET).remove(paths)
+      if (error) throw new Error(error.message)
+      removed = paths.length
+    }
+  }
+
+  // Remove the data row.
+  const { error } = await supa().from('app_state').delete().eq('user_id', user.id)
+  if (error) throw new Error(error.message)
+
+  // Forget the sync markers so nothing tries to re-push a stale copy.
+  localStorage.removeItem(LAST_SYNC_KEY)
+  localStorage.removeItem(SIG_KEY)
+  return { files: removed }
+}
+
+/** Delete the auth account itself via a server-side RPC (`delete_account`, a
+    SECURITY DEFINER function that removes the caller from auth.users — see
+    supabase/delete_account.sql). Returns false if the function isn't installed
+    yet, so the caller can fall back to data-deletion + sign-out. */
+export async function deleteAuthAccount(): Promise<boolean> {
+  const { error } = await supa().rpc('delete_account')
+  return !error
+}
