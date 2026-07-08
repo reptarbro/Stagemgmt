@@ -149,7 +149,11 @@ what you expected · a screenshot if handy · which device/browser.
   foreground, and on a 30s poll while open**. Never auto-clobbers when both sides
   changed — that's left to manual Push/Pull. (Fixed the reported "desktop edits
   didn't reach the iPad" bug: the receiving device used to reconcile only once at
-  sign-in, and the debounced push could be lost on close.)
+  sign-in, and the debounced push could be lost on close.) The debounced push now
+  runs *through* `reconcile()` (not a blind `pushAll`), and `flushPush` bails when
+  a conflict is already known — so a pending push can no longer clobber the cloud
+  after a conflict was detected. The never-auto-clobber guarantee now actually
+  holds for the debounce/flush paths, not just the reconcile path.
 - **Sync conflicts are visible, not silent** (`src/lib/cloud/status.ts` +
   `useSyncStatus`): amber banner (Resolve in Settings) + a Cloud Sync callout
   explaining Push (this device wins) vs Pull (cloud wins). Push/Pull clears it.
