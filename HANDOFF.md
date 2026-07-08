@@ -130,10 +130,14 @@ what you expected · a screenshot if handy · which device/browser.
     the repo** — it's public — kept only in Supabase + a password manager).
 
 ## Current state (Stage 2.1, in progress)
-- **Auto-sync is deployed** (`CloudAutoSync`): pushes on change (2.5s debounce)
-  and reconciles on sign-in/open. **Pending my two-device verification** — could
-  not E2E test multi-device from the build environment (needs my inbox +
-  signed-in devices). Manual Push/Pull remain as overrides.
+- **Auto-sync is deployed and hardened** (`CloudAutoSync`): pushes on change
+  (2.5s debounce), **flushes the pending push when the app is hidden/closing**
+  (so the last desktop edits are never stranded), and reconciles on sign-in,
+  **on focus/return to the foreground, and on a 30s poll while open** (so a
+  device left open still catches another device's changes without a reload). It
+  still never auto-clobbers when both sides changed — that's left to manual
+  Push/Pull. **Pending my two-device verification** — could not E2E test
+  multi-device from the build environment (needs my inbox + signed-in devices).
 - **Delete my account & data — shipped (code).** Settings → Cloud Sync (signed
   in) has a guarded **Delete account & cloud data** button: it removes the cloud
   data row + all Storage binaries, deletes the auth user via the `delete_account`

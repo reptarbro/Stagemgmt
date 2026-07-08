@@ -247,7 +247,7 @@ export function CloudSync() {
           </div>
           <p className="hint" style={{ marginTop: 10 }}>
             Standby syncs automatically while you are signed in: changes upload on their own, and this
-            device catches up when you open it. Push and Pull are manual overrides. Pull{' '}
+            device catches up when you open or return to it. Push and Pull are manual overrides. Pull{' '}
             <strong>replaces</strong> this device with the cloud copy, and Push overwrites the cloud with
             this device.
           </p>
