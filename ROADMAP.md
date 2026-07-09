@@ -65,6 +65,14 @@ is handled, and start using it.
 - **Model: freemium, paywall on sync.** Free covers one production on a single
   device. Paid unlocks cloud sync across devices and unlimited productions. The
   paywall sits exactly on the thing people want and cannot easily do themselves.
+- **Storage tiers (Assets).** The Assets area (headshots, contracts, budgets,
+  design plates — arbitrary files, shipped) is the main driver of cloud-storage
+  cost, so it doubles as a natural paid lever. Free keeps assets on-device and in
+  exported backups; paid syncs them across devices with a generous per-account
+  allowance (e.g. a few GB). A heavier **storage add-on / Company tier** covers
+  companies that keep large design or video files. Surface a usage meter in
+  Settings so it never surprises anyone, and gate uploads gracefully (keep the
+  file local, prompt to upgrade) rather than failing mid-show.
 - **Billing with Stripe.** Stripe Checkout for subscriptions and the Customer
   Portal for self-serve. A Supabase Edge Function receives Stripe webhooks and
   sets a `plan` flag on the user; the app unlocks cloud features when `plan` is
@@ -97,7 +105,10 @@ charge appears in Stripe.
 ## Rough running costs at launch
 Domain about 15 dollars a year, Supabase Pro about 25 dollars a month, Resend
 free to start, Stripe per-transaction only. Roughly 25 to 30 dollars a month plus
-Stripe's cut until volume grows.
+Stripe's cut until volume grows. Note on storage: the free Supabase tier includes
+1 GB of file storage and Pro includes 100 GB — that pool is what the Assets
+feature consumes, so it's the cost line to watch as uploads grow, and the reason
+asset storage is a paid lever above.
 
 ## Recommended sequencing
 Finish **2.1**, then run a small closed beta (5 to 10 stage managers) on the free
@@ -149,6 +160,7 @@ proven, hard-to-replicate value.
 | Cloud sync across devices | No | Yes |
 | Cloud backup and restore of a lost device | No | Yes |
 | Uploaded script and sign-in photos synced | No | Yes |
+| Assets (headshots, contracts, budgets, design files) | On device + in backups | Synced, with a larger storage allowance |
 | Archiving finished shows | No | Yes |
 | Priority support | No | Yes |
 | Shared productions and team roles (Stage 2.4) | No | Team plan |

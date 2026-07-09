@@ -14,10 +14,16 @@ import {
   putScriptFile,
   getScriptFile,
   deleteScriptFile,
+  putFile,
+  getFile,
+  deleteFile,
+  assetKey,
 } from './storage'
 import { makeSampleProduction } from './sample'
 import type {
   AppData,
+  Asset,
+  AssetCategory,
   Attendance,
   Cue,
   LineNote,
@@ -74,6 +80,11 @@ interface StoreValue {
   setScript: (file: File) => Promise<void>
   getScriptURL: () => Promise<string | null>
   removeScript: () => Promise<void>
+  // Assets (general uploaded files: headshots, contracts, budgets…)
+  addAsset: (file: File, meta?: { category?: AssetCategory; personId?: string; note?: string }) => Promise<void>
+  updateAsset: (id: string, patch: Partial<Pick<Asset, 'filename' | 'category' | 'personId' | 'note'>>) => void
+  getAssetURL: (id: string) => Promise<string | null>
+  removeAsset: (id: string) => Promise<void>
   // Data portability
   exportJSON: () => string
   importJSON: (json: string) => { ok: boolean; error?: string }
@@ -128,6 +139,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           props: [],
           lineNotes: [],
           cues: [],
+          assets: [],
           createdAt: new Date().toISOString(),
         }
         setData((d) => ({
@@ -349,6 +361,43 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (!production?.script) return
         await deleteScriptFile(production.script.id)
         patchActive((prod) => ({ ...prod, script: undefined }))
+      },
+
+      addAsset: async (file, meta) => {
+        if (!production) return
+        const id = newId()
+        // Store the bytes in IndexedDB under `asset:<id>`; that key is picked up
+        // by getAllFiles(), so it syncs to the cloud and packs into backups like
+        // the script and sign-in photos, with no extra plumbing.
+        await putFile(assetKey(id), file)
+        const asset: Asset = {
+          id,
+          filename: file.name,
+          category: meta?.category ?? 'Other',
+          mimeType: file.type || 'application/octet-stream',
+          size: file.size,
+          uploadedAt: new Date().toISOString(),
+          personId: meta?.personId,
+          note: meta?.note,
+        }
+        patchActive((prod) => ({ ...prod, assets: [...(prod.assets ?? []), asset] }))
+      },
+
+      updateAsset: (id, patch) =>
+        patchActive((prod) => ({
+          ...prod,
+          assets: (prod.assets ?? []).map((a) => (a.id === id ? { ...a, ...patch } : a)),
+        })),
+
+      getAssetURL: async (id) => {
+        const blob = await getFile(assetKey(id))
+        if (!blob) return null
+        return URL.createObjectURL(blob)
+      },
+
+      removeAsset: async (id) => {
+        await deleteFile(assetKey(id))
+        patchActive((prod) => ({ ...prod, assets: (prod.assets ?? []).filter((a) => a.id !== id) }))
       },
 
       exportJSON: () => JSON.stringify(data, null, 2),

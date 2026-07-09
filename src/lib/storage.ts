@@ -34,6 +34,7 @@ export function normalizeProduction(p: Partial<Production>): Production {
     // Migrate the old "LX" dept label to "Lighting".
     cues: (p.cues ?? []).map((c) => ({ ...c, dept: (c.dept as string) === 'LX' ? 'Lighting' : c.dept })),
     script: p.script,
+    assets: p.assets ?? [],
     isSample: p.isSample,
     createdAt: p.createdAt ?? new Date().toISOString(),
   }
@@ -179,3 +180,6 @@ export const deleteFile = deleteScriptFile
 
 /** IndexedDB key for an event's uploaded (signed) sign-in sheet. */
 export const signInKey = (eventId: string) => `signin:${eventId}`
+
+/** IndexedDB key for a general uploaded asset (headshot, contract, budget…). */
+export const assetKey = (assetId: string) => `asset:${assetId}`

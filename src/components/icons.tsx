@@ -22,6 +22,7 @@ export type IconName =
   | 'script'
   | 'cues'
   | 'reports'
+  | 'assets'
   | 'settings'
 
 export function NavIcon({ name, size = 20 }: { name: IconName; size?: number }) {
@@ -94,6 +95,12 @@ const ICONS: Record<IconName, JSX.Element> = {
       <rect x="5" y="4.5" width="14" height="16" rx="2.2" />
       <rect x="9" y="3" width="6" height="3.4" rx="1.2" />
       <path d="M8.5 11h7M8.5 14.5h5" />
+    </>
+  ),
+  assets: (
+    <>
+      <path d="M3.5 7.2a2 2 0 0 1 2-2h4.1l2.1 2.3H18.5a2 2 0 0 1 2 2v8.1a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" />
+      <path d="M3.5 10.5h17" />
     </>
   ),
   settings: (

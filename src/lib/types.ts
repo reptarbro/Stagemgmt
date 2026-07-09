@@ -200,6 +200,34 @@ export interface ScriptMeta {
   uploadedAt: string
 }
 
+/** How an uploaded asset is filed. Free-form use is fine — these are just the
+    grouping chips (headshots, contracts, budgets, design plates, etc.). */
+export type AssetCategory =
+  | 'Headshot'
+  | 'Contract'
+  | 'Budget'
+  | 'Design'
+  | 'Document'
+  | 'Photo'
+  | 'Other'
+
+/** A general file kept with the production — a headshot, a signed contract, a
+    budget spreadsheet, a set rendering, and so on. The bytes live in IndexedDB
+    under `asset:<id>` (so they sync to the cloud and pack into backups like any
+    other binary); this is just the metadata shown in the Assets list. */
+export interface Asset {
+  id: ID
+  filename: string
+  category: AssetCategory
+  mimeType: string
+  /** Bytes, for the size readout and storage totals. */
+  size: number
+  uploadedAt: string
+  /** Optional person this file belongs to — e.g. whose headshot it is. */
+  personId?: ID
+  note?: string
+}
+
 export interface Production {
   id: ID
   title: string
@@ -222,6 +250,8 @@ export interface Production {
   cues: Cue[]
   /** Uploaded script document (static for now; annotation comes in Phase 2). */
   script?: ScriptMeta
+  /** General uploaded files kept with the show (headshots, contracts, budgets…). */
+  assets: Asset[]
   /** True for the built-in demo show, so it can be shown as a removable preview. */
   isSample?: boolean
   createdAt: string

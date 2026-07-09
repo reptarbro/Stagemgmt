@@ -169,6 +169,7 @@ export function makeSampleProduction(): Production {
     props,
     lineNotes,
     cues,
+    assets: [],
     createdAt: new Date().toISOString(),
   }
 }

@@ -16,6 +16,7 @@ import { Scenes } from '../modules/Scenes'
 import { Props } from '../modules/Props'
 import { LineNotes } from '../modules/LineNotes'
 import { Script } from '../modules/Script'
+import { Assets } from '../modules/Assets'
 import { CueToCue } from '../modules/CueToCue'
 import { Reports } from '../modules/Reports'
 import { Settings } from '../modules/Settings'
@@ -29,6 +30,7 @@ const NAV: { to: string; icon: IconName; label: string }[] = [
   { to: '/props', icon: 'props', label: 'Props & Costumes' },
   { to: '/line-notes', icon: 'notes', label: 'Line Notes' },
   { to: '/script', icon: 'script', label: 'Script' },
+  { to: '/assets', icon: 'assets', label: 'Assets' },
   { to: '/reports', icon: 'reports', label: 'Reports' },
   { to: '/settings', icon: 'settings', label: 'Settings' },
 ]
@@ -53,6 +55,7 @@ export function App() {
           <Route path="/props" element={<Props />} />
           <Route path="/line-notes" element={<LineNotes />} />
           <Route path="/script" element={<Script />} />
+          <Route path="/assets" element={<Assets />} />
           <Route path="/cues" element={<CueToCue />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
@@ -81,9 +84,9 @@ function Shell() {
   const cueHint = dOpen === null || cueActive ? undefined : `in ${dOpen - CUE_WINDOW_DAYS}d`
 
   const nav: { to: string; icon: IconName; label: string; hint?: string }[] = [
-    ...NAV.slice(0, 7), // Hub … Script
+    ...NAV.slice(0, 8), // Hub … Assets
     { to: '/cues', icon: 'cues', label: 'Cue-to-Cue', hint: cueHint },
-    ...NAV.slice(7), // Reports, Settings
+    ...NAV.slice(8), // Reports, Settings
   ]
 
   return (

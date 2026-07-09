@@ -76,7 +76,22 @@ what you expected · a screenshot if handy · which device/browser.
   `src/components/ui.tsx` (`Modal` — body-portaled), `PrintSheet.tsx`
   (print/PDF sheets), `src/styles/global.css` (theme + responsive rules).
 - **Modules** (`src/modules/`): Welcome, Hub, People, Schedule, Scenes, Props,
-  LineNotes, Script, CueToCue, Reports, Settings, Legal (Privacy/Terms).
+  LineNotes, Script, Assets, CueToCue, Reports, Settings, Legal (Privacy/Terms).
+- **Assets** (`src/modules/Assets.tsx`): a general file drawer per production —
+  headshots, contracts, budgets, design plates, any file. Multi-file upload files
+  each immediately with a guessed category (rename / re-file / link-to-person /
+  note via the row ✎). Bytes live in IndexedDB under `asset:<id>` (`assetKey`), so
+  they ride the existing binary path — cloud sync (`getAllFiles`) and full backups
+  (`buildBundleString`) — with no extra wiring. Store actions: `addAsset`,
+  `updateAsset`, `getAssetURL`, `removeAsset`. Model: `Asset`/`AssetCategory` +
+  `Production.assets` (types.ts), defaulted in `normalizeProduction`. Larger
+  cloud storage is the planned paid lever — see ROADMAP Stage 2.3.
+- **Link-preview card:** `public/og-card.png` (1200×630 title card: logo +
+  wordmark + "a digital binder for stage managers"). Wired via `og:*`/`twitter:*`
+  tags in `index.html` (the app had none) and `public/site/index.html` (was a hub
+  screenshot). Regenerate from the scratchpad HTML → Chromium screenshot pattern.
+  Social caches are sticky; re-scrape via each platform's debugger or a `?v=`
+  cache-buster after changing it.
 - **Legal:** `src/modules/Legal.tsx` renders standalone `/privacy` and `/terms`
   pages (top-level routes, no active production needed), linked from Welcome and
   Settings. Plain-language, app-specific. Update `UPDATED`/`CONTACT` constants
