@@ -2,7 +2,7 @@
 // auto-sync engine (see CloudAutoSync) that pushes on change and pulls on open,
 // guarded so it never auto-clobbers when both sides changed.
 import { supa } from './client'
-import { getAllFiles, putFile } from '../storage'
+import { getAllFiles, getAllFileKeys, putFile } from '../storage'
 import { setSyncStatus } from './status'
 
 const BUCKET = 'files'
@@ -35,7 +35,11 @@ function stableStringify(value: unknown): string {
     raw string if it isn't valid JSON. */
 export function dataSignature(s: string): string {
   try {
-    return djb2(stableStringify(JSON.parse(s)))
+    const obj = JSON.parse(s)
+    // activeProductionId is per-device UI state (which show is open); it must not
+    // make two otherwise-identical devices look out of sync.
+    if (obj && typeof obj === 'object') delete obj.activeProductionId
+    return djb2(stableStringify(obj))
   } catch {
     return djb2(s)
   }
@@ -148,6 +152,30 @@ export async function pullAll(importJSON: ImportFn): Promise<{ ok: boolean; erro
   const res = importJSON(JSON.stringify(data.data))
   if (res.ok) markSynced()
   return { ...res, files: count }
+}
+
+/** Download any binaries that exist in the cloud but not on this device — used
+    after an auto-merge so an asset/script/sign-in file added on another device
+    follows its metadata here. Only fetches what's missing, so it's cheap to call
+    on every reconcile. Returns the number of files pulled down. */
+export async function downloadMissingFiles(): Promise<number> {
+  const user = await currentUser()
+  if (!user) return 0
+  const localKeys = new Set(await getAllFileKeys())
+  const list = await supa().storage.from(BUCKET).list(user.id, { limit: 1000 })
+  if (list.error || !list.data) return 0
+  let n = 0
+  for (const obj of list.data) {
+    if (obj.name.startsWith('.')) continue // folder placeholder
+    const key = decodeURIComponent(obj.name)
+    if (localKeys.has(key)) continue
+    const dl = await supa().storage.from(BUCKET).download(`${user.id}/${obj.name}`)
+    if (!dl.error && dl.data) {
+      await putFile(key, dl.data)
+      n++
+    }
+  }
+  return n
 }
 
 /** Delete everything this account has stored in the cloud: every uploaded

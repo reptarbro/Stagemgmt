@@ -4,12 +4,13 @@ import { supa } from '../lib/cloud/client'
 import { CLOUD_ENABLED } from '../lib/cloud/config'
 import {
   pushAll,
-  pullAll,
   fetchCloudState,
+  downloadMissingFiles,
   dataSignature,
   syncedSignature,
   setSyncedSignature,
 } from '../lib/cloud/sync'
+import { mergeAppData } from '../lib/cloud/merge'
 import { setSyncStatus, getSyncStatus } from '../lib/cloud/status'
 import type { AppData } from '../lib/types'
 
@@ -52,7 +53,12 @@ export function CloudAutoSync() {
   exportRef.current = exportJSON
   importRef.current = importJSON
 
-  // Reconcile: decide pull vs push vs leave-alone. Safe to call repeatedly.
+  // Reconcile by MERGING, never by asking the user to choose. We union this
+  // device's data with the cloud copy (adds from either side survive, newest
+  // edit wins per record, deletes are tombstoned) via mergeAppData, adopt the
+  // result locally, and push it up if the cloud is behind. The merge converges,
+  // so both devices land on identical state — no conflict, no Push/Pull needed.
+  // Safe to call repeatedly (focus, poll, realtime, debounced change).
   const reconcile = async () => {
     if (syncing.current) return
     syncing.current = true
@@ -62,54 +68,33 @@ export function CloudAutoSync() {
       const cloud = await fetchCloudState()
 
       if (!cloud) {
-        if (hasRealData(localJson)) {
-          await pushAll(localJson)
-        }
-        setSyncedSignature(localSig)
-        return
-      }
-      const cloudSig = dataSignature(JSON.stringify(cloud.data))
-      if (cloudSig === localSig) {
+        // No cloud copy yet — seed it from this device if it has real data.
+        if (hasRealData(localJson)) await pushAll(localJson)
         setSyncedSignature(localSig)
         setSyncStatus('synced')
         return
       }
-      const synced = syncedSignature()
-      // A device with no real shows just takes the cloud copy.
-      if (!hasRealData(localJson)) {
-        const r = await pullAll(importRef.current)
-        if (r.ok) setSyncedSignature(cloudSig)
-        return
-      }
-      // Never synced here, and both sides have (different) data → real conflict.
-      if (synced === null) {
-        setSyncStatus('conflict')
-        return
-      }
-      // Local unchanged since last sync, cloud moved on → safe to pull.
-      if (localSig === synced) {
-        const r = await pullAll(importRef.current)
-        if (r.ok) setSyncedSignature(cloudSig)
-        return
-      }
-      // Local changed since last sync. Decide by SIGNATURE, not wall-clock: the
-      // cloud has "moved on" only if its signature differs from the one we last
-      // synced. If it hasn't, our local edit is strictly newer → push it.
-      // (The old check compared cloud.updatedAt against lastSyncedAt(), but a
-      // null lastSyncedAt — e.g. after a first reconcile that found local ==
-      // cloud and only set the signature — read as epoch-0, so ANY real cloud
-      // timestamp looked "newer" → a bogus conflict. The edit was then never
-      // pushed and could be lost when the user resolved that conflict with Pull.
-      // That's the "my uploaded asset keeps disappearing" bug.)
-      const cloudMovedOn = cloudSig !== synced
-      if (cloudMovedOn) {
-        setSyncStatus('conflict')
-        return
-      }
-      await pushAll(localJson)
-      setSyncedSignature(localSig)
+
+      const local = JSON.parse(localJson) as AppData
+      const cloudData = cloud.data as AppData
+      const merged = mergeAppData(local, cloudData)
+      const mergedJson = JSON.stringify(merged)
+      const mergedSig = dataSignature(mergedJson)
+      const cloudSig = dataSignature(JSON.stringify(cloudData))
+
+      // Adopt the merged result locally if it adds/changes anything we have.
+      if (mergedSig !== localSig) importRef.current(mergedJson)
+      // Push it up when the cloud is behind the merged result (this also uploads
+      // any local binaries the cloud is missing).
+      if (mergedSig !== cloudSig) await pushAll(mergedJson)
+      // Pull down any binaries (asset/script/sign-in files) another device added
+      // that we don't have yet, so merged metadata never dangles.
+      await downloadMissingFiles()
+
+      setSyncedSignature(mergedSig)
+      setSyncStatus('synced')
     } catch {
-      /* offline or transient; manual buttons remain */
+      /* offline or transient; retried on next change / focus / poll / realtime */
     } finally {
       syncing.current = false
     }

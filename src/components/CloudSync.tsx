@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useStore } from '../lib/store'
 import { supa } from '../lib/cloud/client'
-import { pushAll, pullAll, lastSyncedAt, cloudHasData, deleteCloudData, deleteAuthAccount } from '../lib/cloud/sync'
+import { lastSyncedAt, deleteCloudData, deleteAuthAccount } from '../lib/cloud/sync'
 import { useSyncStatus, setSyncStatus } from '../lib/cloud/status'
 import { ConfirmButton } from './ui'
 import { GoogleG } from './GoogleG'
@@ -17,7 +16,6 @@ function appBaseUrl(): string {
     local-first. Signed in, you can Push this device's data to the cloud and Pull
     it onto another (data model + uploaded script/photos). */
 export function CloudSync() {
-  const { exportJSON, importJSON, data } = useStore()
   const [stage, setStage] = useState<Stage>('loading')
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
@@ -26,31 +24,20 @@ export function CloudSync() {
   const status = useSyncStatus()
   const handledSignIn = useRef(false)
 
-  // When a session appears (fresh sign-in or restored), guide the next step:
-  // a brand-new device with no shows auto-loads the cloud copy; a device that
-  // already has shows is asked to choose Push or Pull so nothing is clobbered.
+  // Nothing to do on sign-in but reassure — the auto-sync engine (CloudAutoSync)
+  // merges this device with the cloud on its own (on sign-in, focus, a poll, and
+  // realtime), so shows appear here automatically with no Push/Pull to press.
   const onSignedIn = async () => {
     if (handledSignIn.current) return
     handledSignIn.current = true
-    const hasLocal = data.productions.some((p) => !p.isSample)
-    let cloud = false
-    try {
-      cloud = await cloudHasData()
-    } catch {
-      /* offline or transient */
-    }
-    if (cloud && !hasLocal) {
-      setBusy(true)
-      const r = await pullAll(importJSON)
-      setBusy(false)
-      setSynced(lastSyncedAt())
-      setMsg(r.ok ? `Loaded your shows from the cloud (${r.files} file(s)).` : r.error ?? 'Could not load.')
-    } else if (cloud && hasLocal) {
-      setMsg('Signed in. A cloud copy exists — Pull to load it here, or Push to overwrite it with this device.')
-    } else {
-      setMsg('Signed in. Tap Push to save this device to the cloud.')
-    }
+    setMsg('Signed in — your shows sync automatically across your devices.')
   }
+
+  // Keep the "last synced" line fresh as the engine works.
+  useEffect(() => {
+    const t = setInterval(() => setSynced(lastSyncedAt()), 3000)
+    return () => clearInterval(t)
+  }, [])
 
   useEffect(() => {
     let alive = true
@@ -117,20 +104,6 @@ export function CloudSync() {
     setMsg('Signed out. Your data stays on this device.')
   }
 
-  const doPush = async () => {
-    setBusy(true)
-    setMsg(null)
-    try {
-      const r = await pushAll(exportJSON())
-      setSynced(lastSyncedAt())
-      setMsg(`Pushed to the cloud — data + ${r.files} file(s).`)
-    } catch (e) {
-      setMsg(`Push failed: ${(e as Error).message}`)
-    } finally {
-      setBusy(false)
-    }
-  }
-
   const doDeleteAccount = async () => {
     setBusy(true)
     setMsg(null)
@@ -152,30 +125,15 @@ export function CloudSync() {
     }
   }
 
-  const doPull = async () => {
-    setBusy(true)
-    setMsg(null)
-    try {
-      const r = await pullAll(importJSON)
-      if (r.ok) {
-        setSynced(lastSyncedAt())
-        setMsg(`Pulled from the cloud — data + ${r.files} file(s).`)
-      } else setMsg(r.error ?? 'Pull failed.')
-    } catch (e) {
-      setMsg(`Pull failed: ${(e as Error).message}`)
-    } finally {
-      setBusy(false)
-    }
-  }
-
   return (
     <div className="card">
       <div className="card-title">
         Cloud Sync <span className="nav-hint" style={{ marginLeft: 6 }}>beta</span>
       </div>
       <p className="small muted">
-        Sign in with your email to move your show between devices without a file. Push from the device
-        that has your latest work, then Pull on the others. Signed out, nothing leaves this device.
+        Sign in to sync your shows across your devices. It happens automatically and merges changes from
+        every device — add a person on your iPad and a headshot on your laptop and you'll see both, no
+        buttons to press. Signed out, nothing leaves this device.
       </p>
 
       {stage === 'loading' && <p className="small muted">Checking sign-in…</p>}
@@ -229,52 +187,25 @@ export function CloudSync() {
         <>
           <p className="small" style={{ margin: '2px 0 12px' }}>
             Signed in as <strong>{email}</strong>
-            {status.state === 'syncing' && <span className="faint"> · syncing…</span>}
-            {status.state !== 'syncing' && synced && (
-              <span className="faint"> · last synced {new Date(synced).toLocaleString()}</span>
+            {status.state === 'syncing' ? (
+              <span className="faint"> · syncing…</span>
+            ) : synced ? (
+              <span className="faint"> · synced {new Date(synced).toLocaleString()}</span>
+            ) : (
+              <span className="faint"> · up to date</span>
             )}
           </p>
 
-          {status.state === 'conflict' && (
-            <div
-              className="card"
-              style={{
-                marginBottom: 12,
-                background: 'rgba(224, 168, 70, 0.10)',
-                borderColor: 'rgba(224, 168, 70, 0.5)',
-              }}
-            >
-              <p className="small" style={{ margin: 0 }}>
-                ⚠️ <strong>Sync conflict.</strong> This device and your cloud copy both changed since
-                they last synced. Pick which one to keep: <strong>Push</strong> to make this device win
-                (overwrites the cloud), or <strong>Pull</strong> to make the cloud win (replaces this
-                device). Export a backup first if you're unsure.
-              </p>
-            </div>
-          )}
+          <p className="small muted" style={{ marginTop: 0 }}>
+            ✓ Syncing automatically. To use another device, just open Standby there and sign in with the
+            same account — your shows appear on their own, and edits on any device merge together.
+          </p>
 
           <div className="row wrap" style={{ gap: 10 }}>
-            <button className="btn btn-primary" onClick={doPush} disabled={busy}>
-              ⤴ Push this device → cloud
-            </button>
-            <ConfirmButton
-              className="btn"
-              ariaLabel="Pull from cloud"
-              title="Replace this device with the cloud copy"
-              onConfirm={doPull}
-            >
-              ⤵ Pull cloud → this device
-            </ConfirmButton>
             <button className="btn btn-ghost" onClick={signOut} disabled={busy}>
               Sign out
             </button>
           </div>
-          <p className="hint" style={{ marginTop: 10 }}>
-            Standby syncs automatically while you are signed in: changes upload on their own, and this
-            device catches up when you open or return to it. Push and Pull are manual overrides. Pull{' '}
-            <strong>replaces</strong> this device with the cloud copy, and Push overwrites the cloud with
-            this device.
-          </p>
 
           <div
             style={{

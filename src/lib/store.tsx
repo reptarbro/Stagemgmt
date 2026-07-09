@@ -116,6 +116,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       })
     }
 
+    // Auto-merge across devices needs a per-record edit time and delete
+    // tombstones. `now()` stamps updatedAt on every add/edit; `tomb()` records a
+    // deleted record's id so the delete survives a merge instead of the record
+    // resurrecting from another device that still has it.
+    const now = () => new Date().toISOString()
+    const tomb = (prod: Production, ...ids: string[]): Record<string, string> => {
+      const out = { ...(prod.deleted ?? {}) }
+      const t = now()
+      for (const id of ids) out[id] = t
+      return out
+    }
+
     return {
       data,
       production,
@@ -141,6 +153,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           cues: [],
           assets: [],
           createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          deleted: {},
         }
         setData((d) => ({
           ...d,
@@ -169,7 +183,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setData((d) => ({
           ...d,
           productions: d.productions.map((p) =>
-            p.id === id ? { ...p, ...patch } : p,
+            p.id === id ? { ...p, ...patch, updatedAt: now() } : p,
           ),
         })),
 
@@ -180,7 +194,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             d.activeProductionId === id
               ? (productions[0]?.id ?? null)
               : d.activeProductionId
-          return { ...d, productions, activeProductionId }
+          // Tombstone the production so the delete survives an auto-merge.
+          return { ...d, productions, activeProductionId, deleted: { ...(d.deleted ?? {}), [id]: now() } }
         }),
 
       setActiveProduction: (id) =>
@@ -189,36 +204,39 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       addPerson: (p) =>
         patchActive((prod) => ({
           ...prod,
-          people: [...prod.people, { ...p, id: newId() }],
+          people: [...prod.people, { ...p, id: newId(), updatedAt: now() }],
         })),
 
       updatePerson: (id, patch) =>
         patchActive((prod) => ({
           ...prod,
-          people: prod.people.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+          people: prod.people.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: now() } : x)),
         })),
 
       deletePerson: (id) =>
         patchActive((prod) => ({
           ...prod,
           people: prod.people.filter((x) => x.id !== id),
-          // Also drop them from any event call lists.
-          events: prod.events.map((e) => ({
-            ...e,
-            calledPersonIds: e.calledPersonIds.filter((pid) => pid !== id),
-          })),
+          // Also drop them from any event call lists (stamp only the events that
+          // actually change, so unrelated events aren't marked edited).
+          events: prod.events.map((e) =>
+            e.calledPersonIds.includes(id)
+              ? { ...e, calledPersonIds: e.calledPersonIds.filter((pid) => pid !== id), updatedAt: now() }
+              : e,
+          ),
+          deleted: tomb(prod, id),
         })),
 
       addEvent: (e) =>
         patchActive((prod) => ({
           ...prod,
-          events: [...prod.events, { ...e, id: newId() }],
+          events: [...prod.events, { ...e, id: newId(), updatedAt: now() }],
         })),
 
       updateEvent: (id, patch) =>
         patchActive((prod) => ({
           ...prod,
-          events: prod.events.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+          events: prod.events.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: now() } : x)),
         })),
 
       deleteEvent: (id) =>
@@ -226,6 +244,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ...prod,
           events: prod.events.filter((x) => x.id !== id),
           attendance: prod.attendance.filter((a) => a.eventId !== id),
+          // The event id also keys its attendance record, so one tombstone covers both.
+          deleted: tomb(prod, id),
         })),
 
       getAttendance: (eventId) =>
@@ -233,14 +253,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       setAttendance: (att) =>
         patchActive((prod) => {
+          const stamped = { ...att, updatedAt: now() }
           const exists = prod.attendance.some((a) => a.eventId === att.eventId)
           return {
             ...prod,
             attendance: exists
-              ? prod.attendance.map((a) =>
-                  a.eventId === att.eventId ? att : a,
-                )
-              : [...prod.attendance, att],
+              ? prod.attendance.map((a) => (a.eventId === att.eventId ? stamped : a))
+              : [...prod.attendance, stamped],
           }
         }),
 
@@ -249,6 +268,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ...r,
           id: newId(),
           createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         }
         patchActive((prod) => ({
           ...prod,
@@ -261,7 +281,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         patchActive((prod) => ({
           ...prod,
           reports: prod.reports.map((x) =>
-            x.id === id ? { ...x, ...patch } : x,
+            x.id === id ? { ...x, ...patch, updatedAt: now() } : x,
           ),
         })),
 
@@ -269,70 +289,75 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         patchActive((prod) => ({
           ...prod,
           reports: prod.reports.filter((x) => x.id !== id),
+          deleted: tomb(prod, id),
         })),
 
       addScene: (s) =>
         patchActive((prod) => ({
           ...prod,
-          scenes: [...prod.scenes, { ...s, id: newId() }],
+          scenes: [...prod.scenes, { ...s, id: newId(), updatedAt: now() }],
         })),
       updateScene: (id, patch) =>
         patchActive((prod) => ({
           ...prod,
-          scenes: prod.scenes.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+          scenes: prod.scenes.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: now() } : x)),
         })),
       deleteScene: (id) =>
         patchActive((prod) => ({
           ...prod,
           scenes: prod.scenes.filter((x) => x.id !== id),
+          deleted: tomb(prod, id),
         })),
 
       addProp: (p) =>
         patchActive((prod) => ({
           ...prod,
-          props: [...prod.props, { ...p, id: newId() }],
+          props: [...prod.props, { ...p, id: newId(), updatedAt: now() }],
         })),
       updateProp: (id, patch) =>
         patchActive((prod) => ({
           ...prod,
-          props: prod.props.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+          props: prod.props.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: now() } : x)),
         })),
       deleteProp: (id) =>
         patchActive((prod) => ({
           ...prod,
           props: prod.props.filter((x) => x.id !== id),
+          deleted: tomb(prod, id),
         })),
 
       addLineNote: (n) =>
         patchActive((prod) => ({
           ...prod,
-          lineNotes: [...prod.lineNotes, { ...n, id: newId() }],
+          lineNotes: [...prod.lineNotes, { ...n, id: newId(), updatedAt: now() }],
         })),
       updateLineNote: (id, patch) =>
         patchActive((prod) => ({
           ...prod,
-          lineNotes: prod.lineNotes.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+          lineNotes: prod.lineNotes.map((x) => (x.id === id ? { ...x, ...patch, updatedAt: now() } : x)),
         })),
       deleteLineNote: (id) =>
         patchActive((prod) => ({
           ...prod,
           lineNotes: prod.lineNotes.filter((x) => x.id !== id),
+          deleted: tomb(prod, id),
         })),
 
       addCue: (c) =>
         patchActive((prod) => ({
           ...prod,
-          cues: [...(prod.cues ?? []), { ...c, id: newId() }],
+          cues: [...(prod.cues ?? []), { ...c, id: newId(), updatedAt: now() }],
         })),
       updateCue: (id, patch) =>
         patchActive((prod) => ({
           ...prod,
-          cues: (prod.cues ?? []).map((x) => (x.id === id ? { ...x, ...patch } : x)),
+          cues: (prod.cues ?? []).map((x) => (x.id === id ? { ...x, ...patch, updatedAt: now() } : x)),
         })),
       deleteCue: (id) =>
         patchActive((prod) => ({
           ...prod,
           cues: (prod.cues ?? []).filter((x) => x.id !== id),
+          deleted: tomb(prod, id),
         })),
 
       setScript: async (file) => {
@@ -347,7 +372,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           size: file.size,
           uploadedAt: new Date().toISOString(),
         }
-        patchActive((prod) => ({ ...prod, script: meta }))
+        // Bump the production's own updatedAt so the script change wins in a merge.
+        patchActive((prod) => ({ ...prod, script: meta, updatedAt: now() }))
       },
 
       getScriptURL: async () => {
@@ -360,7 +386,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       removeScript: async () => {
         if (!production?.script) return
         await deleteScriptFile(production.script.id)
-        patchActive((prod) => ({ ...prod, script: undefined }))
+        patchActive((prod) => ({ ...prod, script: undefined, updatedAt: now() }))
       },
 
       addAsset: async (file, meta) => {
@@ -377,6 +403,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           mimeType: file.type || 'application/octet-stream',
           size: file.size,
           uploadedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           personId: meta?.personId,
           note: meta?.note,
         }
@@ -386,7 +413,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateAsset: (id, patch) =>
         patchActive((prod) => ({
           ...prod,
-          assets: (prod.assets ?? []).map((a) => (a.id === id ? { ...a, ...patch } : a)),
+          assets: (prod.assets ?? []).map((a) => (a.id === id ? { ...a, ...patch, updatedAt: now() } : a)),
         })),
 
       getAssetURL: async (id) => {
@@ -397,7 +424,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       removeAsset: async (id) => {
         await deleteFile(assetKey(id))
-        patchActive((prod) => ({ ...prod, assets: (prod.assets ?? []).filter((a) => a.id !== id) }))
+        patchActive((prod) => ({
+          ...prod,
+          assets: (prod.assets ?? []).filter((a) => a.id !== id),
+          deleted: tomb(prod, id),
+        }))
       },
 
       exportJSON: () => JSON.stringify(data, null, 2),
@@ -409,12 +440,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             return { ok: false, error: 'File does not look like Standby data.' }
           }
           const productions = parsed.productions.map(normalizeProduction)
-          setData({
+          setData((d) => ({
             version: 1,
             productions,
+            // Keep the current device's open production if it still exists.
             activeProductionId:
-              parsed.activeProductionId ?? productions[0]?.id ?? null,
-          })
+              (d.activeProductionId && productions.some((p) => p.id === d.activeProductionId)
+                ? d.activeProductionId
+                : parsed.activeProductionId) ?? productions[0]?.id ?? null,
+            // Preserve production-level tombstones so deletes survive a merge/import.
+            deleted: parsed.deleted ?? d.deleted ?? {},
+          }))
           return { ok: true }
         } catch (err) {
           return { ok: false, error: (err as Error).message }

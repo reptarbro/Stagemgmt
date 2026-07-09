@@ -37,6 +37,8 @@ export function normalizeProduction(p: Partial<Production>): Production {
     assets: p.assets ?? [],
     isSample: p.isSample,
     createdAt: p.createdAt ?? new Date().toISOString(),
+    updatedAt: p.updatedAt,
+    deleted: p.deleted ?? {},
   }
 }
 
@@ -154,6 +156,20 @@ export async function getAllFiles(): Promise<{ key: string; blob: Blob }[]> {
       resolve(keys.map((k, i) => ({ key: String(k), blob: vals[i] })))
     }
     tx.onerror = () => reject(tx.error)
+  })
+  db.close()
+  return result
+}
+
+/** Just the keys of every stored binary (no blob loads) — used by the sync
+    engine to find which cloud files this device is missing. */
+export async function getAllFileKeys(): Promise<string[]> {
+  const db = await openFileDB()
+  const result = await new Promise<string[]>((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readonly')
+    const req = tx.objectStore(DB_STORE).getAllKeys()
+    req.onsuccess = () => resolve((req.result as IDBValidKey[]).map(String))
+    req.onerror = () => reject(req.error)
   })
   db.close()
   return result

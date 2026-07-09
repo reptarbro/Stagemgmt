@@ -41,6 +41,8 @@ export interface Person {
   notes?: string
   /** Dates this person can't attend, surfaced against the schedule. */
   conflicts?: Conflict[]
+  /** ISO time of the last local edit — used to auto-merge across devices. */
+  updatedAt?: string
 }
 
 export type EventType =
@@ -73,6 +75,8 @@ export interface ScheduleEvent {
   signInUploadedAt?: string
   /** MIME type of the uploaded signed sheet, e.g. "image/jpeg", "application/pdf". */
   signInMime?: string
+  /** ISO time of the last local edit — used to auto-merge across devices. */
+  updatedAt?: string
 }
 
 export type AttendanceStatus =
@@ -87,6 +91,8 @@ export type AttendanceStatus =
 export interface Attendance {
   eventId: ID
   records: Record<ID, { status: AttendanceStatus; note?: string }>
+  /** ISO time of the last local edit — used to auto-merge across devices. */
+  updatedAt?: string
 }
 
 /** A single line item within a report section (e.g. one note for the LX dept). */
@@ -117,6 +123,8 @@ export interface Report {
   sections: ReportSection[]
   scheduleNote?: string
   createdAt: string
+  /** ISO time of the last local edit — used to auto-merge across devices. */
+  updatedAt?: string
 }
 
 /** A unit of the play — a French scene, a numbered scene, or a song. */
@@ -131,6 +139,8 @@ export interface Scene {
   characterIds: ID[]
   synopsis?: string
   notes?: string
+  /** ISO time of the last local edit — used to auto-merge across devices. */
+  updatedAt?: string
 }
 
 export type PropCategory = 'Prop' | 'Costume' | 'Set' | 'Furniture' | 'Other'
@@ -146,6 +156,8 @@ export interface PropItem {
   usedByPersonIds: ID[]
   status: PropStatus
   notes?: string
+  /** ISO time of the last local edit — used to auto-merge across devices. */
+  updatedAt?: string
 }
 
 export type LineNoteType =
@@ -167,6 +179,8 @@ export interface LineNote {
   type: LineNoteType
   note?: string
   resolved?: boolean
+  /** ISO time of the last local edit — used to auto-merge across devices. */
+  updatedAt?: string
 }
 
 /**
@@ -189,6 +203,8 @@ export interface Cue {
   standby?: string
   status: CueStatus
   notes?: string
+  /** ISO time of the last local edit — used to auto-merge across devices. */
+  updatedAt?: string
 }
 
 /** Metadata for an uploaded script file; the bytes live in IndexedDB. */
@@ -226,6 +242,9 @@ export interface Asset {
   /** Optional person this file belongs to — e.g. whose headshot it is. */
   personId?: ID
   note?: string
+  /** ISO time of the last local edit — used to auto-merge across devices.
+      (Distinct from uploadedAt, which is when the bytes were first added.) */
+  updatedAt?: string
 }
 
 export interface Production {
@@ -255,6 +274,13 @@ export interface Production {
   /** True for the built-in demo show, so it can be shown as a removable preview. */
   isSample?: boolean
   createdAt: string
+  /** ISO time of the last edit to the production's own fields (title, dates,
+      notes…). Record edits carry their own updatedAt. Drives auto-merge. */
+  updatedAt?: string
+  /** Tombstones for records deleted from THIS production: record id → ISO time
+      of deletion. Lets a delete on one device survive an auto-merge instead of
+      the record resurrecting from another device that still has it. */
+  deleted?: Record<ID, string>
 }
 
 export interface AppData {
@@ -262,4 +288,7 @@ export interface AppData {
   version: number
   productions: Production[]
   activeProductionId: ID | null
+  /** Tombstones for deleted PRODUCTIONS: production id → ISO deletion time, so a
+      show deleted on one device doesn't come back via auto-merge from another. */
+  deleted?: Record<ID, string>
 }

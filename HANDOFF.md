@@ -58,30 +58,36 @@ what you expected · a screenshot if handy · which device/browser.
     `fetchCloudState`, `cloudHasData`, `dataSignature` (djb2),
     `syncedSignature`/`setSyncedSignature`, `lastSyncedAt`.
   - `src/components/CloudSync.tsx` — Settings card: sign in (Google + email),
-    manual Push/Pull, sign out, and a guarded **Delete account & cloud data**
-    action (danger zone).
+    sign out, live "synced" status, and a guarded **Delete account & cloud data**
+    action (danger zone). **No manual Push/Pull** — sync is fully automatic
+    (those buttons were removed; they bypassed the merge and could overwrite).
   - `sync.ts` also has `deleteCloudData` (removes the app_state row + all
-    Storage binaries) and `deleteAuthAccount` (calls the `delete_account` RPC).
+    Storage binaries), `deleteAuthAccount` (calls the `delete_account` RPC), and
+    `downloadMissingFiles` (pulls down binaries another device added).
   - `supabase/delete_account.sql` — one-time SQL to install the `delete_account`
     RPC so account deletion also removes the auth user (run in the SQL editor).
-  - `src/components/CloudAutoSync.tsx` — Stage 2.1 engine (renders null):
-    reconcile on sign-in / focus / return-to-foreground / 30s poll / **Realtime
-    push**, debounced push-on-change with a flush on hide/close, never
-    auto-clobbers when both sides changed. Conflict detection is by **signature**
-    (`cloudSig !== syncedSignature`), not wall-clock — the old timestamp check
-    mis-fired when `lastSyncedAt` was null and silently dropped new edits (the
-    "uploaded asset keeps disappearing" bug). Mounted in `App.tsx`.
-  - **Realtime auto-sync:** subscribes to the user's `app_state` row via Supabase
-    Realtime; a remote change triggers `reconcile()` (~1s), so another device's
-    save lands without waiting for the poll. Reuses reconcile's safety (pulls
-    only when this device has no unsynced edits). Needs the table in the
+  - **`src/lib/cloud/merge.ts` — auto-merge (the sync model).** `mergeAppData`
+    unions this device's data with the cloud copy: records union by id (an add on
+    any device is never lost), same id → newest `updatedAt` wins (deterministic
+    tiebreak so devices agree without a server), deletes are tombstones
+    (`Production.deleted` for records, `AppData.deleted` for whole productions).
+    Order comes from the cloud copy with local-only records appended, so the merge
+    **converges** — both devices land on identical state. **No conflicts, ever.**
+  - `src/components/CloudAutoSync.tsx` — the sync engine (renders null). On
+    sign-in / focus / return-to-foreground / 30s poll / **Realtime push** it
+    `reconcile()`s: merge local+cloud, adopt the result locally, push it up if the
+    cloud is behind, and `downloadMissingFiles()`. Debounced push-on-change +
+    flush on hide/close. It never blocks or prompts. (Every mutable record carries
+    an `updatedAt` stamped by the store actions; deletes write tombstones — that's
+    what powers the merge.)
+  - **Realtime:** subscribes to the user's `app_state` row via Supabase Realtime;
+    a remote change triggers `reconcile()` in ~1s. Needs the table in the
     `supabase_realtime` publication — run `supabase/enable_realtime.sql` ONCE;
-    until then the 30s poll is the fallback. `src/lib/cloud/auth.ts` exposes
-    `useSignedIn()`; the "data lives on this device only" backup nudge in
-    `App.tsx` is suppressed when signed in (cloud is the backup).
+    the 30s poll is the fallback. `src/lib/cloud/auth.ts` exposes `useSignedIn()`;
+    the "data lives on this device only" backup nudge is hidden when signed in.
   - `src/lib/cloud/status.ts` — observable sync state (`useSyncStatus`):
-    idle/syncing/synced/conflict/error. Drives the amber **sync-conflict
-    banner** (`App.tsx`) and the live status + resolve-guidance in `CloudSync`.
+    idle/syncing/synced/error (**`conflict` is retired** — auto-merge never
+    conflicts; the old amber banner is gone). Drives the "synced" line in `CloudSync`.
   - `src/components/GoogleG.tsx` — Google "G" mark.
 - **UI:** `src/components/App.tsx` (routes + `Shell` sidebar layout),
   `src/components/ui.tsx` (`Modal` — body-portaled), `PrintSheet.tsx`
