@@ -45,7 +45,7 @@ export function Settings() {
       const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean }
       if (nav.canShare && nav.canShare({ files: [file] })) {
         try {
-          await nav.share!({ files: [file], title: 'Standby backup' } as ShareData)
+          await nav.share!({ files: [file], title: 'StandBy backup' } as ShareData)
           setMsg('Backup shared — open it on the other device and Import.')
           return
         } catch (err) {
@@ -189,7 +189,7 @@ export function Settings() {
         <button
           className="btn"
           onClick={() => {
-            const subject = 'Standby — feedback'
+            const subject = 'StandBy — feedback'
             const body =
               'What I was doing:\n\nWhat happened / what I wish it did:\n\nDevice & browser:\n'
             window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`

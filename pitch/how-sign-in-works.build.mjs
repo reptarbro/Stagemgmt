@@ -84,14 +84,14 @@ tbody td:first-child{color:var(--ivory);font-weight:600;width:30%}
 const page1 = `
 <div class="page">
   <div class="hdr">
-    <div class="brand">${CUE}<div><div class="wm">Standby</div><div class="sub">Prompt Book</div></div></div>
+    <div class="brand">${CUE}<div><div class="wm">StandBy</div><div class="sub">Prompt Book</div></div></div>
     <div class="kick">Accounts &amp; Sign-In</div>
   </div>
   <div class="body">
   <div>
     <div class="kick">The short version</div>
     <div class="title">How signing in works, and why <span class="g">there is no password</span></div>
-    <p class="lead">Standby uses modern passwordless sign-in. You never create or remember a password. Instead, you prove it is you by receiving a one-time link at your own email. Here is exactly what happens, why it is secure, and how your shows stay organized under one account.</p>
+    <p class="lead">StandBy uses modern passwordless sign-in. You never create or remember a password. Instead, you prove it is you by receiving a one-time link at your own email. Here is exactly what happens, why it is secure, and how your shows stay organized under one account.</p>
   </div>
 
   <div class="grid g3">
@@ -104,9 +104,9 @@ const page1 = `
   <div class="sec-h" style="margin:0 0 8px"><span class="n">1</span><h2>Signing in, step by step</h2></div>
   <div class="steps">
     <div class="step"><div class="num">1</div><h3>Type your email</h3><p>On the Settings screen, open Cloud Sync and enter your email address. That address is the only thing you provide.</p></div>
-    <div class="step"><div class="num">2</div><h3>We send a link</h3><p>Standby asks its secure server to email you a one-time sign-in link. The app already knows how to reach that server, so nothing is set up in advance.</p></div>
+    <div class="step"><div class="num">2</div><h3>We send a link</h3><p>StandBy asks its secure server to email you a one-time sign-in link. The app already knows how to reach that server, so nothing is set up in advance.</p></div>
     <div class="step"><div class="num">3</div><h3>Open it on that device</h3><p>Tap the link in your inbox on the same device. Your account is created automatically the first time, with no separate signup.</p></div>
-    <div class="step"><div class="num">4</div><h3>You are in</h3><p>You return to Standby signed in. Push your show to the cloud, then Pull it onto any other device where you sign in with the same email.</p></div>
+    <div class="step"><div class="num">4</div><h3>You are in</h3><p>You return to StandBy signed in. Push your show to the cloud, then Pull it onto any other device where you sign in with the same email.</p></div>
   </div>
 
   </div>
@@ -122,20 +122,20 @@ const page1 = `
   </div>
   </div>
 
-  <div class="foot"><span>Standby, the stage manager's prompt book</span><span>Accounts &amp; Sign-In, page 1 of 3</span></div>
+  <div class="foot"><span>StandBy, the stage manager's prompt book</span><span>Accounts &amp; Sign-In, page 1 of 3</span></div>
 </div>`
 
 const page2 = `
 <div class="page">
   <div class="hdr">
-    <div class="brand">${CUE}<div><div class="wm">Standby</div><div class="sub">Prompt Book</div></div></div>
+    <div class="brand">${CUE}<div><div class="wm">StandBy</div><div class="sub">Prompt Book</div></div></div>
     <div class="kick">Accounts &amp; Sign-In</div>
   </div>
 
   <div class="body">
-  <div class="sec-h"><span class="n">2</span><h2>Password login versus Standby sign-in</h2></div>
+  <div class="sec-h"><span class="n">2</span><h2>Password login versus StandBy sign-in</h2></div>
   <table>
-    <thead><tr><th>What people worry about</th><th>Traditional password login</th><th>Standby passwordless sign-in</th></tr></thead>
+    <thead><tr><th>What people worry about</th><th>Traditional password login</th><th>StandBy passwordless sign-in</th></tr></thead>
     <tbody>
       <tr><td>Setup</td><td class="cross">Create an account, invent a password, confirm it</td><td class="tick">Type your email once, and you are done</td></tr>
       <tr><td>Forgetting it</td><td class="cross">A forgotten password blocks you until you reset</td><td class="tick">Nothing to forget, request a fresh link anytime</td></tr>
@@ -179,17 +179,17 @@ const page2 = `
   </div>
   </div>
 
-  <div class="foot"><span>Standby, the stage manager's prompt book</span><span>Accounts &amp; Sign-In, page 2 of 3</span></div>
+  <div class="foot"><span>StandBy, the stage manager's prompt book</span><span>Accounts &amp; Sign-In, page 2 of 3</span></div>
 </div>`
 
 const faqs = [
-  ['Do I even need to sign in?', 'No. Standby is fully usable on one device with no account. Sign in only when you want the same show on your iPad, phone, and computer at once.'],
-  ['How does the app email me if I never registered?', 'The app ships already knowing how to reach Standby\'s secure server. When you type your email, it asks that server to send the link, and your account is created for that address on the spot.'],
+  ['Do I even need to sign in?', 'No. StandBy is fully usable on one device with no account. Sign in only when you want the same show on your iPad, phone, and computer at once.'],
+  ['How does the app email me if I never registered?', 'The app ships already knowing how to reach StandBy\'s secure server. When you type your email, it asks that server to send the link, and your account is created for that address on the spot.'],
   ['What if the email does not arrive?', 'Check spam or promotions, then use Resend. Free email has a small hourly limit, so if you are signing in on several devices at once, wait a few minutes between them.'],
   ['Is a one-time link really secure?', 'Yes. The link works once, expires quickly, and only helps someone who can already open your inbox. It cannot be reused, and there is no stored password to steal.'],
   ['What if I lose access to my email?', 'The cloud copy is tied to that address, so keep a file backup as insurance (Settings, Export). A second sign-in method with Google is on the roadmap for extra safety.'],
   ['Can anyone else see my cast\'s contacts?', 'No. The server enforces that only your signed-in account can read your data. The key inside the app cannot bypass that rule, so no other user can reach your shows.'],
-  ['Do I need internet to use Standby?', 'No. Everything works offline on your device. Internet is only needed at the moment you Push or Pull to sync.'],
+  ['Do I need internet to use StandBy?', 'No. Everything works offline on your device. Internet is only needed at the moment you Push or Pull to sync.'],
   ['How do I use it on more than one device?', 'Sign in with the same email on each device. Push from the device that has your latest work, then Pull on the others.'],
   ['Can I keep more than one production?', 'Yes. All of your shows live under one account. Switch between them from the sidebar, with no extra login per show.'],
   ['Can I archive an old show?', 'Soon. Archiving will move a finished production into a separate list, hidden from your day to day view but never deleted, and reopenable anytime.'],
@@ -204,7 +204,7 @@ const faqs = [
 const page3 = `
 <div class="page">
   <div class="hdr">
-    <div class="brand">${CUE}<div><div class="wm">Standby</div><div class="sub">Prompt Book</div></div></div>
+    <div class="brand">${CUE}<div><div class="wm">StandBy</div><div class="sub">Prompt Book</div></div></div>
     <div class="kick">Accounts &amp; Sign-In</div>
   </div>
   <div class="body">
@@ -219,13 +219,13 @@ const page3 = `
     <p style="font-size:11px;color:var(--dim);line-height:1.55">Passwordless sign-in is not a workaround, it is a deliberate, modern choice used across banking, healthcare, and major workplace tools. It removes the weakest link in most accounts, the password, while keeping your data private to you and portable across every device you use.</p>
   </div>
   </div>
-  <div class="foot"><span>Standby, the stage manager's prompt book</span><span>Accounts &amp; Sign-In, page 3 of 3</span></div>
+  <div class="foot"><span>StandBy, the stage manager's prompt book</span><span>Accounts &amp; Sign-In, page 3 of 3</span></div>
 </div>`
 
 const html = (theme) => `<!doctype html><html data-theme="${theme}"><head><meta charset="utf-8"><style>${CSS}</style></head><body>${page1}${page2}${page3}</body></html>`
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
-for (const [theme, name] of [['dark','Standby-How-SignIn-Works.pdf'],['light','Standby-How-SignIn-Works-Print-Light.pdf']]) {
+for (const [theme, name] of [['dark','StandBy-How-SignIn-Works.pdf'],['light','StandBy-How-SignIn-Works-Print-Light.pdf']]) {
   const page = await browser.newContext().then(c=>c.newPage())
   await page.setContent(html(theme), { waitUntil: 'networkidle' })
   await page.emulateMedia({ media: 'print' })

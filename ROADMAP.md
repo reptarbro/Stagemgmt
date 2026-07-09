@@ -1,4 +1,4 @@
-# Standby — Roadmap (canonical)
+# StandBy — Roadmap (canonical)
 
 This is the forward plan. Older notes (`PHASE2.md`, `FEEDBACK.md`, `PROJECT.md`)
 are historical and superseded by this file.
@@ -120,12 +120,12 @@ market confirms it is worth building.
 
 ## Appendix A — Closed-beta invite (draft)
 
-> **Subject: Want to test Standby, a prompt book that finally follows your show
+> **Subject: Want to test StandBy, a prompt book that finally follows your show
 > across devices?**
 >
 > Hi [name],
 >
-> I built a stage-management app called Standby: a digital prompt book for your
+> I built a stage-management app called StandBy: a digital prompt book for your
 > cast and crew list, schedule and call times, attendance, scenes, props, line
 > notes, and reports. It is free, it works offline, and it now syncs a whole
 > production across your iPad, phone, and laptop with one sign-in.

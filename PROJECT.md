@@ -72,7 +72,7 @@ src/
 ### Naming study (decision pending)
 Five directions explored; all have real-world holders, so the play is a distinctive
 wordmark + modifier/TLD (`.show` fits theatre). Leading options:
-1. **Standby** — strongest brand; theatre lane open. Recommended form: `standby.show`, `@onstandby`.
+1. **StandBy** — strongest brand; theatre lane open. Recommended form: `standby.show`, `@onstandby`.
 2. **Ghostlight** — most shareable, but clashes with **Ghostlight Records** (Broadway label) — clear trademark first.
 3. **Promptly** — clean but crowded in general SaaS.
 - Parked (already used in-niche): **Callboard** (VirtualCallboard), **OnCue** (theatre soundboard app).
@@ -98,5 +98,5 @@ wordmark + modifier/TLD (`.show` fits theatre). Leading options:
 ## How to resume
 Reopen this session from your Claude Code history at **claude.ai/code**, or start a
 fresh session pointed at `reptarbro/Stagemgmt` — everything is in git, and this file
-is the briefing. Then say what's next (e.g. "pick the name Standby and rebrand the app"
+is the briefing. Then say what's next (e.g. "pick the name StandBy and rebrand the app"
 or "start Phase 2 with the cue list").

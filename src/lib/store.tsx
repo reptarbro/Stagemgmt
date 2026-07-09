@@ -437,7 +437,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         try {
           const parsed = JSON.parse(json) as AppData
           if (!parsed || !Array.isArray(parsed.productions)) {
-            return { ok: false, error: 'File does not look like Standby data.' }
+            return { ok: false, error: 'File does not look like StandBy data.' }
           }
           const productions = parsed.productions.map(normalizeProduction)
           setData((d) => ({

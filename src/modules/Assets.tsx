@@ -194,11 +194,36 @@ export function Assets() {
                 {filtered.map((a) => (
                   <tr key={a.id} className="row-tap" onClick={() => open(a, false)}>
                     <td>
-                      <div className="row" style={{ gap: 10 }}>
-                        <span aria-hidden="true" style={{ fontSize: '1.3rem' }}>{CAT_ICON[a.category]}</span>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, wordBreak: 'break-word' }}>{a.filename}</div>
-                          {a.note && <div className="faint small">{a.note}</div>}
+                      <div className="row" style={{ gap: 10, alignItems: 'flex-start' }}>
+                        <span aria-hidden="true" style={{ fontSize: '1.3rem', lineHeight: 1.3, flexShrink: 0 }}>
+                          {CAT_ICON[a.category]}
+                        </span>
+                        {/* Bounded width + clamp so long, hyphen/space-free names
+                            (e.g. MORGAN-FANNING-headshot.jpeg) don't collapse the
+                            column into one-letter-per-line. */}
+                        <div style={{ width: 'clamp(140px, 34vw, 340px)' }}>
+                          <div
+                            title={a.filename}
+                            style={{
+                              fontWeight: 600,
+                              overflowWrap: 'anywhere',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            {a.filename}
+                          </div>
+                          {a.note && (
+                            <div
+                              className="faint small"
+                              title={a.note}
+                              style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                            >
+                              {a.note}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>

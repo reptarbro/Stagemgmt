@@ -197,7 +197,7 @@ export function CloudSync() {
           </p>
 
           <p className="small muted" style={{ marginTop: 0 }}>
-            ✓ Syncing automatically. To use another device, just open Standby there and sign in with the
+            ✓ Syncing automatically. To use another device, just open StandBy there and sign in with the
             same account — your shows appear on their own, and edits on any device merge together.
           </p>
 

@@ -1,18 +1,18 @@
-# Standby — Pitch / Overview Deck
+# StandBy — Pitch / Overview Deck
 
-Marketing and roadmap collateral for Standby. Not part of the app build (GitHub
+Marketing and roadmap collateral for StandBy. Not part of the app build (GitHub
 Pages only publishes `dist/`), just stored here for safekeeping.
 
 | File | What it is |
 |------|------------|
-| `Standby-Overview-Letter.pdf` | 7-page product overview, US Letter portrait, dark theme (screen/sending). |
-| `Standby-Overview-Print-Light.pdf` | Same overview, light background with darker greens (printing). |
-| `Standby-Deck-Editable.pptx` | 11-slide deck with **native editable text, a real comparison table, and embedded screenshots**. Opens in PowerPoint; import into Google Slides via File → Import slides. |
-| `Standby-How-SignIn-Works.pdf` | 3-page "Accounts & Sign-In" explainer, dark theme (screen/sending): how passwordless sign-in works, a password-vs-Standby comparison table, one-account/multiple-productions plus archiving, and a full FAQ for the non-traditional (no password) login. |
-| `Standby-How-SignIn-Works-Print-Light.pdf` | Same explainer, light background for printing. |
+| `StandBy-Overview-Letter.pdf` | 7-page product overview, US Letter portrait, dark theme (screen/sending). |
+| `StandBy-Overview-Print-Light.pdf` | Same overview, light background with darker greens (printing). |
+| `StandBy-Deck-Editable.pptx` | 11-slide deck with **native editable text, a real comparison table, and embedded screenshots**. Opens in PowerPoint; import into Google Slides via File → Import slides. |
+| `StandBy-How-SignIn-Works.pdf` | 3-page "Accounts & Sign-In" explainer, dark theme (screen/sending): how passwordless sign-in works, a password-vs-StandBy comparison table, one-account/multiple-productions plus archiving, and a full FAQ for the non-traditional (no password) login. |
+| `StandBy-How-SignIn-Works-Print-Light.pdf` | Same explainer, light background for printing. |
 | `how-sign-in-works.html` + `how-sign-in-works.build.mjs` | Source for the explainer (self-contained HTML with embedded Montserrat/Raleway) and the Node/Chromium script that renders both PDFs. Rebuild with a session that has `playwright-core` and the app's `@fontsource` files. |
 
-Contents: cover, purpose + KPIs, a Standby-vs-others comparison matrix, real-world
+Contents: cover, purpose + KPIs, a StandBy-vs-others comparison matrix, real-world
 scenarios, OOB/AEA perspectives, five interface screenshots with blurbs, and a
 phased roadmap (v3.5 shipped → Phase 2 → Phase 3).
 

@@ -59,7 +59,7 @@ export async function applyBackupText(
   try {
     parsed = JSON.parse(text)
   } catch {
-    return { ok: false, error: "That file isn't valid Standby data.", files: 0, bundle: false }
+    return { ok: false, error: "That file isn't valid StandBy data.", files: 0, bundle: false }
   }
   const obj = parsed as { kind?: string; files?: BundleFile[]; data?: unknown }
   if (obj && obj.kind === 'standby-bundle') {

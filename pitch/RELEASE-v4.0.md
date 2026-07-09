@@ -1,11 +1,11 @@
-# Standby v4.0: The show goes anywhere
+# StandBy v4.0: The show goes anywhere
 
-Standby is the first project I have built and carried all the way to a real
+StandBy is the first project I have built and carried all the way to a real
 release. I made it from inside the work, using my own ongoing production of
 Hedda Gabler as a live testing ground and drawing on the daily reality of stage
 managing.
 
-Version 4.0 is the release where Standby stopped being a notebook on a single
+Version 4.0 is the release where StandBy stopped being a notebook on a single
 device and became a tool that follows you across all of them.
 
 ## What is new

@@ -1,6 +1,6 @@
-/** App identity — the Standby cue-light mark and name, used across the app. */
+/** App identity — the StandBy cue-light mark and name, used across the app. */
 
-export const APP_NAME = 'Standby'
+export const APP_NAME = 'StandBy'
 export const APP_TAGLINE = 'Prompt Book'
 
 /**
@@ -10,7 +10,7 @@ export const APP_TAGLINE = 'Prompt Book'
 export function StandbyMark({ size = 40 }: { size?: number }) {
   const gid = `sb-glow-${size}`
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-label="Standby">
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-label="StandBy">
       <defs>
         <radialGradient id={gid} cx="50%" cy="38%" r="55%">
           <stop offset="0%" stopColor="#d9a441" stopOpacity="0.5" />

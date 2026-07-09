@@ -68,7 +68,7 @@ These came up during the base-site revision and are explicitly deferred to Phase
 - **Script-page linking** — scene page numbers pulled from the live uploaded script doc
   (deep-link scene ↔ script). Heavier; revisit after the script viewer is wired to sync.
 
-### Captured from the V2 (Standby-branded) screenshot review
+### Captured from the V2 (StandBy-branded) screenshot review
 - **Surface existing productions after sign-in** — once accounts/sync land, land a returning
   user on their production list rather than the create-new landing (needs 2b back-end).
 - **Email script to cast** — send the uploaded script doc to selected cast members. Needs a

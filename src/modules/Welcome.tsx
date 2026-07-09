@@ -225,7 +225,7 @@ export function Welcome() {
 
         {/* Compact secondary actions */}
         <p className="hint" style={{ margin: '16px 0 8px' }}>
-          Already using Standby, or moving from another device?
+          Already using StandBy, or moving from another device?
         </p>
         <div className="row" style={{ gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
           {CLOUD_ENABLED &&

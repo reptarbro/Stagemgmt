@@ -1,6 +1,6 @@
-# Standby — Changelog
+# StandBy — Changelog
 
-Standby is a local-first stage-management web app (a digital prompt book) for
+StandBy is a local-first stage-management web app (a digital prompt book) for
 stage managers. Live at https://reptarbro.github.io/Stagemgmt/.
 
 ## v4.0 — Cross-device sync 🎉 (milestone)
@@ -40,7 +40,7 @@ audit; report PDF white background; Reports → Download PDF + Email.
 ## v3 and earlier
 
 Base modules and screenshot-driven revisions; rebrand to sage/emerald and the
-**Standby** name; home landing page and deploy hardening; copy/labels, tappable
+**StandBy** name; home landing page and deploy hardening; copy/labels, tappable
 Hub tiles, switch-production menu, print/PDF overhaul, calendar legend;
 cast-first roster sort; past-event sign-in upload/view; app-shell scroll model.
 

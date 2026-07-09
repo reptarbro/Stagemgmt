@@ -1,6 +1,6 @@
-# Standby — Session Handoff
+# StandBy — Session Handoff
 
-Snapshot for continuing work in a fresh session. **Standby** is a local-first
+Snapshot for continuing work in a fresh session. **StandBy** is a local-first
 stage-management web app (a digital prompt book) for stage managers.
 
 ## Start a new session (copy/paste this)
@@ -8,7 +8,7 @@ stage-management web app (a digital prompt book) for stage managers.
 Open a new session on the `reptarbro/Stagemgmt` repo and paste this as the first
 message:
 
-> Continue work on the Standby stage-manager app. Read `HANDOFF.md` first (this
+> Continue work on the StandBy stage-manager app. Read `HANDOFF.md` first (this
 > file) — it has the architecture, branch, and everything shipped so far — then
 > read `ROADMAP.md` for the forward plan. Work on branch
 > `claude/modal-form-ui-fixes-xjfci8` (it mirrors `main`). The app is live at
@@ -142,7 +142,7 @@ what you expected · a screenshot if handy · which device/browser.
 
 ## Shipped so far (through v4.0 — cross-device sync)
 - v1: base modules + screenshot-driven revisions.
-- Rebrand to sage/emerald; renamed to **Standby**; favicon-matched colors.
+- Rebrand to sage/emerald; renamed to **StandBy**; favicon-matched colors.
 - Home landing page (create / open existing / sample); deploy hardening.
 - v2: copy/labels, tappable Hub tiles, switch-production menu, print/PDF
   overhaul (`PrintSheet` + jsPDF), calendar legend, Dress Rehearsal type.
@@ -238,10 +238,10 @@ HTTPS in GitHub Pages settings.
   may be pruned by npm (reinstall `--no-save`); `vite preview` is flaky (retry).
 
 ## Branding
-The app name is **Standby** everywhere in-app and in the PWA manifest / titles.
+The app name is **StandBy** everywhere in-app and in the PWA manifest / titles.
 The GitHub repo stays named `Stagemgmt` on purpose — renaming it would change
 the live Pages URL (`reptarbro.github.io/Stagemgmt/`). To make search results
-say "Standby", edit the repo **description** in GitHub settings (external, not
+say "StandBy", edit the repo **description** in GitHub settings (external, not
 in this codebase).
 
 ## Roadmap / backlog
