@@ -40,6 +40,7 @@ function hasRealData(json: string): boolean {
 export function CloudAutoSync() {
   const { exportJSON, importJSON, data } = useStore()
   const [signedIn, setSignedIn] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const reconciledFor = useRef<string | null>(null)
   const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Serialize sync work so a poll, a focus reconcile, and a flush never overlap.
@@ -144,14 +145,15 @@ export function CloudAutoSync() {
   useEffect(() => {
     if (!CLOUD_ENABLED) return
     let alive = true
-    const apply = (userId: string | null) => {
+    const apply = (uid: string | null) => {
       if (!alive) return
-      setSignedIn(!!userId)
-      if (userId && reconciledFor.current !== userId) {
-        reconciledFor.current = userId
+      setSignedIn(!!uid)
+      setUserId(uid)
+      if (uid && reconciledFor.current !== uid) {
+        reconciledFor.current = uid
         void reconcile()
       }
-      if (!userId) reconciledFor.current = null
+      if (!uid) reconciledFor.current = null
     }
     supa()
       .auth.getUser()
@@ -212,6 +214,31 @@ export function CloudAutoSync() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signedIn])
+
+  // Realtime: subscribe to this user's cloud row so another device's push lands
+  // here in ~1s instead of waiting for the focus/30s-poll reconcile. On any
+  // change we just run reconcile() — it re-checks the cloud against our last
+  // sync and only PULLS when this device has no unsynced edits (pushes when only
+  // we changed, flags a conflict when both did), so it can't clobber local work.
+  // Our own push echoes back as a change too, but reconcile then sees cloud ==
+  // local and no-ops. Best-effort: if Realtime isn't enabled on the table or the
+  // socket drops, the 30s poll above still converges. Requires the app_state
+  // table to be in the `supabase_realtime` publication (supabase/enable_realtime.sql).
+  useEffect(() => {
+    if (!CLOUD_ENABLED || !userId) return
+    const channel = supa()
+      .channel(`app_state:${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'app_state', filter: `user_id=eq.${userId}` },
+        () => void reconcile(),
+      )
+      .subscribe()
+    return () => {
+      void supa().removeChannel(channel)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
 
   return null
 }

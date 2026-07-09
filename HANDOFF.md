@@ -65,9 +65,20 @@ what you expected · a screenshot if handy · which device/browser.
   - `supabase/delete_account.sql` — one-time SQL to install the `delete_account`
     RPC so account deletion also removes the auth user (run in the SQL editor).
   - `src/components/CloudAutoSync.tsx` — Stage 2.1 engine (renders null):
-    reconcile on sign-in / focus / return-to-foreground / 30s poll, debounced
-    push-on-change with a flush on hide/close, never auto-clobbers when both
-    sides changed. Mounted in `App.tsx`.
+    reconcile on sign-in / focus / return-to-foreground / 30s poll / **Realtime
+    push**, debounced push-on-change with a flush on hide/close, never
+    auto-clobbers when both sides changed. Conflict detection is by **signature**
+    (`cloudSig !== syncedSignature`), not wall-clock — the old timestamp check
+    mis-fired when `lastSyncedAt` was null and silently dropped new edits (the
+    "uploaded asset keeps disappearing" bug). Mounted in `App.tsx`.
+  - **Realtime auto-sync:** subscribes to the user's `app_state` row via Supabase
+    Realtime; a remote change triggers `reconcile()` (~1s), so another device's
+    save lands without waiting for the poll. Reuses reconcile's safety (pulls
+    only when this device has no unsynced edits). Needs the table in the
+    `supabase_realtime` publication — run `supabase/enable_realtime.sql` ONCE;
+    until then the 30s poll is the fallback. `src/lib/cloud/auth.ts` exposes
+    `useSignedIn()`; the "data lives on this device only" backup nudge in
+    `App.tsx` is suppressed when signed in (cloud is the backup).
   - `src/lib/cloud/status.ts` — observable sync state (`useSyncStatus`):
     idle/syncing/synced/conflict/error. Drives the amber **sync-conflict
     banner** (`App.tsx`) and the live status + resolve-guidance in `CloudSync`.

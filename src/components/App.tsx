@@ -6,6 +6,7 @@ import { daysToOpening, cueToCueActive, CUE_WINDOW_DAYS } from '../lib/dates'
 import { ScrollToTop } from './ui'
 import { CloudAutoSync } from './CloudAutoSync'
 import { useSyncStatus } from '../lib/cloud/status'
+import { useSignedIn } from '../lib/cloud/auth'
 import { StandbyMark, APP_NAME, APP_TAGLINE } from './Brand'
 import { NavIcon, type IconName } from './icons'
 import { Welcome } from '../modules/Welcome'
@@ -232,6 +233,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 /** Gentle reminder to export a backup when data exists and it's overdue. */
 function BackupBanner() {
   const { data, exportJSON } = useStore()
+  const signedIn = useSignedIn()
   const [dismissed, setDismissed] = useState(false)
 
   const hasData = data.productions.some(
@@ -245,7 +247,10 @@ function BackupBanner() {
   )
   const last = getLastBackup()
   const overdue = hasData && (last === 0 || Date.now() - last > WEEK_MS)
-  if (!overdue || dismissed) return null
+  // Signed in, the data also lives in the cloud (and syncs automatically), so
+  // the "on this device only — back it up or lose it" nudge is both alarming
+  // and inaccurate. Suppress it; a full export is still available in Settings.
+  if (!overdue || dismissed || signedIn) return null
 
   const doExport = () => {
     const blob = new Blob([exportJSON()], { type: 'application/json' })
