@@ -86,12 +86,14 @@ what you expected · a screenshot if handy · which device/browser.
   `updateAsset`, `getAssetURL`, `removeAsset`. Model: `Asset`/`AssetCategory` +
   `Production.assets` (types.ts), defaulted in `normalizeProduction`. Larger
   cloud storage is the planned paid lever — see ROADMAP Stage 2.3.
-- **Link-preview card:** `public/og-card.png` (1200×630 title card: logo +
-  wordmark + "a digital binder for stage managers"). Wired via `og:*`/`twitter:*`
-  tags in `index.html` (the app had none) and `public/site/index.html` (was a hub
-  screenshot). Regenerate from the scratchpad HTML → Chromium screenshot pattern.
-  Social caches are sticky; re-scrape via each platform's debugger or a `?v=`
-  cache-buster after changing it.
+- **Link-preview cards (two, 1200×630 @2×):** the app and the marketing site
+  preview differently. `public/og-app.png` — "▶ Open the app" pill + feature
+  strip, wired in `index.html` (title "open your prompt book"). `public/og-card.png`
+  — the tagline poster ("a digital binder for stage managers"), wired in
+  `public/site/index.html` (the pitch page). Both set via `og:*`/`twitter:*` tags
+  with absolute URLs. Regenerate from the scratchpad HTML → Chromium screenshot
+  pattern. Social caches are sticky; re-scrape via each platform's debugger or a
+  `?v=` cache-buster after changing them.
 - **Legal:** `src/modules/Legal.tsx` renders standalone `/privacy` and `/terms`
   pages (top-level routes, no active production needed), linked from Welcome and
   Settings. Plain-language, app-specific. Update `UPDATED`/`CONTACT` constants
