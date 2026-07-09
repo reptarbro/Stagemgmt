@@ -9,7 +9,6 @@ import {
   dataSignature,
   syncedSignature,
   setSyncedSignature,
-  lastSyncedAt,
 } from '../lib/cloud/sync'
 import { setSyncStatus, getSyncStatus } from '../lib/cloud/status'
 import type { AppData } from '../lib/types'
@@ -92,10 +91,17 @@ export function CloudAutoSync() {
         if (r.ok) setSyncedSignature(cloudSig)
         return
       }
-      // Local changed since last sync. If the cloud also moved on, that's a
-      // conflict → leave it to manual. Otherwise push our edits up.
-      const cloudNewer = cloud.updatedAt > (lastSyncedAt() ?? '')
-      if (cloudNewer) {
+      // Local changed since last sync. Decide by SIGNATURE, not wall-clock: the
+      // cloud has "moved on" only if its signature differs from the one we last
+      // synced. If it hasn't, our local edit is strictly newer → push it.
+      // (The old check compared cloud.updatedAt against lastSyncedAt(), but a
+      // null lastSyncedAt — e.g. after a first reconcile that found local ==
+      // cloud and only set the signature — read as epoch-0, so ANY real cloud
+      // timestamp looked "newer" → a bogus conflict. The edit was then never
+      // pushed and could be lost when the user resolved that conflict with Pull.
+      // That's the "my uploaded asset keeps disappearing" bug.)
+      const cloudMovedOn = cloudSig !== synced
+      if (cloudMovedOn) {
         setSyncStatus('conflict')
         return
       }
