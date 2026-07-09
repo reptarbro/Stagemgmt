@@ -105,11 +105,19 @@ what you expected · a screenshot if handy · which device/browser.
   with absolute URLs. Regenerate from the scratchpad HTML → Chromium screenshot
   pattern. Social caches are sticky; re-scrape via each platform's debugger or a
   `?v=` cache-buster after changing them.
-- **Legal:** `src/modules/Legal.tsx` renders standalone `/privacy` and `/terms`
-  pages (top-level routes, no active production needed), linked from Welcome and
-  Settings. Plain-language, app-specific. Update `UPDATED`/`CONTACT` constants
-  there when the text or contact changes. Needs counsel review before monetizing
-  (see ROADMAP Stage 2.2).
+- **Legal:** `src/modules/Legal.tsx` renders in-app `/privacy` and `/terms`
+  (hash routes, JS-rendered), linked from Welcome and Settings. **Static,
+  crawlable mirrors** live at `public/privacy/index.html` + `public/terms/index.html`
+  (self-contained HTML, no JS) at `…/Stagemgmt/privacy/` and `…/terms/` — these are
+  the URLs to give Google's OAuth consent screen (its verifier may not run JS) and
+  are SEO-indexable. Keep the mirrors in sync with `Legal.tsx` (there's a reminder
+  comment there); update `UPDATED`/`CONTACT` in all three. Needs counsel review
+  before monetizing (see ROADMAP Stage 2.2).
+- **Performance:** route modules are `React.lazy` + `Suspense` (App.tsx), so the
+  initial JS is just shell + landing (~123 kB gzip, was ~280 kB); each module is
+  its own chunk loaded on navigation. The PDF/print stack (`jspdf`, and its lazy
+  `html2canvas`/`dompurify`) is dynamically imported in `reportPdf.ts`, so ~187 kB
+  gzip only loads when someone exports a report.
 - **Theme:** T-REX × brooklynONE palette (near-black bg, ivory text, sage +
   emerald accents); Montserrat (display) + Raleway (body) via @fontsource.
 

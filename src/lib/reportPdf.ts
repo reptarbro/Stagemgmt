@@ -1,4 +1,3 @@
-import { jsPDF } from 'jspdf'
 import type { Production, Report } from './types'
 import { formatDate } from './format'
 import { slug } from './exporters'
@@ -8,8 +7,11 @@ export function reportSubject(report: Report, production: Production): string {
   return `${production.title} — ${report.type} Report — ${formatDate(report.date)}`
 }
 
-/** Build a clean, page-filling PDF of a rehearsal/performance report. */
-export function buildReportPDF(report: Report, production: Production): Blob {
+/** Build a clean, page-filling PDF of a rehearsal/performance report.
+    jsPDF (and its lazy html2canvas/dompurify deps) is imported on demand so it
+    stays out of the initial bundle — it's only needed when someone exports. */
+export async function buildReportPDF(report: Report, production: Production): Promise<Blob> {
+  const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ unit: 'pt', format: 'letter' })
   // Document title (shown in viewer tab / file info) — the report's "subject".
   doc.setProperties({ title: reportSubject(report, production) })
@@ -107,8 +109,8 @@ function reportFilename(report: Report, production: Production): string {
  * PDF in the viewer (from there it can be saved to Files or attached to an
  * email with a clean subject and no auto-filled body).
  */
-export function downloadReportPDF(report: Report, production: Production): void {
-  const blob = buildReportPDF(report, production)
+export async function downloadReportPDF(report: Report, production: Production): Promise<void> {
+  const blob = await buildReportPDF(report, production)
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url

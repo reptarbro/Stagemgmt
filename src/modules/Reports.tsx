@@ -360,7 +360,7 @@ function ReportViewer({ report, onClose }: { report: Report; onClose: () => void
   }
 
   const download = () => {
-    if (production) downloadReportPDF(report, production)
+    if (production) void downloadReportPDF(report, production)
   }
 
   // Open a mail draft with the subject pre-filled and an empty body, so the

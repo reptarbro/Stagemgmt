@@ -2,6 +2,11 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { StandbyMark, APP_NAME } from '../components/Brand'
 
+// NOTE: static, crawlable mirrors of these pages live at public/privacy/index.html
+// and public/terms/index.html (used for Google OAuth verification + SEO, which
+// don't run JS). If you edit the text or the constants below, update those two
+// files to match so the in-app and public versions don't drift.
+
 /** Human-readable "last updated" — bump when the text below changes. */
 const UPDATED = 'July 8, 2026'
 /** Where people reach a human about privacy or these terms. */

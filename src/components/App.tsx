@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { NavLink, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { getLastBackup, markBackedUp } from '../lib/storage'
@@ -10,18 +10,31 @@ import { useSignedIn } from '../lib/cloud/auth'
 import { StandbyMark, APP_NAME, APP_TAGLINE } from './Brand'
 import { NavIcon, type IconName } from './icons'
 import { Welcome } from '../modules/Welcome'
-import { Hub } from '../modules/Hub'
-import { People } from '../modules/People'
-import { Schedule } from '../modules/Schedule'
-import { Scenes } from '../modules/Scenes'
-import { Props } from '../modules/Props'
-import { LineNotes } from '../modules/LineNotes'
-import { Script } from '../modules/Script'
-import { Assets } from '../modules/Assets'
-import { CueToCue } from '../modules/CueToCue'
-import { Reports } from '../modules/Reports'
-import { Settings } from '../modules/Settings'
-import { PrivacyPolicy, Terms } from '../modules/Legal'
+// Route modules are lazy-loaded so the initial bundle is just the shell + the
+// landing page; each module (and heavy deps like the PDF/print path) loads on
+// first navigation. Welcome stays eager for a fast first paint.
+const Hub = lazy(() => import('../modules/Hub').then((m) => ({ default: m.Hub })))
+const People = lazy(() => import('../modules/People').then((m) => ({ default: m.People })))
+const Schedule = lazy(() => import('../modules/Schedule').then((m) => ({ default: m.Schedule })))
+const Scenes = lazy(() => import('../modules/Scenes').then((m) => ({ default: m.Scenes })))
+const Props = lazy(() => import('../modules/Props').then((m) => ({ default: m.Props })))
+const LineNotes = lazy(() => import('../modules/LineNotes').then((m) => ({ default: m.LineNotes })))
+const Script = lazy(() => import('../modules/Script').then((m) => ({ default: m.Script })))
+const Assets = lazy(() => import('../modules/Assets').then((m) => ({ default: m.Assets })))
+const CueToCue = lazy(() => import('../modules/CueToCue').then((m) => ({ default: m.CueToCue })))
+const Reports = lazy(() => import('../modules/Reports').then((m) => ({ default: m.Reports })))
+const Settings = lazy(() => import('../modules/Settings').then((m) => ({ default: m.Settings })))
+const PrivacyPolicy = lazy(() => import('../modules/Legal').then((m) => ({ default: m.PrivacyPolicy })))
+const Terms = lazy(() => import('../modules/Legal').then((m) => ({ default: m.Terms })))
+
+/** Small, unobtrusive fallback while a lazily-loaded page chunk arrives. */
+function PageLoading() {
+  return (
+    <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-faint)' }} aria-busy="true">
+      Loading…
+    </div>
+  )
+}
 
 const NAV: { to: string; icon: IconName; label: string }[] = [
   { to: '/hub', icon: 'hub', label: 'Production Hub' },
@@ -41,6 +54,7 @@ export function App() {
     <>
       <ScrollToTop />
       <CloudAutoSync />
+      <Suspense fallback={<PageLoading />}>
       <Routes>
         {/* Home / landing — every fresh entry starts here. */}
         <Route path="/" element={<Welcome />} />
@@ -63,6 +77,7 @@ export function App() {
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </>
   )
 }
@@ -198,7 +213,11 @@ function Shell() {
           <div className="main-inner">
             <SyncConflictBanner />
             <BackupBanner />
-            <Outlet />
+            {/* Nearer boundary than the top-level one, so switching modules shows
+                the fallback only in the content area — the sidebar stays put. */}
+            <Suspense fallback={<PageLoading />}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
       </div>
