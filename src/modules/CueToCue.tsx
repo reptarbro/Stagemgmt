@@ -98,11 +98,11 @@ export function CueToCue() {
         <>
           <div className="row wrap mb no-print" style={{ gap: 8 }}>
             <FilterChip active={deptFilter === 'All'} onClick={() => setDeptFilter('All')}>
-              All {cues.length}
+              All <span className="chip-ct">{cues.length}</span>
             </FilterChip>
             {DEPTS.filter((g) => deptCounts[g]).map((g) => (
               <FilterChip key={g} active={deptFilter === g} onClick={() => setDeptFilter(g)}>
-                {g} {deptCounts[g]}
+                {g} <span className="chip-ct">{deptCounts[g]}</span>
               </FilterChip>
             ))}
           </div>

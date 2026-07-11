@@ -162,7 +162,7 @@ export function People() {
             />
             <div className="spacer" />
             <FilterChip active={filter === 'All'} onClick={() => setFilter('All')}>
-              All {people.length}
+              All <span className="chip-ct">{people.length}</span>
             </FilterChip>
             {GROUPS.filter((g) => counts[g]).map((g) => (
               <FilterChip key={g} active={filter === g} onClick={() => setFilter(g)}>

@@ -589,6 +589,13 @@ tbody tr:hover {
 }
 
 /* ---------- Badges / chips ---------- */
+/* Count on a filter chip, set off from its label by a subtle dot. */
+.chip-ct::before {
+  content: "·";
+  margin-right: 4px;
+  opacity: 0.55;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;

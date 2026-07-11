@@ -18,6 +18,7 @@ export function Welcome() {
   const [company, setCompany] = useState('')
   const [venue, setVenue] = useState('')
   const [kind, setKind] = useState<ProductionKind>('play')
+  const [sampleChoosing, setSampleChoosing] = useState(false)
   const [importErr, setImportErr] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   // A fresh device with no production lands here and can't reach Settings, so
@@ -255,14 +256,41 @@ export function Welcome() {
           <button type="button" className="btn btn-sm" onClick={() => fileRef.current?.click()}>
             ⬆ Import backup
           </button>
-          <button type="button" className="btn btn-sm" onClick={() => openSample('play')}>
-            ✨ Play sample
-          </button>
-          <button type="button" className="btn btn-sm" onClick={() => openSample('cabaret')}>
-            🎵 Cabaret sample
+          <button
+            type="button"
+            className={`btn btn-sm ${sampleChoosing ? 'btn-primary' : ''}`}
+            onClick={() => setSampleChoosing((s) => !s)}
+            aria-expanded={sampleChoosing}
+          >
+            ✨ Explore a sample
           </button>
         </div>
         <input ref={fileRef} type="file" accept="application/json,.json" onChange={onImport} style={{ display: 'none' }} />
+
+        {/* Sample chooser — tap a show type to open a fully-built demo. */}
+        {sampleChoosing && (
+          <div className="card" style={{ textAlign: 'left', marginTop: 10, padding: 12 }}>
+            <p className="hint" style={{ margin: '0 0 8px' }}>Pick a sample to explore — it opens right away:</p>
+            <div className="row wrap" style={{ gap: 8 }}>
+              <button
+                type="button"
+                className="btn"
+                style={{ flex: 1, minWidth: 170, justifyContent: 'flex-start' }}
+                onClick={() => openSample('play')}
+              >
+                🎭&nbsp; Theater — A Midsummer Night's Dream
+              </button>
+              <button
+                type="button"
+                className="btn"
+                style={{ flex: 1, minWidth: 170, justifyContent: 'flex-start' }}
+                onClick={() => openSample('cabaret')}
+              >
+                🎵&nbsp; Cabaret — The Blue Room
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Inline sign-in panel (opens under the row) */}
         {CLOUD_ENABLED && showSignIn && (cloudStage === 'out' || cloudStage === 'sent') && (
