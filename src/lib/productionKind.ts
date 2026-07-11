@@ -8,6 +8,13 @@ export interface KindProfile {
   blurb: string
   /** Relabeled vocabulary. Keys are the theater defaults. */
   terms: { scenes: string; character: string; script: string }
+  /** Singular name for one item in the "scenes" collection (e.g. "Number"). */
+  unit: string
+  /** True for running-order kinds: the "scenes" list shows a set-list layout
+      (duration column, performers optional) instead of a scene breakdown. */
+  setlist: boolean
+  /** True where a musical key is meaningful (shows a Key field on set-list items). */
+  musicalKeys: boolean
   /** Nav paths hidden by default for this kind (user can re-enable per show). */
   hiddenByDefault: string[]
 }
@@ -22,42 +29,63 @@ export const KIND_PROFILES: Record<ProductionKind, KindProfile> = {
     label: 'Play',
     blurb: 'A scripted play.',
     terms: { scenes: 'Scenes', character: 'Character', script: 'Script' },
+    unit: 'Scene',
+    setlist: false,
+    musicalKeys: false,
     hiddenByDefault: [],
   },
   musical: {
     label: 'Musical',
     blurb: 'A book musical.',
     terms: { scenes: 'Scenes', character: 'Character', script: 'Script' },
+    unit: 'Scene',
+    setlist: false,
+    musicalKeys: false,
     hiddenByDefault: [],
   },
   cabaret: {
     label: 'Cabaret / Concert',
     blurb: 'A cabaret or concert set — songs, not a script.',
     terms: { scenes: 'Set list', character: 'Performer', script: 'Running order' },
+    unit: 'Number',
+    setlist: true,
+    musicalKeys: true,
     hiddenByDefault: ['/line-notes'],
   },
   oneact: {
     label: 'One-act / Festival',
     blurb: 'A one-act or a festival of short pieces.',
     terms: { scenes: 'Scenes', character: 'Character', script: 'Script' },
+    unit: 'Scene',
+    setlist: false,
+    musicalKeys: false,
     hiddenByDefault: [],
   },
   dance: {
     label: 'Dance',
     blurb: 'A dance or movement piece.',
     terms: { scenes: 'Pieces', character: 'Dancer', script: 'Score notes' },
+    unit: 'Piece',
+    setlist: true,
+    musicalKeys: false,
     hiddenByDefault: ['/line-notes', '/script'],
   },
   variety: {
     label: 'Variety / Comedy',
     blurb: 'A variety, sketch, or comedy night.',
     terms: { scenes: 'Segments', character: 'Performer', script: 'Running order' },
+    unit: 'Segment',
+    setlist: true,
+    musicalKeys: false,
     hiddenByDefault: ['/line-notes'],
   },
   other: {
     label: 'Other',
     blurb: 'Any other staged live performance.',
     terms: { scenes: 'Scenes', character: 'Character', script: 'Script' },
+    unit: 'Scene',
+    setlist: false,
+    musicalKeys: false,
     hiddenByDefault: [],
   },
 }

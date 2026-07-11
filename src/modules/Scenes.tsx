@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar } from '../components/ui'
-import { term } from '../lib/productionKind'
+import { term, kindProfile } from '../lib/productionKind'
 import type { Person, Scene } from '../lib/types'
 
 const BLANK: Omit<Scene, 'id'> = {
@@ -20,6 +20,9 @@ export function Scenes() {
   const [view, setView] = useState<'list' | 'matrix'>('list')
 
   const scenes = production?.scenes ?? []
+  const profile = kindProfile(production?.kind)
+  const { setlist, musicalKeys, unit } = profile
+  const charLabel = term(production?.kind, 'character')
   // Only cast are useful as "characters in a scene".
   const cast = useMemo(
     () => (production?.people ?? []).filter((p) => p.group === 'Cast'),
@@ -34,7 +37,11 @@ export function Scenes() {
     <>
       <PageHead
         title={term(production?.kind, 'scenes')}
-        subtitle={`${term(production?.kind, 'scenes')} & ${term(production?.kind, 'character').toLowerCase()} breakdown`}
+        subtitle={
+          setlist
+            ? `Running order — ${charLabel.toLowerCase()}s${musicalKeys ? ', keys' : ''} & timings`
+            : `${term(production?.kind, 'scenes')} & ${charLabel.toLowerCase()} breakdown`
+        }
         actions={
           <>
             {scenes.length > 0 && cast.length > 0 && (
@@ -54,19 +61,20 @@ export function Scenes() {
               </div>
             )}
             <button className="btn btn-primary" onClick={() => setEditing('new')}>
-              + Add Scene
+              + Add {unit}
             </button>
           </>
         }
       />
 
       {scenes.length === 0 ? (
-        <EmptyState mark="🎬" title="No scenes broken down yet">
-          Add each scene (or French scene) and mark who's in it. You'll get an instant "who's called for
-          what" grid to build rehearsal calls from.
+        <EmptyState mark={setlist ? '🎵' : '🎬'} title={`No ${term(production?.kind, 'scenes').toLowerCase()} yet`}>
+          {setlist
+            ? `Add each ${unit.toLowerCase()} in order — title, who's up${musicalKeys ? ', key' : ''}, and timing. You'll get a clean running order plus a who's-in-what grid.`
+            : `Add each scene (or French scene) and mark who's in it. You'll get an instant "who's called for what" grid to build rehearsal calls from.`}
         </EmptyState>
       ) : view === 'matrix' ? (
-        <SceneMatrix scenes={scenes} cast={cast} />
+        <SceneMatrix scenes={scenes} cast={cast} unit={unit} />
       ) : (
         <>
           <p className="hint no-print" style={{ marginTop: -4 }}>
@@ -79,8 +87,10 @@ export function Scenes() {
                   <div style={{ minWidth: 200 }}>
                     <div className="row" style={{ gap: 8 }}>
                       <span className="badge">{s.number || '—'}</span>
-                      <strong className="tcase">{s.title || 'Untitled scene'}</strong>
-                      {s.page && <span className="tag">p. {s.page}</span>}
+                      <strong className="tcase">{s.title || `Untitled ${unit.toLowerCase()}`}</strong>
+                      {!setlist && s.page && <span className="tag">p. {s.page}</span>}
+                      {musicalKeys && s.key && <span className="tag">key {s.key}</span>}
+                      {setlist && s.duration && <span className="tag">{s.duration}</span>}
                     </div>
                     {s.synopsis && (
                       <div className="small muted" style={{ marginTop: 6 }}>
@@ -89,7 +99,7 @@ export function Scenes() {
                     )}
                     <div className="row wrap" style={{ gap: 5, marginTop: 8 }}>
                       {s.characterIds.length === 0 ? (
-                        <span className="faint small">No characters marked</span>
+                        <span className="faint small">No {charLabel.toLowerCase()}s marked</span>
                       ) : (
                         s.characterIds.map((id) => (
                           <span key={id} className="tag">
@@ -116,6 +126,9 @@ export function Scenes() {
         <SceneDetail
           scene={viewing}
           nameFor={nameFor}
+          setlist={setlist}
+          musicalKeys={musicalKeys}
+          charLabel={charLabel}
           onClose={() => setViewing(null)}
           onEdit={() => {
             const s = viewing
@@ -129,6 +142,10 @@ export function Scenes() {
         <SceneForm
           initial={editing === 'new' ? undefined : editing}
           cast={cast}
+          setlist={setlist}
+          musicalKeys={musicalKeys}
+          unit={unit}
+          charLabel={charLabel}
           onClose={() => setEditing(null)}
           onSave={(vals) => {
             if (editing === 'new') addScene(vals)
@@ -144,11 +161,17 @@ export function Scenes() {
 function SceneDetail({
   scene,
   nameFor,
+  setlist,
+  musicalKeys,
+  charLabel,
   onClose,
   onEdit,
 }: {
   scene: Scene
   nameFor: (id: string) => string
+  setlist: boolean
+  musicalKeys: boolean
+  charLabel: string
   onClose: () => void
   onEdit: () => void
 }) {
@@ -156,12 +179,14 @@ function SceneDetail({
     <Modal title={`${scene.number}${scene.title ? ` · ${scene.title}` : ''}`} onClose={onClose}>
       <div className="row wrap" style={{ gap: 8, marginBottom: 12 }}>
         <span className="badge">{scene.number || '—'}</span>
-        {scene.page && <span className="tag">p. {scene.page}</span>}
+        {!setlist && scene.page && <span className="tag">p. {scene.page}</span>}
+        {musicalKeys && scene.key && <span className="tag">key {scene.key}</span>}
+        {setlist && scene.duration && <span className="tag">{scene.duration}</span>}
       </div>
       {scene.synopsis && (
         <p className="small" style={{ margin: '0 0 10px' }}>{scene.synopsis}</p>
       )}
-      <div className="field-label">Characters ({scene.characterIds.length})</div>
+      <div className="field-label">{setlist ? `${charLabel}s` : 'Characters'} ({scene.characterIds.length})</div>
       <div className="row wrap" style={{ gap: 5, marginBottom: 10 }}>
         {scene.characterIds.length === 0 ? (
           <span className="faint small">None marked</span>
@@ -185,7 +210,7 @@ function SceneDetail({
   )
 }
 
-function SceneMatrix({ scenes, cast }: { scenes: Scene[]; cast: Person[] }) {
+function SceneMatrix({ scenes, cast, unit }: { scenes: Scene[]; cast: Person[]; unit: string }) {
   if (cast.length === 0) {
     return <p className="muted small">Add cast members on the People page to build the grid.</p>
   }
@@ -194,7 +219,7 @@ function SceneMatrix({ scenes, cast }: { scenes: Scene[]; cast: Person[] }) {
       <table>
         <thead>
           <tr>
-            <th>Scene</th>
+            <th>{unit}</th>
             {cast.map((p) => (
               <th key={p.id} style={{ textAlign: 'center' }}>
                 {p.character || p.name}
@@ -233,11 +258,19 @@ function SceneMatrix({ scenes, cast }: { scenes: Scene[]; cast: Person[] }) {
 function SceneForm({
   initial,
   cast,
+  setlist,
+  musicalKeys,
+  unit,
+  charLabel,
   onClose,
   onSave,
 }: {
   initial?: Scene
   cast: Person[]
+  setlist: boolean
+  musicalKeys: boolean
+  unit: string
+  charLabel: string
   onClose: () => void
   onSave: (vals: Omit<Scene, 'id'>) => void
 }) {
@@ -255,27 +288,43 @@ function SceneForm({
         : [...s.characterIds, id],
     }))
 
-  const missing = !f.number.trim() || !(f.title ?? '').trim() || f.characterIds.length === 0
+  // Set lists don't require a performer (an overture or company number may have none).
+  const missing = !f.number.trim() || !(f.title ?? '').trim() || (!setlist && f.characterIds.length === 0)
 
   return (
-    <Modal title={initial ? 'Edit Scene' : 'Add Scene'} onClose={onClose}>
+    <Modal title={`${initial ? 'Edit' : 'Add'} ${unit}`} onClose={onClose}>
       <div className="form-row-3">
         <label className="field">
-          <span className="field-label">Number <ReqStar /></span>
-          <input value={f.number} onChange={set('number')} placeholder="1.1" autoFocus />
+          <span className="field-label">{setlist ? 'Order' : 'Number'} <ReqStar /></span>
+          <input value={f.number} onChange={set('number')} placeholder={setlist ? '1' : '1.1'} autoFocus />
         </label>
         <label className="field" style={{ gridColumn: 'span 2' }}>
-          <span className="field-label">Title <ReqStar /></span>
-          <input value={f.title} onChange={set('title')} placeholder="The tavern" />
+          <span className="field-label">{setlist ? 'Song / title' : 'Title'} <ReqStar /></span>
+          <input value={f.title} onChange={set('title')} placeholder={setlist ? 'Cry Me a River' : 'The tavern'} />
         </label>
       </div>
-      <label className="field">
-        <span className="field-label">Script page(s)</span>
-        <input value={f.page} onChange={set('page')} placeholder="12–15" />
-      </label>
+      {setlist ? (
+        <div className="form-row">
+          {musicalKeys && (
+            <label className="field">
+              <span className="field-label">Key</span>
+              <input value={f.key ?? ''} onChange={set('key')} placeholder="Am" />
+            </label>
+          )}
+          <label className="field">
+            <span className="field-label">Duration</span>
+            <input value={f.duration ?? ''} onChange={set('duration')} placeholder="3:10" />
+          </label>
+        </div>
+      ) : (
+        <label className="field">
+          <span className="field-label">Script page(s)</span>
+          <input value={f.page} onChange={set('page')} placeholder="12–15" />
+        </label>
+      )}
 
       <div className="field-label">
-        Characters in this scene <ReqStar />{' '}
+        {setlist ? `${charLabel}s` : 'Characters'} in this {unit.toLowerCase()} {!setlist && <ReqStar />}{' '}
         <span className="faint">({f.characterIds.length} selected)</span>
       </div>
       {cast.length === 0 ? (
@@ -310,7 +359,9 @@ function SceneForm({
       </label>
       {missing && (
         <p className="hint" style={{ color: 'var(--danger)', marginBottom: 8 }}>
-          Number, title &amp; at least one character are required.
+          {setlist
+            ? 'Order and title are required.'
+            : 'Number, title & at least one character are required.'}
         </p>
       )}
       <div className="modal-actions">

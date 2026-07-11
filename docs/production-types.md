@@ -102,12 +102,23 @@ gets a **Type** `<select>` (default Play). Its value is passed to
 - Export → import round-trips `kind` and `modules`.
 - Sign in on a second device: the `kind` syncs and the nav matches.
 
-## Out of scope (Phase 2)
+## Phase 2 — shipped
 
-- **Running order** as a purpose-built view (song, key, who's up, patter cues)
-  replacing the plain Script upload for music-driven kinds.
+- **Set-list / running-order mode.** For set-list kinds (`cabaret`, `variety`,
+  `dance`, flagged `setlist: true` on the profile) the Scenes module reshapes
+  into a running order: items gain optional **Key** (music kinds only, via
+  `musicalKeys`) and **Duration** fields (`Scene.key`, `Scene.duration`), the
+  script-page field is hidden, and a performer is no longer required (an
+  overture or company number may have none). Reuses the existing `scenes`
+  array and sync — no new module or data array.
+- **Per-show controls in Settings.** A "Show type & modules" card changes a
+  production's `kind` after creation and toggles individual modules on/off,
+  writing `production.modules` via `updateProduction` (stamps `updatedAt`, so
+  it syncs).
+
+## Still deferred
+
 - **Line Notes** reframed for the kinds that keep it.
-- A per-show **module toggle UI** in Settings that writes `production.modules`
-  (the data field and `moduleVisible` override already support it; only the UI
-  is deferred).
-- Kind-specific **sample productions** for onboarding.
+- Kind-specific **sample productions** for onboarding (e.g. a ready-made
+  cabaret demo).
+- **Patter/cue** rows interleaved in the running order as a distinct row type.

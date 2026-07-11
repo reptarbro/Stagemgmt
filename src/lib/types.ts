@@ -139,6 +139,10 @@ export interface Scene {
   characterIds: ID[]
   synopsis?: string
   notes?: string
+  /** Set-list only: musical key (e.g. "Am"). Shown for music kinds. */
+  key?: string
+  /** Set-list only: running time (e.g. "3:10"). Shown for set-list kinds. */
+  duration?: string
   /** ISO time of the last local edit — used to auto-merge across devices. */
   updatedAt?: string
 }
