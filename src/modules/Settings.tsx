@@ -8,6 +8,7 @@ import { markBackedUp } from '../lib/storage'
 import { slug } from '../lib/exporters'
 import { buildBundleString, applyBackupText } from '../lib/backup'
 import { CloudSync } from '../components/CloudSync'
+import { FeedbackForm } from '../components/FeedbackForm'
 import { CLOUD_ENABLED } from '../lib/cloud/config'
 
 export function Settings() {
@@ -23,6 +24,7 @@ export function Settings() {
   } = useStore()
   const [msg, setMsg] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const samples = data.productions.filter((p) => p.isSample)
@@ -249,20 +251,27 @@ export function Settings() {
       <div className="card">
         <div className="card-title">Help &amp; feedback</div>
         <p className="small muted">
-          Testing the app? Send a quick note — what worked, what didn't, and what you wish it did.
-          Opens your mail app with a short template.
+          Using the app on a show? Send a quick note — what worked, what didn't, and what you wish it
+          did. It goes straight to us in the app; no email needed.
         </p>
-        <button
-          className="btn"
-          onClick={() => {
-            const subject = 'StandBy — feedback'
-            const body =
-              'What I was doing:\n\nWhat happened / what I wish it did:\n\nDevice & browser:\n'
-            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-          }}
-        >
-          ✉ Send feedback
-        </button>
+        <div className="row wrap" style={{ gap: 10 }}>
+          {CLOUD_ENABLED && (
+            <button className="btn btn-primary" onClick={() => setShowFeedback(true)}>
+              ✉ Send feedback
+            </button>
+          )}
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => {
+              const subject = 'StandBy — feedback'
+              const body =
+                'What I was doing:\n\nWhat happened / what I wish it did:\n\nDevice & browser:\n'
+              window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+            }}
+          >
+            {CLOUD_ENABLED ? 'or email instead' : '✉ Send feedback by email'}
+          </button>
+        </div>
       </div>
 
       {production && (
@@ -291,6 +300,8 @@ export function Settings() {
         <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
         <Link to="/terms">Terms of Service</Link>
       </p>
+
+      {showFeedback && <FeedbackForm onClose={() => setShowFeedback(false)} />}
     </>
   )
 }

@@ -2,6 +2,8 @@
 
 export const APP_NAME = 'StandBy'
 export const APP_TAGLINE = 'Prompt Book'
+/** Bump on notable releases; attached to feedback so notes are traceable. */
+export const APP_VERSION = '4.0-beta'
 
 /**
  * Backstage cue light: amber "standby" lamp lit, green "GO" lamp waiting.
