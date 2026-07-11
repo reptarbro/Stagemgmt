@@ -226,7 +226,7 @@ function ReportEditor({
         <textarea
           value={f.workedOn}
           onChange={(e) => setField('workedOn', e.target.value)}
-          placeholder="Scenes rehearsed, running time, breaks taken…"
+          placeholder="What you worked on, running time, breaks taken…"
         />
       </label>
 

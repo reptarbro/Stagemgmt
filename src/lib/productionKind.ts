@@ -46,7 +46,7 @@ export const KIND_PROFILES: Record<ProductionKind, KindProfile> = {
   cabaret: {
     label: 'Cabaret / Concert',
     blurb: 'A cabaret or concert set — songs, not a script.',
-    terms: { scenes: 'Set list', character: 'Performer', script: 'Running order' },
+    terms: { scenes: 'Set List', character: 'Performer', script: 'Running Order' },
     unit: 'Number',
     setlist: true,
     musicalKeys: true,
@@ -64,7 +64,7 @@ export const KIND_PROFILES: Record<ProductionKind, KindProfile> = {
   dance: {
     label: 'Dance',
     blurb: 'A dance or movement piece.',
-    terms: { scenes: 'Pieces', character: 'Dancer', script: 'Score notes' },
+    terms: { scenes: 'Pieces', character: 'Dancer', script: 'Score Notes' },
     unit: 'Piece',
     setlist: true,
     musicalKeys: false,
@@ -73,7 +73,7 @@ export const KIND_PROFILES: Record<ProductionKind, KindProfile> = {
   variety: {
     label: 'Variety / Comedy',
     blurb: 'A variety, sketch, or comedy night.',
-    terms: { scenes: 'Segments', character: 'Performer', script: 'Running order' },
+    terms: { scenes: 'Segments', character: 'Performer', script: 'Running Order' },
     unit: 'Segment',
     setlist: true,
     musicalKeys: false,

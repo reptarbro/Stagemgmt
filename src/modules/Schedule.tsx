@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar } from '../components/ui'
 import { PrintSheet } from '../components/PrintSheet'
+import { term, kindProfile } from '../lib/productionKind'
 import { putFile, getFile, deleteFile, signInKey } from '../lib/storage'
 import { formatDate, formatTime, todayISO, parseISODate } from '../lib/format'
 import { formatConflict } from './People'
@@ -529,7 +530,7 @@ function EventDetail({
     <Modal title={event.title || event.type} onClose={onClose}>
       <div className="row wrap" style={{ gap: 8, marginBottom: 12 }}>
         <span className="badge">{event.type}</span>
-        {scenesText && <span className="tag">🎬 {scenesText}</span>}
+        {scenesText && <span className="tag">{kindProfile(production?.kind).setlist ? '🎵' : '🎬'} {scenesText}</span>}
       </div>
       <p className="small" style={{ margin: '0 0 10px' }}>
         {formatDate(event.date)}
@@ -588,6 +589,8 @@ function EventForm({
   onClose: () => void
   onSave: (vals: Omit<ScheduleEvent, 'id'>) => void
 }) {
+  const { production } = useStore()
+  const profile = kindProfile(production?.kind)
   const [f, setF] = useState<Omit<ScheduleEvent, 'id'>>({ ...BLANK, ...initial })
   const set =
     (k: keyof Omit<ScheduleEvent, 'id'>) =>
@@ -673,7 +676,8 @@ function EventForm({
       {scenes.length > 0 && (
         <>
           <div className="field-label">
-            Scene(s) worked <span className="faint">(optional — links to Scenes)</span>
+            {profile.unit}(s) worked{' '}
+            <span className="faint">(optional — links to {term(production?.kind, 'scenes')})</span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
             {scenes.map((s) => {
@@ -753,7 +757,7 @@ function EventForm({
 
       <label className="field">
         <span className="field-label">Notes</span>
-        <textarea value={f.notes} onChange={set('notes')} placeholder="Scenes, focus, reminders…" />
+        <textarea value={f.notes} onChange={set('notes')} placeholder="Notes, focus, reminders…" />
       </label>
       {missing && (
         <p className="hint" style={{ color: 'var(--danger)', marginBottom: 8 }}>
@@ -905,7 +909,7 @@ function SignInSheet({
         <thead>
           <tr>
             <th style={{ width: '34%' }}>Name</th>
-            <th>Role / Character</th>
+            <th>Role / {term(production?.kind, 'character')}</th>
             <th style={{ width: '18%' }}>Time in</th>
             <th style={{ width: '16%' }}>Initials</th>
           </tr>

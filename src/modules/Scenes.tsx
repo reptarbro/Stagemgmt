@@ -39,7 +39,7 @@ export function Scenes() {
         title={term(production?.kind, 'scenes')}
         subtitle={
           setlist
-            ? `Running order — ${charLabel.toLowerCase()}s${musicalKeys ? ', keys' : ''} & timings`
+            ? `Running Order — ${charLabel.toLowerCase()}s${musicalKeys ? ', keys' : ''} & timings`
             : `${term(production?.kind, 'scenes')} & ${charLabel.toLowerCase()} breakdown`
         }
         actions={
