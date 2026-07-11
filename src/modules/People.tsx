@@ -166,7 +166,7 @@ export function People() {
             </FilterChip>
             {GROUPS.filter((g) => counts[g]).map((g) => (
               <FilterChip key={g} active={filter === g} onClick={() => setFilter(g)}>
-                {g}
+                {g} <span className="chip-ct">{counts[g]}</span>
               </FilterChip>
             ))}
           </div>

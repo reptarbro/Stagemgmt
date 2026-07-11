@@ -160,7 +160,7 @@ export function Assets() {
               onClick={() => setFilter('All')}
               style={{ borderRadius: 999 }}
             >
-              All {assets.length}
+              All <span className="chip-ct">{assets.length}</span>
             </button>
             {CATEGORIES.filter((c) => counts[c]).map((c) => (
               <button
@@ -169,7 +169,7 @@ export function Assets() {
                 onClick={() => setFilter(c)}
                 style={{ borderRadius: 999 }}
               >
-                {CAT_ICON[c]} {c} {counts[c]}
+                {CAT_ICON[c]} {c} <span className="chip-ct">{counts[c]}</span>
               </button>
             ))}
           </div>

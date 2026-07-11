@@ -95,7 +95,7 @@ export function Props() {
               onClick={() => setFilter('All')}
               style={{ borderRadius: 999 }}
             >
-              All {items.length}
+              All <span className="chip-ct">{items.length}</span>
             </button>
             {CATEGORIES.filter((c) => counts[c]).map((c) => (
               <button
@@ -104,7 +104,7 @@ export function Props() {
                 onClick={() => setFilter(c)}
                 style={{ borderRadius: 999 }}
               >
-                {c}
+                {c} <span className="chip-ct">{counts[c]}</span>
               </button>
             ))}
           </div>
