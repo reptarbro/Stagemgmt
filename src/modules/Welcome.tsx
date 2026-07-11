@@ -99,7 +99,6 @@ export function Welcome() {
   }
 
   const realProductions = data.productions.filter((p) => !p.isSample)
-  const sample = data.productions.find((p) => p.isSample)
   const [openId, setOpenId] = useState(realProductions[0]?.id ?? '')
 
   const canSubmit = title.trim() !== '' && venue.trim() !== ''
@@ -117,9 +116,10 @@ export function Welcome() {
     navigate('/hub')
   }
 
-  const openSample = () => {
-    if (sample) setActiveProduction(sample.id)
-    else loadSampleProduction()
+  const openSample = (kind: ProductionKind = 'play') => {
+    const existing = data.productions.find((p) => p.isSample && (p.kind ?? 'play') === kind)
+    if (existing) setActiveProduction(existing.id)
+    else loadSampleProduction(kind)
     navigate('/hub')
   }
 
@@ -255,8 +255,11 @@ export function Welcome() {
           <button type="button" className="btn btn-sm" onClick={() => fileRef.current?.click()}>
             ⬆ Import backup
           </button>
-          <button type="button" className="btn btn-sm" onClick={openSample}>
-            ✨ Sample
+          <button type="button" className="btn btn-sm" onClick={() => openSample('play')}>
+            ✨ Play sample
+          </button>
+          <button type="button" className="btn btn-sm" onClick={() => openSample('cabaret')}>
+            🎵 Cabaret sample
           </button>
         </div>
         <input ref={fileRef} type="file" accept="application/json,.json" onChange={onImport} style={{ display: 'none' }} />

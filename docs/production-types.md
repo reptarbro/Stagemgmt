@@ -115,10 +115,16 @@ gets a **Type** `<select>` (default Play). Its value is passed to
   production's `kind` after creation and toggles individual modules on/off,
   writing `production.modules` via `updateProduction` (stamps `updatedAt`, so
   it syncs).
+- **Patter rows.** A set-list item can be flagged `Scene.patter` — a spoken
+  banter/bit between numbers rather than a song. The form offers a Number/Patter
+  toggle (set-list kinds only); patter rows drop the Key field, read in a muted
+  italic style with a 🎤 tag, and are excluded from the who's-in grid.
+- **Cabaret sample.** `makeCabaretSample()` seeds a full cabaret — performers,
+  a band, a nine-item set list with interleaved patter, cues, and a filed
+  report. `loadSampleProduction(kind)` keeps one sample per kind, and Welcome
+  and Settings both offer a Play or Cabaret sample.
 
 ## Still deferred
 
-- **Line Notes** reframed for the kinds that keep it.
-- Kind-specific **sample productions** for onboarding (e.g. a ready-made
-  cabaret demo).
-- **Patter/cue** rows interleaved in the running order as a distinct row type.
+- **Line Notes** reframed for the kinds that keep it (currently just hidden by
+  default for non-scripted kinds).

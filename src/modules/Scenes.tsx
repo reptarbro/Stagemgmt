@@ -74,7 +74,7 @@ export function Scenes() {
             : `Add each scene (or French scene) and mark who's in it. You'll get an instant "who's called for what" grid to build rehearsal calls from.`}
         </EmptyState>
       ) : view === 'matrix' ? (
-        <SceneMatrix scenes={scenes} cast={cast} unit={unit} />
+        <SceneMatrix scenes={scenes.filter((s) => !s.patter)} cast={cast} unit={unit} />
       ) : (
         <>
           <p className="hint no-print" style={{ marginTop: -4 }}>
@@ -82,14 +82,22 @@ export function Scenes() {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {scenes.map((s) => (
-              <div key={s.id} className="card row-tap" style={{ padding: 14 }} onClick={() => setViewing(s)}>
+              <div
+                key={s.id}
+                className="card row-tap"
+                style={{ padding: 14, borderLeft: s.patter ? '3px solid var(--muted)' : undefined }}
+                onClick={() => setViewing(s)}
+              >
                 <div className="row-between wrap" style={{ gap: 10 }}>
                   <div style={{ minWidth: 200 }}>
                     <div className="row" style={{ gap: 8 }}>
                       <span className="badge">{s.number || '—'}</span>
-                      <strong className="tcase">{s.title || `Untitled ${unit.toLowerCase()}`}</strong>
+                      <strong className={s.patter ? 'muted' : 'tcase'} style={s.patter ? { fontStyle: 'italic', fontWeight: 500 } : undefined}>
+                        {s.title || `Untitled ${unit.toLowerCase()}`}
+                      </strong>
+                      {s.patter && <span className="tag">🎤 patter</span>}
                       {!setlist && s.page && <span className="tag">p. {s.page}</span>}
-                      {musicalKeys && s.key && <span className="tag">key {s.key}</span>}
+                      {musicalKeys && !s.patter && s.key && <span className="tag">key {s.key}</span>}
                       {setlist && s.duration && <span className="tag">{s.duration}</span>}
                     </div>
                     {s.synopsis && (
@@ -179,8 +187,9 @@ function SceneDetail({
     <Modal title={`${scene.number}${scene.title ? ` · ${scene.title}` : ''}`} onClose={onClose}>
       <div className="row wrap" style={{ gap: 8, marginBottom: 12 }}>
         <span className="badge">{scene.number || '—'}</span>
+        {scene.patter && <span className="tag">🎤 patter</span>}
         {!setlist && scene.page && <span className="tag">p. {scene.page}</span>}
-        {musicalKeys && scene.key && <span className="tag">key {scene.key}</span>}
+        {musicalKeys && !scene.patter && scene.key && <span className="tag">key {scene.key}</span>}
         {setlist && scene.duration && <span className="tag">{scene.duration}</span>}
       </div>
       {scene.synopsis && (
@@ -292,20 +301,46 @@ function SceneForm({
   const missing = !f.number.trim() || !(f.title ?? '').trim() || (!setlist && f.characterIds.length === 0)
 
   return (
-    <Modal title={`${initial ? 'Edit' : 'Add'} ${unit}`} onClose={onClose}>
+    <Modal title={`${initial ? 'Edit' : 'Add'} ${f.patter ? 'patter' : unit}`} onClose={onClose}>
+      {setlist && (
+        <div className="row" style={{ gap: 6, marginBottom: 12 }}>
+          <button
+            type="button"
+            className={`btn btn-sm ${!f.patter ? 'btn-primary' : 'btn-ghost'}`}
+            style={{ borderRadius: 999 }}
+            onClick={() => setF((s) => ({ ...s, patter: false }))}
+          >
+            🎵 {unit}
+          </button>
+          <button
+            type="button"
+            className={`btn btn-sm ${f.patter ? 'btn-primary' : 'btn-ghost'}`}
+            style={{ borderRadius: 999 }}
+            onClick={() => setF((s) => ({ ...s, patter: true }))}
+          >
+            🎤 Patter
+          </button>
+        </div>
+      )}
       <div className="form-row-3">
         <label className="field">
           <span className="field-label">{setlist ? 'Order' : 'Number'} <ReqStar /></span>
           <input value={f.number} onChange={set('number')} placeholder={setlist ? '1' : '1.1'} autoFocus />
         </label>
         <label className="field" style={{ gridColumn: 'span 2' }}>
-          <span className="field-label">{setlist ? 'Song / title' : 'Title'} <ReqStar /></span>
-          <input value={f.title} onChange={set('title')} placeholder={setlist ? 'Cry Me a River' : 'The tavern'} />
+          <span className="field-label">
+            {f.patter ? 'Patter / bit' : setlist ? 'Song / title' : 'Title'} <ReqStar />
+          </span>
+          <input
+            value={f.title}
+            onChange={set('title')}
+            placeholder={f.patter ? 'Intro banter' : setlist ? 'Cry Me a River' : 'The tavern'}
+          />
         </label>
       </div>
       {setlist ? (
         <div className="form-row">
-          {musicalKeys && (
+          {musicalKeys && !f.patter && (
             <label className="field">
               <span className="field-label">Key</span>
               <input value={f.key ?? ''} onChange={set('key')} placeholder="Am" />
@@ -313,7 +348,7 @@ function SceneForm({
           )}
           <label className="field">
             <span className="field-label">Duration</span>
-            <input value={f.duration ?? ''} onChange={set('duration')} placeholder="3:10" />
+            <input value={f.duration ?? ''} onChange={set('duration')} placeholder={f.patter ? '1:30' : '3:10'} />
           </label>
         </div>
       ) : (

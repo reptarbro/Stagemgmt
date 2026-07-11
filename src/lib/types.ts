@@ -143,6 +143,8 @@ export interface Scene {
   key?: string
   /** Set-list only: running time (e.g. "3:10"). Shown for set-list kinds. */
   duration?: string
+  /** Set-list only: a spoken patter/banter row between numbers, not a song. */
+  patter?: boolean
   /** ISO time of the last local edit — used to auto-merge across devices. */
   updatedAt?: string
 }

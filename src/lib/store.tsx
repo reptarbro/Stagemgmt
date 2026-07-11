@@ -19,7 +19,7 @@ import {
   deleteFile,
   assetKey,
 } from './storage'
-import { makeSampleProduction } from './sample'
+import { makeSampleProduction, makeCabaretSample } from './sample'
 import type {
   AppData,
   Asset,
@@ -29,6 +29,7 @@ import type {
   LineNote,
   Person,
   Production,
+  ProductionKind,
   PropItem,
   Report,
   Scene,
@@ -41,7 +42,7 @@ interface StoreValue {
   production: Production | null
   // Productions
   createProduction: (fields: Partial<Production> & { title: string }) => Production
-  loadSampleProduction: () => void
+  loadSampleProduction: (kind?: ProductionKind) => void
   updateProduction: (id: string, patch: Partial<Production>) => void
   deleteProduction: (id: string) => void
   setActiveProduction: (id: string) => void
@@ -166,14 +167,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return prod
       },
 
-      loadSampleProduction: () => {
-        // Never create a second sample — just switch to the existing one.
-        const existing = data.productions.find((p) => p.isSample)
+      loadSampleProduction: (kind = 'play') => {
+        // One sample per kind — switch to it if present, else build it.
+        const existing = data.productions.find((p) => p.isSample && (p.kind ?? 'play') === kind)
         if (existing) {
           setData((d) => ({ ...d, activeProductionId: existing.id }))
           return
         }
-        const prod = makeSampleProduction()
+        const prod = kind === 'cabaret' ? makeCabaretSample() : makeSampleProduction()
         setData((d) => ({
           ...d,
           productions: [...d.productions, prod],

@@ -25,7 +25,7 @@ export function Settings() {
   const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const sample = data.productions.find((p) => p.isSample)
+  const samples = data.productions.filter((p) => p.isSample)
   const realProductions = data.productions.filter((p) => !p.isSample)
   const totalPeople = data.productions.reduce((n, p) => n + p.people.length, 0)
   const totalEvents = data.productions.reduce((n, p) => n + p.events.length, 0)
@@ -174,38 +174,45 @@ export function Settings() {
           cues, and a filed report — to see how everything fits together. It's clearly marked as a sample
           and you can remove it in one tap; your real shows aren't affected.
         </p>
-        {sample ? (
-          <div className="row wrap" style={{ gap: 10 }}>
-            <button
-              className="btn"
-              onClick={() => {
-                setActiveProduction(sample.id)
-                setMsg('Viewing the sample — see the Production Hub.')
-              }}
-            >
-              View sample
-            </button>
+        <div className="row wrap" style={{ gap: 10 }}>
+          {(['play', 'cabaret'] as const).map((k) => {
+            const s = samples.find((x) => (x.kind ?? 'play') === k)
+            return s ? (
+              <button
+                key={k}
+                className="btn"
+                onClick={() => {
+                  setActiveProduction(s.id)
+                  setMsg(`Viewing the ${KIND_PROFILES[k].label} sample — see the Production Hub.`)
+                }}
+              >
+                View {KIND_PROFILES[k].label} sample
+              </button>
+            ) : (
+              <button
+                key={k}
+                className="btn"
+                onClick={() => {
+                  loadSampleProduction(k)
+                  setMsg(`${KIND_PROFILES[k].label} sample loaded — see the Production Hub.`)
+                }}
+              >
+                {k === 'cabaret' ? '🎵' : '✨'} {KIND_PROFILES[k].label} sample
+              </button>
+            )
+          })}
+          {samples.length > 0 && (
             <ConfirmButton
               className="btn btn-danger"
               onConfirm={() => {
-                deleteProduction(sample.id)
-                setMsg('Sample removed.')
+                samples.forEach((s) => deleteProduction(s.id))
+                setMsg('Sample(s) removed.')
               }}
             >
-              Remove sample
+              Remove sample{samples.length > 1 ? 's' : ''}
             </ConfirmButton>
-          </div>
-        ) : (
-          <button
-            className="btn"
-            onClick={() => {
-              loadSampleProduction()
-              setMsg('Sample loaded — see the Production Hub.')
-            }}
-          >
-            ✨ Preview a sample show
-          </button>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="card">
