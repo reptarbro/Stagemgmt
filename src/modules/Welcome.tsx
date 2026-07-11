@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useStore } from '../lib/store'
+import { PRODUCTION_KINDS, KIND_PROFILES } from '../lib/productionKind'
+import type { ProductionKind } from '../lib/types'
 import { ReqStar } from '../components/ui'
 import { StandbyMark, APP_NAME } from '../components/Brand'
 import { applyBackupText } from '../lib/backup'
@@ -15,6 +17,7 @@ export function Welcome() {
   const [title, setTitle] = useState('')
   const [company, setCompany] = useState('')
   const [venue, setVenue] = useState('')
+  const [kind, setKind] = useState<ProductionKind>('play')
   const [importErr, setImportErr] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   // A fresh device with no production lands here and can't reach Settings, so
@@ -104,7 +107,7 @@ export function Welcome() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!canSubmit) return
-    createProduction({ title: title.trim(), company: company.trim(), venue: venue.trim() })
+    createProduction({ title: title.trim(), company: company.trim(), venue: venue.trim(), kind })
     navigate('/hub')
   }
 
@@ -193,6 +196,17 @@ export function Welcome() {
                 <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="Main Stage" />
               </label>
             </div>
+            <label className="field">
+              <span className="field-label">Type of show</span>
+              <select value={kind} onChange={(e) => setKind(e.target.value as ProductionKind)}>
+                {PRODUCTION_KINDS.map((k) => (
+                  <option key={k} value={k}>
+                    {KIND_PROFILES[k].label}
+                  </option>
+                ))}
+              </select>
+              <span className="hint" style={{ marginTop: 4 }}>{KIND_PROFILES[kind].blurb}</span>
+            </label>
             <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={!canSubmit}>
               Create Production →
             </button>

@@ -247,6 +247,12 @@ export interface Asset {
   updatedAt?: string
 }
 
+/** The kind of show a production is. Drives module labels and default
+    visibility; the underlying data model is identical across all kinds.
+    Undefined on older data ⇒ treated as a classic 'play'. */
+export type ProductionKind =
+  | 'play' | 'musical' | 'cabaret' | 'oneact' | 'dance' | 'variety' | 'other'
+
 export interface Production {
   id: ID
   title: string
@@ -271,6 +277,12 @@ export interface Production {
   script?: ScriptMeta
   /** General uploaded files kept with the show (headshots, contracts, budgets…). */
   assets: Asset[]
+  /** What kind of show this is — drives module labels and default visibility.
+      Undefined means a classic play (back-compat with pre-kinds data). */
+  kind?: ProductionKind
+  /** Per-show module show/hide overrides keyed by nav path (e.g. '/line-notes').
+      Overrides the kind's default when the user toggles a module for this show. */
+  modules?: Partial<Record<string, boolean>>
   /** True for the built-in demo show, so it can be shown as a removable preview. */
   isSample?: boolean
   createdAt: string

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, EmptyState, ConfirmButton } from '../components/ui'
+import { term } from '../lib/productionKind'
 import { formatDate } from '../lib/format'
 
 function humanSize(bytes: number): string {
@@ -54,7 +55,7 @@ export function Script() {
   return (
     <>
       <PageHead
-        title="Script"
+        title={term(production?.kind, 'script')}
         subtitle="Your prompt book document"
         actions={
           script ? (

@@ -3,6 +3,7 @@ import { NavLink, Navigate, Outlet, Route, Routes, useNavigate } from 'react-rou
 import { useStore } from '../lib/store'
 import { getLastBackup, markBackedUp } from '../lib/storage'
 import { daysToOpening, cueToCueActive, CUE_WINDOW_DAYS } from '../lib/dates'
+import { moduleVisible, term } from '../lib/productionKind'
 import { ScrollToTop } from './ui'
 import { CloudAutoSync } from './CloudAutoSync'
 import { useSignedIn } from '../lib/cloud/auth'
@@ -98,11 +99,22 @@ function Shell() {
   const cueActive = cueToCueActive(production)
   const cueHint = dOpen === null || cueActive ? undefined : `in ${dOpen - CUE_WINDOW_DAYS}d`
 
-  const nav: { to: string; icon: IconName; label: string; hint?: string }[] = [
+  // The visible nav — and a couple of labels — depend on the show's kind.
+  const kind = production.kind
+  const baseNav: { to: string; icon: IconName; label: string; hint?: string }[] = [
     ...NAV.slice(0, 8), // Hub … Assets
     { to: '/cues', icon: 'cues', label: 'Cue-to-Cue', hint: cueHint },
     ...NAV.slice(8), // Reports, Settings
   ]
+  const nav = baseNav
+    .filter((n) => moduleVisible(production, n.to))
+    .map((n) =>
+      n.to === '/scenes'
+        ? { ...n, label: term(kind, 'scenes') }
+        : n.to === '/script'
+          ? { ...n, label: term(kind, 'script') }
+          : n,
+    )
 
   return (
     <div className="app">

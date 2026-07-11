@@ -35,6 +35,8 @@ export function normalizeProduction(p: Partial<Production>): Production {
     cues: (p.cues ?? []).map((c) => ({ ...c, dept: (c.dept as string) === 'LX' ? 'Lighting' : c.dept })),
     script: p.script,
     assets: p.assets ?? [],
+    kind: p.kind,
+    modules: p.modules,
     isSample: p.isSample,
     createdAt: p.createdAt ?? new Date().toISOString(),
     updatedAt: p.updatedAt,

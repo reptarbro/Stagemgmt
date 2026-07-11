@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar, SortTh, useSort } from '../components/ui'
 import { PrintSheet } from '../components/PrintSheet'
+import { term } from '../lib/productionKind'
 import { newId } from '../lib/storage'
 import { formatDateShort, formatTime, todayISO } from '../lib/format'
 import { contactsCSV, downloadText, slug } from '../lib/exporters'
@@ -180,7 +181,7 @@ export function People() {
                 <tr>
                   <SortTh label="Name" sortKey="name" ctrl={sort} />
                   <SortTh label="Group" sortKey="group" ctrl={sort} />
-                  <SortTh label="Role / Character" sortKey="role" ctrl={sort} />
+                  <SortTh label={`Role / ${term(production?.kind, 'character')}`} sortKey="role" ctrl={sort} />
                   <SortTh label="Contact" sortKey="contact" ctrl={sort} />
                   <th style={{ width: 96 }} className="no-print"></th>
                 </tr>
@@ -317,7 +318,7 @@ function CastListSheet({
           <tr>
             <th style={{ width: '24%' }}>Name</th>
             <th style={{ width: '15%' }}>Group</th>
-            <th style={{ width: '28%' }}>Role / Character</th>
+            <th style={{ width: '28%' }}>Role / {term(production.kind, 'character')}</th>
             <th style={{ width: '33%' }}>Contact</th>
           </tr>
         </thead>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar } from '../components/ui'
+import { term } from '../lib/productionKind'
 import type { Person, Scene } from '../lib/types'
 
 const BLANK: Omit<Scene, 'id'> = {
@@ -32,8 +33,8 @@ export function Scenes() {
   return (
     <>
       <PageHead
-        title="Scenes"
-        subtitle="Scene & character breakdown"
+        title={term(production?.kind, 'scenes')}
+        subtitle={`${term(production?.kind, 'scenes')} & ${term(production?.kind, 'character').toLowerCase()} breakdown`}
         actions={
           <>
             {scenes.length > 0 && cast.length > 0 && (

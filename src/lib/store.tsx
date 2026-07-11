@@ -143,6 +143,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           openingNight: fields.openingNight,
           closingNight: fields.closingNight,
           notes: fields.notes,
+          kind: fields.kind,
+          modules: fields.modules,
           people: [],
           events: [],
           attendance: [],
