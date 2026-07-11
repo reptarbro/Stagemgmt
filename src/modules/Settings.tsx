@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../lib/store'
+import { PRODUCTION_KINDS, KIND_PROFILES, moduleVisible, term } from '../lib/productionKind'
+import type { ProductionKind } from '../lib/types'
 import { PageHead, ConfirmButton } from '../components/ui'
 import { markBackedUp } from '../lib/storage'
 import { slug } from '../lib/exporters'
@@ -14,6 +16,7 @@ export function Settings() {
     data,
     exportJSON,
     importJSON,
+    updateProduction,
     deleteProduction,
     loadSampleProduction,
     setActiveProduction,
@@ -26,6 +29,17 @@ export function Settings() {
   const realProductions = data.productions.filter((p) => !p.isSample)
   const totalPeople = data.productions.reduce((n, p) => n + p.people.length, 0)
   const totalEvents = data.productions.reduce((n, p) => n + p.events.length, 0)
+
+  // Optional modules a user can show/hide per show. Core modules (Hub, People,
+  // Schedule, Reports, Settings) are always available and not listed here.
+  const moduleToggles = [
+    { to: '/scenes', label: term(production?.kind, 'scenes') },
+    { to: '/props', label: 'Props & Costumes' },
+    { to: '/line-notes', label: 'Line Notes' },
+    { to: '/script', label: term(production?.kind, 'script') },
+    { to: '/assets', label: 'Assets' },
+    { to: '/cues', label: 'Cue-to-Cue' },
+  ]
 
   // A COMPLETE, portable backup: the data model + every binary (uploaded script
   // PDF, sign-in photos) base64-packed into one file, so it fully rehydrates on
@@ -107,6 +121,51 @@ export function Settings() {
           <Stat value={production?.title ?? '—'} label="Current" small />
         </div>
       </div>
+
+      {/* Per-show type & module visibility. */}
+      {production && (
+        <div className="card">
+          <div className="card-title">Show type &amp; modules</div>
+          <p className="small muted">
+            The type sets the vocabulary and which modules appear for{' '}
+            <strong>{production.title}</strong>. Adjust its type, or turn individual modules on and
+            off for this show.
+          </p>
+          <label className="field" style={{ maxWidth: 340 }}>
+            <span className="field-label">Type of show</span>
+            <select
+              value={production.kind ?? 'play'}
+              onChange={(e) => updateProduction(production.id, { kind: e.target.value as ProductionKind })}
+            >
+              {PRODUCTION_KINDS.map((k) => (
+                <option key={k} value={k}>
+                  {KIND_PROFILES[k].label}
+                </option>
+              ))}
+            </select>
+            <span className="hint" style={{ marginTop: 4 }}>{KIND_PROFILES[production.kind ?? 'play'].blurb}</span>
+          </label>
+          <div className="field-label" style={{ marginTop: 14 }}>Modules shown for this show</div>
+          <div
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8, marginTop: 6 }}
+          >
+            {moduleToggles.map((m) => (
+              <label key={m.to} className="row" style={{ gap: 8, alignItems: 'center', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={moduleVisible(production, m.to)}
+                  onChange={(e) =>
+                    updateProduction(production.id, {
+                      modules: { ...production.modules, [m.to]: e.target.checked },
+                    })
+                  }
+                />
+                <span className="small">{m.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <div className="card-title">Demo</div>
