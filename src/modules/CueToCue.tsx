@@ -128,7 +128,7 @@ export function CueToCue() {
                   <tr key={c.id} className="row-tap" onClick={() => setViewing(c)}>
                     <td style={{ fontWeight: 700 }}>{c.number}</td>
                     <td>
-                      <span className="badge">{c.dept}</span>
+                      <span className={`badge badge-${c.dept}`}>{c.dept}</span>
                     </td>
                     <td className="small">{c.placement || '—'}</td>
                     <td className="small">{c.action || '—'}</td>

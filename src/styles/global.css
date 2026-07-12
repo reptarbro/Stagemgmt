@@ -1,25 +1,35 @@
 :root {
-  /* T-REX × brooklynONE palette: neutral near-black, ivory, sage + emerald. */
-  --bg: #0e1311;
-  --bg-elev: #151b18;
-  --bg-elev-2: #1d2420;
-  --panel: #111713;
-  --border: #26302a;
-  --border-soft: #1e2621;
-  --text: #f1efe7; /* ivory */
-  --text-dim: #a7b6ab; /* sage-grey */
-  --text-faint: #6f7d73;
-  --accent: #9fb8a6; /* sage — the pervasive, calm accent */
-  --accent-strong: #2fae6b; /* emerald — primary actions & key highlights */
-  --accent-deep: #1c7a4d; /* deep green — gradient partner / pressed */
-  --accent-ink: #08120d; /* dark ink for text on emerald */
-  --warn: #d9a441; /* amber, reserved for late/attention only */
-  --danger: #e0705b;
-  --success: #46b87f;
+  /* "Callboard" — warm black-box ground, bone rules, cue-light + gel system. */
+  --bg: #100f0c;
+  --bg-elev: #17150f;
+  --bg-elev-2: #211e16;
+  --panel: #17150f;
+  --border: #292419;
+  --border-soft: #211d15;
+  --text: #f1ece0; /* warm ivory */
+  --text-dim: #a8a18e; /* warm grey */
+  --text-faint: #6f6a5b;
+  --accent: #57b98a; /* muted green — the pervasive, calm accent */
+  --accent-strong: #3ecb86; /* GO green — primary actions & key highlights */
+  --accent-deep: #2a9a63; /* deep green — gradient partner / pressed */
+  --accent-ink: #08160e; /* dark ink for text on green */
+  --warn: #e6ab4c; /* amber — standby light / attention */
+  --danger: #d9705b;
+  --success: #3ecb86;
   --info: #7fb0c9;
-  --radius: 14px;
-  --radius-sm: 9px;
-  --shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
+  --bone: #e7e1d0; /* marquee rule / structural ink, used sparingly */
+  --standby: #e6ab4c; /* cue light: standby (amber) */
+  --go: #3ecb86; /* cue light: GO (green) */
+  /* Department "gel" swatches — a real color system, deliberately muted. */
+  --gel-light: #d9a24a;
+  --gel-sound: #57a99b;
+  --gel-fly: #9a8ac9;
+  --gel-spot: #ded4bf;
+  --gel-deck: #66ab80;
+  --gel-projection: #cf7d6a;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
   --maxw: 1080px;
   --font-body: 'Raleway Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Montserrat Variable', 'Raleway Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -44,10 +54,10 @@ html {
 }
 
 body {
-  /* Neutral near-black with two very soft brand glows — sleek, not flat, not busy. */
+  /* Warm black-box ground with a soft worklight glow, top-right. */
   background:
-    radial-gradient(900px 520px at 82% -8%, rgba(47, 174, 107, 0.10), transparent 60%),
-    radial-gradient(1000px 680px at 6% 108%, rgba(159, 184, 166, 0.06), transparent 55%),
+    radial-gradient(900px 520px at 84% -10%, rgba(230, 171, 76, 0.07), transparent 60%),
+    radial-gradient(1000px 680px at 4% 108%, rgba(62, 203, 134, 0.05), transparent 55%),
     var(--bg);
   background-color: var(--bg);
   background-attachment: fixed;
@@ -301,9 +311,27 @@ p {
   margin-bottom: 22px;
   flex-wrap: wrap;
 }
+/* Marquee page title: uppercase, heavy, with a short cue-green accent bar. */
+.page-head h1 {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.004em;
+  font-size: clamp(1.55rem, 3vw, 2.05rem);
+  line-height: 0.98;
+  margin-bottom: 0;
+}
+.page-head h1::after {
+  content: '';
+  display: block;
+  width: 42px;
+  height: 3px;
+  margin-top: 11px;
+  border-radius: 2px;
+  background: var(--accent-strong);
+}
 .page-head .subtitle {
   color: var(--text-dim);
-  margin: 2px 0 0;
+  margin: 11px 0 0;
   font-size: 0.92rem;
 }
 
@@ -620,6 +648,14 @@ tbody tr:hover {
 .badge-absent { color: var(--danger); }
 .badge-excused { color: var(--info); }
 .badge-no-show { color: var(--danger); }
+
+/* Department "gel" swatches for cue-to-cue badges. */
+.badge-Lighting { color: var(--gel-light); border-color: rgba(217, 162, 74, 0.4); background: rgba(217, 162, 74, 0.1); }
+.badge-Sound { color: var(--gel-sound); border-color: rgba(87, 169, 155, 0.4); background: rgba(87, 169, 155, 0.1); }
+.badge-Fly { color: var(--gel-fly); border-color: rgba(154, 138, 201, 0.4); background: rgba(154, 138, 201, 0.1); }
+.badge-Spot { color: var(--gel-spot); border-color: rgba(222, 212, 191, 0.4); background: rgba(222, 212, 191, 0.1); }
+.badge-Deck { color: var(--gel-deck); border-color: rgba(102, 171, 128, 0.4); background: rgba(102, 171, 128, 0.1); }
+.badge-Projection { color: var(--gel-projection); border-color: rgba(207, 125, 106, 0.4); background: rgba(207, 125, 106, 0.1); }
 
 .cue-dry-tech { color: var(--text-dim); }
 .cue-teched { color: var(--warn); border-color: rgba(217, 164, 65, 0.35); background: rgba(217, 164, 65, 0.08); }
