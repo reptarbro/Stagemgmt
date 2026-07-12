@@ -26,6 +26,7 @@ const Reports = lazy(() => import('../modules/Reports').then((m) => ({ default: 
 const Settings = lazy(() => import('../modules/Settings').then((m) => ({ default: m.Settings })))
 const PrivacyPolicy = lazy(() => import('../modules/Legal').then((m) => ({ default: m.PrivacyPolicy })))
 const Terms = lazy(() => import('../modules/Legal').then((m) => ({ default: m.Terms })))
+const SharedView = lazy(() => import('../modules/SharedView').then((m) => ({ default: m.SharedView })))
 
 /** Small, unobtrusive fallback while a lazily-loaded page chunk arrives. */
 function PageLoading() {
@@ -61,6 +62,8 @@ export function App() {
         {/* Standalone legal pages — linkable without an active production. */}
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<Terms />} />
+        {/* Chromeless, read-only shared view — opened from a share link, no login. */}
+        <Route path="/view/:token" element={<SharedView />} />
         {/* App pages share the sidebar shell. */}
         <Route element={<Shell />}>
           <Route path="/hub" element={<Hub />} />

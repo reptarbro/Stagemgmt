@@ -335,6 +335,46 @@ p {
   font-size: 0.92rem;
 }
 
+/* ---------- Shared (view-only) page ---------- */
+.shared-wrap {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  padding: 40px 18px 80px;
+}
+.shared-card { width: 100%; max-width: 640px; }
+.shared-brand {
+  display: flex; align-items: center; gap: 9px; margin-bottom: 22px;
+  font-family: var(--font-display); font-weight: 800; letter-spacing: 0.12em;
+  text-transform: uppercase; font-size: 0.95rem;
+}
+.shared-kicker {
+  font-family: ui-monospace, monospace; font-size: 0.7rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-faint); margin: 0 0 4px;
+}
+.shared-card h1 {
+  text-transform: uppercase; font-weight: 800; font-size: clamp(1.6rem, 4vw, 2.2rem);
+  line-height: 1; margin: 0 0 6px;
+}
+.shared-card h1::after {
+  content: ''; display: block; width: 42px; height: 3px; margin-top: 12px;
+  border-radius: 2px; background: var(--accent-strong);
+}
+.shared-card h2 {
+  text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.12em;
+  color: var(--text-dim); border-bottom: 1px solid var(--border); padding-bottom: 6px;
+  margin: 28px 0 12px;
+}
+.shared-ev { padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
+.shared-ev-head { display: flex; flex-direction: column; gap: 2px; }
+.shared-agenda { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
+.shared-time { font-family: ui-monospace, monospace; color: var(--accent-strong); min-width: 62px; }
+.shared-person { padding: 8px 0; border-bottom: 1px solid var(--border-soft); }
+.shared-foot { margin-top: 30px; color: var(--text-faint); font-size: 0.82rem; }
+
 /* ---------- Cards ---------- */
 .card {
   background: var(--bg-elev);

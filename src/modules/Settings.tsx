@@ -9,6 +9,7 @@ import { slug } from '../lib/exporters'
 import { buildBundleString, applyBackupText } from '../lib/backup'
 import { CloudSync } from '../components/CloudSync'
 import { FeedbackForm } from '../components/FeedbackForm'
+import { ShareModal } from '../components/ShareModal'
 import { CLOUD_ENABLED } from '../lib/cloud/config'
 
 export function Settings() {
@@ -25,6 +26,7 @@ export function Settings() {
   const [msg, setMsg] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const samples = data.productions.filter((p) => p.isSample)
@@ -169,6 +171,18 @@ export function Settings() {
         </div>
       )}
 
+      {production && CLOUD_ENABLED && (
+        <div className="card">
+          <div className="card-title">Share with your cast</div>
+          <p className="small muted">
+            Create a read-only link anyone can open — no login needed. You choose whether to include
+            the schedule and the company list; line notes, reports, and private contact details are
+            never shared. Revoke anytime.
+          </p>
+          <button className="btn" onClick={() => setShowShare(true)}>🔗 Share view-only link</button>
+        </div>
+      )}
+
       <div className="card">
         <div className="card-title">Demo</div>
         <p className="small muted">
@@ -302,6 +316,7 @@ export function Settings() {
       </p>
 
       {showFeedback && <FeedbackForm onClose={() => setShowFeedback(false)} />}
+      {showShare && <ShareModal onClose={() => setShowShare(false)} />}
     </>
   )
 }

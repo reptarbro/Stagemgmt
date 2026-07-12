@@ -70,7 +70,7 @@ Investigating · Planned · Done · Parked.
 | 2026-07-12 | SM 1 | Schedule | Idea | Auto-generate an emailable call sheet from the schedule. | Planned (epic) |
 | 2026-07-12 | SM 1 | Reports | Idea | Report schedule section should auto-fill scenes from the schedule. | Planned |
 | 2026-07-12 | SM 1 | People/Contacts | Idea | Email-blast button from the contact page. | Planned (email) |
-| 2026-07-12 | SM 1 | Global | Idea | Share a view-only version with the cast. | Planned (share) |
+| 2026-07-12 | SM 1 | Global | Idea | Share a view-only version with the cast. | **Shipped** — run `supabase/shared_views.sql` |
 | 2026-07-12 | SM 1 | Reports | Idea | PDF preview before download; more structure; "email to crew" button. | Planned |
 | 2026-07-12 | SM 1 | Hub | Idea | Auto-populate last performance (from schedule) + Director (from contacts). | Planned |
 | 2026-07-12 | SM 1 | People | Idea | Allow multiple roles per person (e.g. a director who casts themselves), on both lists. | Planned |
