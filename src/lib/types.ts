@@ -54,6 +54,19 @@ export type EventType =
   | 'Fitting'
   | 'Other'
 
+/** A single line in an event's hour-by-hour agenda / call times. */
+export interface AgendaItem {
+  id: ID
+  /** "HH:MM" 24h. */
+  time: string
+  /** Optional end "HH:MM" for a block. */
+  endTime?: string
+  /** What happens, e.g. "Cast call", "Sound check", "LX crew". */
+  what: string
+  /** Who's called for this block (optional). */
+  personIds?: ID[]
+}
+
 export interface ScheduleEvent {
   id: ID
   type: EventType
@@ -69,6 +82,8 @@ export interface ScheduleEvent {
   calledPersonIds: ID[]
   /** Scene ids being worked in this event, linking Schedule <-> Scenes. */
   sceneIds?: ID[]
+  /** Hour-by-hour call times / running order for the day (any increment). */
+  agenda?: AgendaItem[]
   notes?: string
   /** ISO timestamp set when a photo/scan of the signed sheet is uploaded
       (bytes live in IndexedDB under `signin:<eventId>`). Past events only. */

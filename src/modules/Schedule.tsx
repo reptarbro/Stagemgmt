@@ -3,17 +3,19 @@ import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar } from '../components/ui'
 import { PrintSheet } from '../components/PrintSheet'
 import { term, kindProfile } from '../lib/productionKind'
-import { putFile, getFile, deleteFile, signInKey } from '../lib/storage'
+import { putFile, getFile, deleteFile, signInKey, newId } from '../lib/storage'
 import { formatDate, formatTime, todayISO, parseISODate } from '../lib/format'
 import { formatConflict } from './People'
 import { eventsToICS } from '../lib/ics'
 import { downloadText, slug } from '../lib/exporters'
 import type {
+  AgendaItem,
   Attendance,
   AttendanceStatus,
   Conflict,
   EventType,
   Person,
+  Production,
   Scene,
   ScheduleEvent,
 } from '../lib/types'
@@ -525,6 +527,7 @@ function EventDetail({
     : people
   const conflicted = called.filter((p) => eventConflict(p, event))
   const scenesText = sceneLabels(event.sceneIds, scenes)
+  const [callSheet, setCallSheet] = useState(false)
 
   return (
     <Modal title={event.title || event.type} onClose={onClose}>
@@ -539,6 +542,20 @@ function EventDetail({
         {event.endTime && `–${formatTime(event.endTime)}`}
         {event.location && ` · ${event.location}`}
       </p>
+
+      {event.agenda && event.agenda.length > 0 && (
+        <>
+          <div className="field-label">Call times</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, margin: '0 0 12px' }}>
+            {sortAgenda(event.agenda).map((a) => (
+              <div key={a.id} className="row" style={{ gap: 10, alignItems: 'baseline' }}>
+                <span className="mono small" style={{ minWidth: 62, color: 'var(--accent)' }}>{a.time ? formatTime(a.time) : '—'}</span>
+                <span className="small">{a.what}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       <div className="field-label">
         Who's called{' '}
@@ -568,11 +585,122 @@ function EventDetail({
 
       <div className="modal-actions" style={{ flexWrap: 'wrap' }}>
         <button className="btn btn-ghost" onClick={onClose}>Close</button>
+        <button className="btn" onClick={() => setCallSheet(true)}>📋 Call Sheet</button>
         <button className="btn" onClick={onSignIn}>🖊 Sign-in Sheet</button>
         <button className="btn" onClick={onAttendance}>✓ Attendance</button>
         <button className="btn btn-primary" onClick={onEdit}>✎ Edit</button>
       </div>
+
+      {callSheet && production && (
+        <CallSheet event={event} production={production} called={called} onClose={() => setCallSheet(false)} />
+      )}
     </Modal>
+  )
+}
+
+/** Sort agenda lines by their time (blank times sink to the bottom). */
+function sortAgenda(items: AgendaItem[]): AgendaItem[] {
+  return [...items].sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'))
+}
+
+function AgendaEditor({ items, onChange }: { items: AgendaItem[]; onChange: (list: AgendaItem[]) => void }) {
+  const add = () => onChange([...items, { id: newId(), time: '', what: '' }])
+  const update = (id: string, patch: Partial<AgendaItem>) =>
+    onChange(items.map((a) => (a.id === id ? { ...a, ...patch } : a)))
+  const remove = (id: string) => onChange(items.filter((a) => a.id !== id))
+  return (
+    <>
+      <div className="row-between mb">
+        <div className="field-label" style={{ margin: 0 }}>
+          Call times / agenda <span className="faint">(optional — the hour-by-hour)</span>
+        </div>
+        <button type="button" className="btn btn-sm btn-ghost" onClick={add}>
+          + Time
+        </button>
+      </div>
+      {items.length === 0 ? (
+        <p className="hint" style={{ marginTop: 0 }}>
+          Add lines like &ldquo;6:15 · Cast call&rdquo; or &ldquo;5:30 · Band, Zo — musician rehearsal&rdquo;. They print on the call sheet.
+        </p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+          {items.map((a) => (
+            <div key={a.id} className="row" style={{ gap: 6, alignItems: 'center' }}>
+              <input type="time" value={a.time} onChange={(e) => update(a.id, { time: e.target.value })} style={{ width: 116, flex: 'none' }} />
+              <input value={a.what} onChange={(e) => update(a.id, { what: e.target.value })} placeholder="e.g. Cast call — Robin, Aisha" style={{ flex: 1 }} />
+              <button type="button" className="icon-btn danger" aria-label="Remove line" onClick={() => remove(a.id)}>🗑</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
+function CallSheet({
+  event,
+  production,
+  called,
+  onClose,
+}: {
+  event: ScheduleEvent
+  production: Production
+  called: Person[]
+  onClose: () => void
+}) {
+  const agenda = sortAgenda(event.agenda ?? [])
+  const emailCallSheet = () => {
+    const to = called.map((p) => p.email).filter(Boolean).join(',')
+    const body = [
+      `${production.title} — Call Sheet`,
+      `${event.type}${event.title ? ` · ${event.title}` : ''} · ${formatDate(event.date)}`,
+      event.location ? `Location: ${event.location}` : '',
+      event.callTime ? `Call: ${formatTime(event.callTime)}` : '',
+      '',
+      ...(agenda.length ? ['CALL TIMES', ...agenda.map((a) => `${a.time ? formatTime(a.time) : '—'}  ${a.what}`), ''] : []),
+      called.length ? `Called: ${called.map((p) => p.name).join(', ')}` : '',
+    ]
+      .filter((l) => l !== '')
+      .join('\n')
+    const subject = `Call Sheet — ${production.title} — ${formatDate(event.date)}`
+    window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  }
+  return (
+    <PrintSheet hint="Print or save the call sheet as a PDF, or email it to the called company." onClose={onClose}>
+      <div className="sheet-head">
+        <h2>{production.title} — Call Sheet</h2>
+        <div className="sheet-sub">
+          {event.type}
+          {event.title ? ` · ${event.title}` : ''} · {formatDate(event.date)}
+          {event.location ? ` · ${event.location}` : ''}
+        </div>
+      </div>
+      {agenda.length > 0 ? (
+        <table className="sheet-table">
+          <thead>
+            <tr>
+              <th style={{ width: '20%' }}>Time</th>
+              <th>Call</th>
+            </tr>
+          </thead>
+          <tbody>
+            {agenda.map((a) => (
+              <tr key={a.id}>
+                <td style={{ fontWeight: 700 }}>{a.time ? formatTime(a.time) : '—'}</td>
+                <td>{a.what}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p className="muted small">No call times yet — add them on the event to build the hour-by-hour.</p>
+      )}
+      <div className="field-label" style={{ marginTop: 14 }}>Called{called.length ? ` (${called.length})` : ''}</div>
+      <p className="small">{called.length ? called.map((p) => p.name).join(', ') : 'Whole company'}</p>
+      <div className="no-print" style={{ marginTop: 12 }}>
+        <button className="btn btn-primary" onClick={emailCallSheet}>✉ Email to called</button>
+      </div>
+    </PrintSheet>
   )
 }
 
@@ -754,6 +882,8 @@ function EventForm({
           </ul>
         </div>
       )}
+
+      <AgendaEditor items={f.agenda ?? []} onChange={(list) => setF((s) => ({ ...s, agenda: list }))} />
 
       <label className="field">
         <span className="field-label">Notes</span>
