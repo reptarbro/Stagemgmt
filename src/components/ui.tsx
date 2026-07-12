@@ -42,12 +42,16 @@ export function Modal({
 }
 
 /** A button that requires a second click to confirm a destructive action. */
+const SKIP_CONFIRMS_KEY = 'standby.skipConfirms'
+
 export function ConfirmButton({
   onConfirm,
   children = 'Delete',
   className = 'btn btn-danger btn-sm',
   ariaLabel,
   title,
+  message,
+  confirmLabel = 'Delete',
 }: {
   onConfirm: () => void
   children?: ReactNode
@@ -56,31 +60,78 @@ export function ConfirmButton({
       Leave unset when `children` is meaningful text (that becomes the name). */
   ariaLabel?: string
   title?: string
+  /** Body text in the confirm dialog. */
+  message?: string
+  /** Label on the confirming button. */
+  confirmLabel?: string
 }) {
-  const [armed, setArmed] = useState(false)
+  const [open, setOpen] = useState(false)
 
-  useEffect(() => {
-    if (!armed) return
-    const t = setTimeout(() => setArmed(false), 3000)
-    return () => clearTimeout(t)
-  }, [armed])
+  const start = () => {
+    // Honor a prior "don't ask again" choice.
+    if (localStorage.getItem(SKIP_CONFIRMS_KEY) === '1') {
+      onConfirm()
+      return
+    }
+    setOpen(true)
+  }
 
   return (
-    <button
-      className={className}
-      aria-label={ariaLabel}
-      title={title ?? ariaLabel}
-      onClick={() => {
-        if (armed) {
-          onConfirm()
-          setArmed(false)
-        } else {
-          setArmed(true)
-        }
-      }}
-    >
-      {armed ? 'Sure?' : children}
-    </button>
+    <>
+      <button className={className} aria-label={ariaLabel} title={title ?? ariaLabel} onClick={start}>
+        {children}
+      </button>
+      {open && (
+        <ConfirmDialog
+          message={message}
+          confirmLabel={confirmLabel}
+          onCancel={() => setOpen(false)}
+          onConfirm={() => {
+            setOpen(false)
+            onConfirm()
+          }}
+        />
+      )}
+    </>
+  )
+}
+
+function ConfirmDialog({
+  message,
+  confirmLabel,
+  onConfirm,
+  onCancel,
+}: {
+  message?: string
+  confirmLabel: string
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  const [dontAsk, setDontAsk] = useState(false)
+  return (
+    <Modal title="Are you sure?" onClose={onCancel}>
+      <p className="small muted" style={{ marginTop: 0 }}>
+        {message ?? "This can't be undone."}
+      </p>
+      <label className="row" style={{ gap: 8, alignItems: 'center', cursor: 'pointer', marginTop: 4 }}>
+        <input type="checkbox" checked={dontAsk} onChange={(e) => setDontAsk(e.target.checked)} />
+        <span className="small">Don't ask me again</span>
+      </label>
+      <div className="modal-actions">
+        <button className="btn btn-ghost" onClick={onCancel}>
+          Cancel
+        </button>
+        <button
+          className="btn btn-danger"
+          onClick={() => {
+            if (dontAsk) localStorage.setItem(SKIP_CONFIRMS_KEY, '1')
+            onConfirm()
+          }}
+        >
+          {confirmLabel}
+        </button>
+      </div>
+    </Modal>
   )
 }
 

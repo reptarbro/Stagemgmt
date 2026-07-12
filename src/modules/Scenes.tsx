@@ -4,6 +4,28 @@ import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar } from '../componen
 import { term, kindProfile } from '../lib/productionKind'
 import type { Person, Scene } from '../lib/types'
 
+/** Split a scene "number" into numeric + text chunks for natural ordering,
+    so "2.1" sorts after "1.10" and renumbering to 100 drops it to the bottom. */
+function sceneKey(n: string): (number | string)[] {
+  return (n.match(/\d+|\D+/g) ?? []).map((p) => (/^\d+$/.test(p) ? Number(p) : p.toLowerCase()))
+}
+function compareScenes(a: Scene, b: Scene): number {
+  const ka = sceneKey(a.number)
+  const kb = sceneKey(b.number)
+  for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
+    const x = ka[i]
+    const y = kb[i]
+    if (x === undefined) return -1
+    if (y === undefined) return 1
+    if (typeof x === 'number' && typeof y === 'number') {
+      if (x !== y) return x - y
+    } else if (String(x) !== String(y)) {
+      return String(x) < String(y) ? -1 : 1
+    }
+  }
+  return 0
+}
+
 const BLANK: Omit<Scene, 'id'> = {
   number: '',
   title: '',
@@ -19,7 +41,7 @@ export function Scenes() {
   const [viewing, setViewing] = useState<Scene | null>(null)
   const [view, setView] = useState<'list' | 'matrix'>('list')
 
-  const scenes = production?.scenes ?? []
+  const scenes = useMemo(() => [...(production?.scenes ?? [])].sort(compareScenes), [production?.scenes])
   const profile = kindProfile(production?.kind)
   const { setlist, musicalKeys, unit } = profile
   const charLabel = term(production?.kind, 'character')
@@ -376,7 +398,7 @@ function SceneForm({
                 onClick={() => toggle(p.id)}
                 style={{ borderRadius: 999 }}
               >
-                {on ? '✓ ' : ''}
+                <span style={{ display: 'inline-block', width: '0.8em', marginRight: 3 }}>{on ? '✓' : ''}</span>
                 {p.character || p.name}
               </button>
             )

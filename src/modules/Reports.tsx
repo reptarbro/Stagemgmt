@@ -332,10 +332,10 @@ function SectionEditor({
               commit()
             }
           }}
-          placeholder="Add a note, press Enter…"
+          placeholder="Type a note for this department…"
         />
-        <button className="btn btn-sm" onClick={commit} disabled={!draft.trim()}>
-          Add
+        <button className="btn btn-sm btn-primary" onClick={commit} disabled={!draft.trim()} style={{ whiteSpace: 'nowrap' }}>
+          + Add note
         </button>
       </div>
     </div>

@@ -772,9 +772,8 @@ function PersonForm({
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
       setF((s) => ({ ...s, [k]: e.target.value }))
 
-  // Everyone needs name, group, role, email, phone.
-  const missing =
-    !f.name.trim() || !f.group || !f.role.trim() || !(f.email ?? '').trim() || !(f.phone ?? '').trim()
+  // Only name, group, and role are required — contact details are optional.
+  const missing = !f.name.trim() || !f.group || !f.role.trim()
 
   return (
     <Modal title={initial ? 'Edit Person' : 'Add Person'} onClose={onClose}>
@@ -806,11 +805,11 @@ function PersonForm({
       </div>
       <div className="form-row">
         <label className="field">
-          <span className="field-label">Email <ReqStar /></span>
+          <span className="field-label">Email</span>
           <input type="email" value={f.email} onChange={set('email')} />
         </label>
         <label className="field">
-          <span className="field-label">Phone <ReqStar /></span>
+          <span className="field-label">Phone</span>
           <input value={f.phone} onChange={set('phone')} />
         </label>
       </div>
