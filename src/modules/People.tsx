@@ -104,6 +104,16 @@ export function People() {
 
   const rows = sort.sorted(filtered, sortVal)
 
+  // Email blast to the people currently shown (honors the group filter/search),
+  // BCC so addresses stay private.
+  const withEmail = filtered.filter((p) => p.email)
+  const emailAll = () => {
+    if (!production || withEmail.length === 0) return
+    const bcc = withEmail.map((p) => p.email).join(',')
+    const label = filter === 'All' ? production.title : `${production.title} — ${filter}`
+    window.location.href = `mailto:?bcc=${encodeURIComponent(bcc)}&subject=${encodeURIComponent(`${label}: `)}`
+  }
+
   const counts = useMemo(() => {
     const c: Record<string, number> = {}
     for (const p of people) c[p.group] = (c[p.group] ?? 0) + 1
@@ -123,6 +133,14 @@ export function People() {
             <div className="row wrap" style={{ gap: 6 }}>
               {people.length > 0 && (
                 <>
+                  <button
+                    className="btn btn-sm"
+                    onClick={emailAll}
+                    disabled={withEmail.length === 0}
+                    title={withEmail.length ? `Email the ${withEmail.length} shown contact(s) with an email (BCC)` : 'No contacts with an email address'}
+                  >
+                    ✉ Email {filter === 'All' ? 'all' : filter}
+                  </button>
                   <button className="btn btn-sm" onClick={exportCSV} title="Download contact sheet (CSV)">
                     ⤓ CSV
                   </button>

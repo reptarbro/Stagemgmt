@@ -363,11 +363,16 @@ function ReportViewer({ report, onClose }: { report: Report; onClose: () => void
     if (production) void downloadReportPDF(report, production)
   }
 
-  // Open a mail draft with the subject pre-filled and an empty body, so the
-  // downloaded PDF can be attached and sent without retyping the subject.
+  // Email the report to the production/creative/crew (not the cast), with the
+  // text in the body. The PDF can still be attached from the download.
   const emailDraft = () => {
     if (!production) return
-    window.location.href = `mailto:?subject=${encodeURIComponent(reportSubject(report, production))}`
+    const bcc = production.people
+      .filter((p) => p.group !== 'Cast' && p.email)
+      .map((p) => p.email)
+      .join(',')
+    const subject = reportSubject(report, production)
+    window.location.href = `mailto:?bcc=${encodeURIComponent(bcc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(asText())}`
   }
 
   const empty =
@@ -382,8 +387,8 @@ function ReportViewer({ report, onClose }: { report: Report; onClose: () => void
           <button className="btn btn-sm btn-primary" onClick={download}>
             ⤓ Download PDF
           </button>
-          <button className="btn btn-sm" onClick={emailDraft} title="Open an email with the subject pre-filled — attach the downloaded PDF">
-            ✉ Email
+          <button className="btn btn-sm" onClick={emailDraft} title="Email to production/creative/crew (BCC), report text in the body — attach the PDF if you like">
+            ✉ Email to crew
           </button>
           <button className="btn btn-sm" onClick={copy}>
             {copied ? '✓ Copied' : '⧉ Copy'}
