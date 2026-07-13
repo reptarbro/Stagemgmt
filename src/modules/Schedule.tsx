@@ -82,6 +82,7 @@ export function Schedule() {
   const [viewing, setViewing] = useState<ScheduleEvent | null>(null)
   const [attendanceFor, setAttendanceFor] = useState<ScheduleEvent | null>(null)
   const [signInFor, setSignInFor] = useState<ScheduleEvent | null>(null)
+  const [callSheetFor, setCallSheetFor] = useState<ScheduleEvent | null>(null)
   const [view, setView] = useState<'list' | 'calendar'>('list')
 
   const events = production?.events ?? []
@@ -193,6 +194,11 @@ export function Schedule() {
             setViewing(null)
             setSignInFor(e)
           }}
+          onCallSheet={() => {
+            const e = viewing
+            setViewing(null)
+            setCallSheetFor(e)
+          }}
         />
       )}
 
@@ -219,6 +225,19 @@ export function Schedule() {
           event={signInFor}
           isPast={signInFor.date < today}
           onClose={() => setSignInFor(null)}
+        />
+      )}
+
+      {callSheetFor && production && (
+        <CallSheet
+          event={callSheetFor}
+          production={production}
+          called={
+            callSheetFor.calledPersonIds.length
+              ? production.people.filter((p) => callSheetFor.calledPersonIds.includes(p.id))
+              : production.people
+          }
+          onClose={() => setCallSheetFor(null)}
         />
       )}
     </>
@@ -519,12 +538,14 @@ function EventDetail({
   onEdit,
   onAttendance,
   onSignIn,
+  onCallSheet,
 }: {
   event: ScheduleEvent
   onClose: () => void
   onEdit: () => void
   onAttendance: () => void
   onSignIn: () => void
+  onCallSheet: () => void
 }) {
   const { production } = useStore()
   const people = production?.people ?? []
@@ -534,7 +555,6 @@ function EventDetail({
     : people
   const conflicted = called.filter((p) => eventConflict(p, event))
   const scenesText = sceneLabels(event.sceneIds, scenes)
-  const [callSheet, setCallSheet] = useState(false)
 
   return (
     <Modal title={event.title || event.type} onClose={onClose}>
@@ -612,15 +632,11 @@ function EventDetail({
 
       <div className="modal-actions" style={{ flexWrap: 'wrap' }}>
         <button className="btn btn-ghost" onClick={onClose}>Close</button>
-        <button className="btn" onClick={() => setCallSheet(true)}>📋 Call Sheet</button>
+        <button className="btn" onClick={onCallSheet}>📋 Call Sheet</button>
         <button className="btn" onClick={onSignIn}>🖊 Sign-in Sheet</button>
         <button className="btn" onClick={onAttendance}>✓ Attendance</button>
         <button className="btn btn-primary" onClick={onEdit}>✎ Edit</button>
       </div>
-
-      {callSheet && production && (
-        <CallSheet event={event} production={production} called={called} onClose={() => setCallSheet(false)} />
-      )}
     </Modal>
   )
 }

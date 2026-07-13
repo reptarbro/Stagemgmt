@@ -83,6 +83,44 @@ a {
   text-decoration: none;
 }
 
+/* Thin, faded scrollbars across the app's scroll containers (WebKit/Blink);
+   Firefox uses the scrollbar-width/color set per-container. Matches the dark
+   chrome instead of the OS default slab. */
+.deck-rail::-webkit-scrollbar,
+.main::-webkit-scrollbar,
+.welcome-scroll::-webkit-scrollbar,
+.switch-menu::-webkit-scrollbar,
+.modal-backdrop::-webkit-scrollbar,
+.table-wrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.deck-rail::-webkit-scrollbar-track,
+.main::-webkit-scrollbar-track,
+.welcome-scroll::-webkit-scrollbar-track,
+.switch-menu::-webkit-scrollbar-track,
+.modal-backdrop::-webkit-scrollbar-track,
+.table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+.deck-rail::-webkit-scrollbar-thumb,
+.main::-webkit-scrollbar-thumb,
+.welcome-scroll::-webkit-scrollbar-thumb,
+.switch-menu::-webkit-scrollbar-thumb,
+.modal-backdrop::-webkit-scrollbar-thumb,
+.table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(231, 225, 208, 0.14);
+  border-radius: 999px;
+}
+.deck-rail:hover::-webkit-scrollbar-thumb,
+.main:hover::-webkit-scrollbar-thumb {
+  background: rgba(231, 225, 208, 0.24);
+}
+.main {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(231, 225, 208, 0.16) transparent;
+}
+
 h1,
 h2,
 h3,
@@ -139,7 +177,7 @@ p {
    color and its glowing spine lights up, reading as the open divider. This is
    deliberately NOT a generic app sidebar of icon+label rows. */
 .deck-rail {
-  width: 234px;
+  width: 252px;
   flex-shrink: 0;
   background: var(--rail);
   border-right: 1px solid #000;
@@ -154,6 +192,11 @@ p {
   height: 100svh;
   overflow-y: auto;
   overflow-x: hidden;
+  /* Reserve a stable gutter so a desktop scrollbar sits beside the tabs rather
+     than on top of them, and thin/fade it to match the dark chrome. */
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(231, 225, 208, 0.18) transparent;
 }
 
 .brand {
@@ -1444,9 +1487,17 @@ tbody tr:hover {
   }
 }
 
-/* Printable-sheet preview (screen). */
+/* Printable-sheet preview (screen). A print sheet (call sheet, sign-in, cast
+   list, report) opens on a SOLID ground — no translucent blur showing whatever
+   modal or page sits behind it — so it reads as its own clean document. */
+.sheet-print-root .modal-backdrop {
+  background: var(--bg);
+  backdrop-filter: none;
+  align-items: flex-start;
+}
 .sheet-modal {
-  max-width: 780px;
+  max-width: 760px;
+  background: var(--bg-elev);
 }
 .sheet-head h2 {
   margin: 0 0 2px;
