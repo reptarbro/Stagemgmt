@@ -205,7 +205,7 @@ export function Scenes() {
                       {setlist && s.duration && <span className="tag">{s.duration}</span>}
                     </div>
                     {s.synopsis && (
-                      <div className="small muted" style={{ marginTop: 6 }}>
+                      <div className="small muted" style={{ marginTop: 6, whiteSpace: 'pre-wrap' }}>
                         {s.synopsis}
                       </div>
                     )}
@@ -297,7 +297,7 @@ function SceneDetail({
         {setlist && scene.duration && <span className="tag">{scene.duration}</span>}
       </div>
       {scene.synopsis && (
-        <p className="small" style={{ margin: '0 0 10px' }}>{scene.synopsis}</p>
+        <p className="small" style={{ margin: '0 0 10px', whiteSpace: 'pre-wrap' }}>{scene.synopsis}</p>
       )}
       <div className="field-label">{charLabel}s ({scene.characterIds.length})</div>
       <div className="row wrap" style={{ gap: 5, marginBottom: 10 }}>
@@ -391,8 +391,60 @@ function SceneMatrix({
   )
 }
 
-/** The scene board: a condensed who's-in matrix on top, then a grid of tappable
-    scene squares grouped by act (derived from the number) — reorderable. */
+/** A compact "who's in what" index: one row per character with the scenes they
+    appear in, as chips. Replaces the wide sparse dot-matrix — same tap-to-filter,
+    a fraction of the width, and it scales cleanly to a big cast. */
+function CharacterIndex({
+  scenes,
+  cast,
+  unit,
+  activeChar,
+  onToggleChar,
+}: {
+  scenes: Scene[]
+  cast: Person[]
+  unit: string
+  activeChar: string | null
+  onToggleChar: (id: string) => void
+}) {
+  if (cast.length === 0) {
+    return <p className="muted small">Add cast members on the People page to see who's in what.</p>
+  }
+  const ordered = [...scenes].sort(compareScenes)
+  return (
+    <div className="char-index">
+      <div className="char-index-head">Who's in what</div>
+      {cast.map((p) => {
+        const mine = ordered.filter((s) => s.characterIds.includes(p.id))
+        const active = activeChar === p.id
+        return (
+          <button
+            key={p.id}
+            type="button"
+            className={`char-row ${active ? 'active' : ''}`}
+            onClick={() => onToggleChar(p.id)}
+            title={`Show only ${p.character || p.name}'s ${unit.toLowerCase()}s`}
+          >
+            <span className="char-name">{p.character || p.name}</span>
+            <span className="char-count">{mine.length}</span>
+            <span className="char-scenes">
+              {mine.length === 0 ? (
+                <span className="faint small">—</span>
+              ) : (
+                mine.map((s) => (
+                  <span key={s.id} className="char-scene-chip">{s.number || '—'}</span>
+                ))
+              )}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/** The scene board: the who's-in index on top, then a grid of tappable scene
+    squares grouped by act (derived from the number) — reorderable. */
 function SceneBoard({
   scenes,
   cast,
@@ -447,7 +499,7 @@ function SceneBoard({
 
   return (
     <>
-      <SceneMatrix
+      <CharacterIndex
         scenes={scenes.filter((s) => !s.patter)}
         cast={cast}
         unit={unit}
@@ -481,7 +533,7 @@ function SceneBoard({
             >
               <span className="scene-act-chevron">{isCollapsed ? '▸' : '▾'}</span>
               {g.label}
-              <span className="scene-act-count">{g.items.length}</span>
+              <span className="scene-act-count">({g.items.length})</span>
             </button>
           )}
           {isCollapsed ? null : g.items.length === 0 ? (

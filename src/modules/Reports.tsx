@@ -394,7 +394,7 @@ function SectionEditor({
         <ul className="list-reset" style={{ marginBottom: 8 }}>
           {section.notes.map((n) => (
             <li key={n.id} className="row-between" style={{ padding: '4px 0' }}>
-              <span className="small">• {n.text}</span>
+              <span className="small" style={{ whiteSpace: 'pre-wrap' }}>• {n.text}</span>
               <button className="icon-btn" onClick={() => onRemoveNote(n.id)} aria-label="Remove note">
                 ✕
               </button>
@@ -498,7 +498,7 @@ function ReportViewer({ report, onClose }: { report: Report; onClose: () => void
         <Block key={s.id} title={s.title}>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             {s.notes.map((n) => (
-              <li key={n.id} className="small" style={{ marginBottom: 3 }}>{n.text}</li>
+              <li key={n.id} className="small" style={{ marginBottom: 3, whiteSpace: 'pre-wrap' }}>{n.text}</li>
             ))}
           </ul>
         </Block>

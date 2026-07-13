@@ -144,7 +144,7 @@ export function LineNotes() {
                       <span className="tag">{n.type}</span>
                     </td>
                     <td className="small">{n.location || '—'}</td>
-                    <td className="small">{n.note || '—'}</td>
+                    <td className="small" style={{ whiteSpace: 'pre-wrap' }}>{n.note || '—'}</td>
                     <td>
                       <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
                         <button
