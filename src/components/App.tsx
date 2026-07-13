@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { getLastBackup, markBackedUp } from '../lib/storage'
@@ -11,23 +11,46 @@ import { useSignedIn } from '../lib/cloud/auth'
 import { StandbyMark, APP_NAME, APP_TAGLINE } from './Brand'
 import { NavIcon } from './icons'
 import { Welcome } from '../modules/Welcome'
+// A failed dynamic import is almost always a STALE CHUNK after a deploy: the
+// previously-installed service worker still controls the first post-deploy
+// load and can't serve the new hashed chunk, so the import rejects and — with
+// no boundary — the whole app would blank with a dead back button. Recover by
+// reloading once (which lets the new service worker take over and fetch fresh
+// chunks); the timestamp guard prevents a reload loop if a chunk is truly gone.
+const RELOAD_KEY = 'sb-chunk-reload-at'
+function lazyRoute(factory: () => Promise<Record<string, unknown>>, name: string) {
+  return lazy(() =>
+    factory()
+      .then((m) => ({ default: m[name] as React.ComponentType }))
+      .catch((err) => {
+        const last = Number(sessionStorage.getItem(RELOAD_KEY) || 0)
+        if (Date.now() - last > 10000) {
+          sessionStorage.setItem(RELOAD_KEY, String(Date.now()))
+          window.location.reload()
+          return new Promise<{ default: React.ComponentType }>(() => {})
+        }
+        throw err
+      }),
+  )
+}
+
 // Route modules are lazy-loaded so the initial bundle is just the shell + the
 // landing page; each module (and heavy deps like the PDF/print path) loads on
 // first navigation. Welcome stays eager for a fast first paint.
-const Hub = lazy(() => import('../modules/Hub').then((m) => ({ default: m.Hub })))
-const People = lazy(() => import('../modules/People').then((m) => ({ default: m.People })))
-const Schedule = lazy(() => import('../modules/Schedule').then((m) => ({ default: m.Schedule })))
-const Scenes = lazy(() => import('../modules/Scenes').then((m) => ({ default: m.Scenes })))
-const Props = lazy(() => import('../modules/Props').then((m) => ({ default: m.Props })))
-const LineNotes = lazy(() => import('../modules/LineNotes').then((m) => ({ default: m.LineNotes })))
-const Script = lazy(() => import('../modules/Script').then((m) => ({ default: m.Script })))
-const Assets = lazy(() => import('../modules/Assets').then((m) => ({ default: m.Assets })))
-const CueToCue = lazy(() => import('../modules/CueToCue').then((m) => ({ default: m.CueToCue })))
-const Reports = lazy(() => import('../modules/Reports').then((m) => ({ default: m.Reports })))
-const Settings = lazy(() => import('../modules/Settings').then((m) => ({ default: m.Settings })))
-const PrivacyPolicy = lazy(() => import('../modules/Legal').then((m) => ({ default: m.PrivacyPolicy })))
-const Terms = lazy(() => import('../modules/Legal').then((m) => ({ default: m.Terms })))
-const SharedView = lazy(() => import('../modules/SharedView').then((m) => ({ default: m.SharedView })))
+const Hub = lazyRoute(() => import('../modules/Hub'), 'Hub')
+const People = lazyRoute(() => import('../modules/People'), 'People')
+const Schedule = lazyRoute(() => import('../modules/Schedule'), 'Schedule')
+const Scenes = lazyRoute(() => import('../modules/Scenes'), 'Scenes')
+const Props = lazyRoute(() => import('../modules/Props'), 'Props')
+const LineNotes = lazyRoute(() => import('../modules/LineNotes'), 'LineNotes')
+const Script = lazyRoute(() => import('../modules/Script'), 'Script')
+const Assets = lazyRoute(() => import('../modules/Assets'), 'Assets')
+const CueToCue = lazyRoute(() => import('../modules/CueToCue'), 'CueToCue')
+const Reports = lazyRoute(() => import('../modules/Reports'), 'Reports')
+const Settings = lazyRoute(() => import('../modules/Settings'), 'Settings')
+const PrivacyPolicy = lazyRoute(() => import('../modules/Legal'), 'PrivacyPolicy')
+const Terms = lazyRoute(() => import('../modules/Legal'), 'Terms')
+const SharedView = lazyRoute(() => import('../modules/SharedView'), 'SharedView')
 
 /** Small, unobtrusive fallback while a lazily-loaded page chunk arrives. */
 function PageLoading() {
@@ -38,11 +61,70 @@ function PageLoading() {
   )
 }
 
+/** Catches render/chunk errors so a failure shows a Reload action instead of a
+    blank page with a dead back button. */
+class RootErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean; msg: string }> {
+  state = { failed: false, msg: '' }
+  static getDerivedStateFromError(error: unknown) {
+    return { failed: true, msg: error instanceof Error ? `${error.name}: ${error.message}` : String(error) }
+  }
+  handleReload = () => {
+    try {
+      sessionStorage.removeItem(RELOAD_KEY)
+    } catch {
+      /* ignore */
+    }
+    window.location.reload()
+  }
+  render() {
+    if (this.state.failed) {
+      return (
+        <div
+          style={{
+            minHeight: '100svh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 16,
+            padding: 24,
+            textAlign: 'center',
+          }}
+        >
+          <StandbyMark size={36} />
+          <p style={{ color: 'var(--text-dim)', maxWidth: 320, lineHeight: 1.5 }}>
+            Something interrupted loading this page. Reloading usually fixes it — your data is safe.
+          </p>
+          <button className="btn btn-primary" onClick={this.handleReload}>
+            Reload StandBy
+          </button>
+          {this.state.msg && (
+            <code style={{ color: 'var(--text-faint)', fontSize: '0.72rem', maxWidth: 340, wordBreak: 'break-word' }}>
+              {this.state.msg}
+            </code>
+          )}
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 export function App() {
+  // Reaching a successful mount means chunks are loading fine — clear any prior
+  // reload marker so a future stale deploy can self-heal again.
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(RELOAD_KEY)
+    } catch {
+      /* ignore */
+    }
+  }, [])
   return (
     <>
       <ScrollToTop />
       <CloudAutoSync />
+      <RootErrorBoundary>
       <Suspense fallback={<PageLoading />}>
       <Routes>
         {/* Home / landing — every fresh entry starts here. */}
@@ -69,6 +151,7 @@ export function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>
+      </RootErrorBoundary>
     </>
   )
 }
