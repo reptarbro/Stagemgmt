@@ -22,6 +22,7 @@ function needsSort(i: PropItem): boolean {
 const BLANK: Omit<PropItem, 'id'> = {
   name: '',
   category: 'Prop',
+  quantity: '',
   sceneRef: '',
   usedByPersonIds: [],
   status: 'Needed',
@@ -131,7 +132,10 @@ export function Props() {
                 {rows.map((i) => (
                   <tr key={i.id} className="row-tap" onClick={() => setViewing(i)}>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{i.name}</div>
+                      <div style={{ fontWeight: 600 }}>
+                        {i.name}
+                        {i.quantity && <span className="faint small" style={{ fontWeight: 400 }}> · ×{i.quantity}</span>}
+                      </div>
                       {i.notes && <div className="faint small">{i.notes}</div>}
                     </td>
                     <td>
@@ -220,6 +224,7 @@ function PropDetail({
     <Modal title={item.name} onClose={onClose}>
       <div className="row wrap" style={{ gap: 8, marginBottom: 12 }}>
         <span className="tag">{item.category}</span>
+        {item.quantity && <span className="tag">×{item.quantity}</span>}
         <span className="badge" style={{ color: STATUS_COLOR[item.status], borderColor: 'currentColor' }}>
           {item.status}
         </span>
@@ -271,8 +276,9 @@ function PropForm({
         : [...s.usedByPersonIds, id],
     }))
 
-  const missing =
-    !f.name.trim() || !f.category || !f.status || !(f.sceneRef ?? '').trim() || f.usedByPersonIds.length === 0
+  // Only the essentials are required now — quantity, scene, and handlers are all
+  // optional so an item can be logged fast and filled in later.
+  const missing = !f.name.trim() || !f.category || !f.status
 
   return (
     <Modal title={initial ? 'Edit Item' : 'Add Item'} onClose={onClose}>
@@ -302,13 +308,13 @@ function PropForm({
           </select>
         </label>
         <label className="field">
-          <span className="field-label">{unit} <ReqStar /></span>
-          <input value={f.sceneRef} onChange={set('sceneRef')} placeholder="5.1" />
+          <span className="field-label">Quantity</span>
+          <input value={f.quantity ?? ''} onChange={set('quantity')} placeholder="e.g. 2" />
         </label>
       </div>
 
       <div className="field-label">
-        Used by <ReqStar /> <span className="faint">({f.usedByPersonIds.length} selected)</span>
+        Used by <span className="faint">({f.usedByPersonIds.length} selected)</span>
       </div>
       {people.length === 0 ? (
         <p className="hint">Add people first to assign handlers.</p>
@@ -333,12 +339,17 @@ function PropForm({
       )}
 
       <label className="field">
+        <span className="field-label">{unit}</span>
+        <input value={f.sceneRef} onChange={set('sceneRef')} placeholder="5.1" />
+      </label>
+
+      <label className="field">
         <span className="field-label">Notes</span>
         <textarea value={f.notes} onChange={set('notes')} placeholder="Breakable? Preset where? Sourced from…" />
       </label>
       {missing && (
         <p className="hint" style={{ color: 'var(--danger)', marginBottom: 8 }}>
-          Name, category, status, {unit.toLowerCase()} &amp; at least one handler are required.
+          Name, category &amp; status are required.
         </p>
       )}
       <div className="modal-actions">

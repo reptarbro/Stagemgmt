@@ -403,19 +403,6 @@ p {
     transparent
   );
 }
-/* Binding "punches" — three faint holes down the margin, unmistakably a binder. */
-.main-inner::after {
-  content: '';
-  position: absolute;
-  left: 6px;
-  top: 12%;
-  height: 76%;
-  width: 9px;
-  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.55) 40%, transparent 42%);
-  background-size: 9px 33.333%;
-  background-repeat: repeat-y;
-  pointer-events: none;
-}
 
 /* Landing page scroll shell — Welcome renders outside .app, so it owns its own
    scroll the same way, keeping body locked. */
@@ -1581,9 +1568,6 @@ tbody tr:hover {
   }
   .main-inner {
     padding-left: 22px;
-  }
-  .main-inner::after {
-    display: none;
   }
   .hub-tile {
     flex-basis: calc(50% - 7px);

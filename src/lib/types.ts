@@ -176,6 +176,8 @@ export interface PropItem {
   id: ID
   name: string
   category: PropCategory
+  /** How many are needed (free text so "2", "1 per actor", etc. all work). */
+  quantity?: string
   /** Where it's used, e.g. "Act 1", "1.3". */
   sceneRef?: string
   /** Person ids who handle/wear it. */
