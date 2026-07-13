@@ -46,22 +46,22 @@ export function Hub() {
       )}
 
       <div className="grid grid-4">
-        <button type="button" className="stat stat-tap" onClick={() => setQuick('cast')}>
+        <button type="button" className="stat stat-tap cue-go" onClick={() => setQuick('cast')}>
           <div className="stat-value">{production.people.length}</div>
           <div className="stat-label">People</div>
           <div className="stat-sub">{castCount} cast · tap for list</div>
         </button>
-        <button type="button" className="stat stat-tap" onClick={() => setQuick('calls')}>
+        <button type="button" className="stat stat-tap cue-standby" onClick={() => setQuick('calls')}>
           <div className="stat-value">{upcoming.length}</div>
           <div className="stat-label">Upcoming calls</div>
           <div className="stat-sub">{production.events.length} total · tap to view</div>
         </button>
-        <button type="button" className="stat stat-tap" onClick={() => navigate('/reports')}>
+        <button type="button" className="stat stat-tap cue-sound" onClick={() => navigate('/reports')}>
           <div className="stat-value">{production.reports.length}</div>
           <div className="stat-label">Reports filed</div>
           <div className="stat-sub">rehearsal &amp; performance →</div>
         </button>
-        <button type="button" className="stat stat-tap" onClick={() => navigate('/schedule')}>
+        <button type="button" className="stat stat-tap cue-bone" onClick={() => navigate('/schedule')}>
           <div className="stat-value">
             {opening === null ? '—' : opening > 0 ? opening : opening === 0 ? '🎉' : '✓'}
           </div>
@@ -108,7 +108,7 @@ export function Hub() {
                       {e.location && ` · ${e.location}`}
                     </div>
                   </div>
-                  <span className={`badge`}>{e.type}</span>
+                  <span className={`badge badge-ev-${e.type.replace(/\s+/g, '-')}`}>{e.type}</span>
                 </li>
               ))}
             </ul>
@@ -177,7 +177,7 @@ export function Hub() {
                       {e.location && ` · ${e.location}`}
                     </div>
                   </div>
-                  <span className="badge">{e.type}</span>
+                  <span className={`badge badge-ev-${e.type.replace(/\s+/g, '-')}`}>{e.type}</span>
                 </li>
               ))}
             </ul>

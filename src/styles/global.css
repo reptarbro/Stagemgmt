@@ -1,11 +1,13 @@
 :root {
-  /* "Callboard" — warm black-box ground, bone rules, cue-light + gel system. */
-  --bg: #100f0c;
-  --bg-elev: #17150f;
-  --bg-elev-2: #211e16;
-  --panel: #17150f;
-  --border: #292419;
-  --border-soft: #211d15;
+  /* "Callboard" — warm black-box ground, bone rules, cue-light + gel system.
+     Surfaces step UP from the ground so panels read as lit desks, not a flat
+     field: ground (darkest) < panel/chrome < card < elevated. */
+  --bg: #0c0b08;
+  --bg-elev: #1a1710;
+  --bg-elev-2: #262115;
+  --panel: #131009;
+  --border: #322b1e;
+  --border-soft: #241f16;
   --text: #f1ece0; /* warm ivory */
   --text-dim: #a8a18e; /* warm grey */
   --text-faint: #6f6a5b;
@@ -56,8 +58,8 @@ html {
 body {
   /* Warm black-box ground with a soft worklight glow, top-right. */
   background:
-    radial-gradient(900px 520px at 84% -10%, rgba(230, 171, 76, 0.07), transparent 60%),
-    radial-gradient(1000px 680px at 4% 108%, rgba(62, 203, 134, 0.05), transparent 55%),
+    radial-gradient(1100px 560px at 86% -12%, rgba(230, 171, 76, 0.11), transparent 62%),
+    radial-gradient(1000px 680px at 2% 110%, rgba(62, 203, 134, 0.06), transparent 55%),
     var(--bg);
   background-color: var(--bg);
   background-attachment: fixed;
@@ -304,30 +306,40 @@ p {
 
 /* ---------- Page header ---------- */
 .page-head {
+  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 26px;
+  padding-bottom: 15px;
+  /* Calling-desk section rule: the whole header sits on a hairline, like the
+     ruled top of a calling script. */
+  border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
 }
-/* Marquee page title: uppercase, heavy, with a short cue-green accent bar. */
+/* The "GO light" — a bold, glowing green segment riding the header rule at the
+   left. This is the marquee accent, tied to the cue-light brand. */
+.page-head::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 74px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent-strong);
+  box-shadow: 0 0 13px -1px var(--accent-strong);
+}
+/* Marquee page title: uppercase, heavy, with a faint lit-marquee luminance. */
 .page-head h1 {
   text-transform: uppercase;
   font-weight: 800;
-  letter-spacing: 0.004em;
-  font-size: clamp(1.55rem, 3vw, 2.05rem);
+  letter-spacing: 0.005em;
+  font-size: clamp(1.6rem, 3.1vw, 2.15rem);
   line-height: 0.98;
   margin-bottom: 0;
-}
-.page-head h1::after {
-  content: '';
-  display: block;
-  width: 42px;
-  height: 3px;
-  margin-top: 11px;
-  border-radius: 2px;
-  background: var(--accent-strong);
+  text-shadow: 0 0 30px rgba(231, 225, 208, 0.07);
 }
 .page-head .subtitle {
   color: var(--text-dim);
@@ -376,21 +388,39 @@ p {
 .shared-foot { margin-top: 30px; color: var(--text-faint); font-size: 0.82rem; }
 
 /* ---------- Cards ---------- */
+/* Lit surface: a top-lighter gradient + inset highlight edge + drop shadow so
+   the panel reads as raised off the black-box ground, not painted onto it. */
 .card {
-  background: var(--bg-elev);
+  background: linear-gradient(176deg, var(--bg-elev-2), var(--bg-elev) 62%);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 18px;
+  box-shadow:
+    inset 0 1px 0 rgba(231, 225, 208, 0.045),
+    0 14px 32px -22px rgba(0, 0, 0, 0.9);
 }
 .card + .card {
   margin-top: 16px;
 }
 .card-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--text-faint);
+  color: var(--text-dim);
   margin-bottom: 12px;
+}
+/* Small cue-tick before every section label — the marquee bar at desk scale. */
+.card-title::before {
+  content: '';
+  flex: none;
+  width: 11px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent-strong);
+  box-shadow: 0 0 8px -1px var(--accent-strong);
 }
 
 .grid {
@@ -405,12 +435,35 @@ p {
 }
 
 /* ---------- Stat tiles ---------- */
+/* Each tile is a channel on the calling desk: a lit cue-color rail down the
+   left, the count lit in that same cue color. --cue defaults to GO green;
+   .cue-* modifiers reassign it (amber standby, sound teal, bone spot…). */
 .stat {
-  background: var(--bg-elev);
+  --cue: var(--accent-strong);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(176deg, var(--bg-elev-2), var(--bg-elev) 62%);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px 18px;
+  padding: 16px 18px 16px 21px;
+  box-shadow:
+    inset 0 1px 0 rgba(231, 225, 208, 0.045),
+    0 14px 32px -22px rgba(0, 0, 0, 0.9);
 }
+.stat::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--cue);
+  box-shadow: 0 0 15px -1px var(--cue);
+}
+.cue-go { --cue: var(--go); }
+.cue-standby { --cue: var(--standby); }
+.cue-sound { --cue: var(--gel-sound); }
+.cue-bone { --cue: var(--gel-spot); }
 .stat-tap {
   text-align: left;
   cursor: pointer;
@@ -418,28 +471,32 @@ p {
   color: inherit;
   width: 100%;
   display: block;
-  transition: border-color 0.12s, background 0.12s;
+  transition: border-color 0.12s, background 0.12s, transform 0.12s;
 }
 .stat-tap:hover {
-  border-color: var(--accent-strong);
-  background: var(--bg-elev-2);
+  border-color: color-mix(in srgb, var(--cue) 55%, var(--border));
+  transform: translateY(-2px);
 }
 .stat-value {
-  font-size: 1.9rem;
-  font-weight: 700;
+  font-size: 2.1rem;
+  font-weight: 800;
   font-family: var(--font-display);
-  color: var(--accent-strong);
+  color: var(--cue);
   line-height: 1;
+  text-shadow: 0 0 22px color-mix(in srgb, var(--cue) 30%, transparent);
 }
 .stat-label {
-  color: var(--text-dim);
-  font-size: 0.82rem;
-  margin-top: 6px;
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-top: 9px;
 }
 .stat-sub {
   color: var(--text-faint);
   font-size: 0.75rem;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 /* ---------- Buttons ---------- */
@@ -688,6 +745,14 @@ tbody tr:hover {
 .badge-absent { color: var(--danger); }
 .badge-excused { color: var(--info); }
 .badge-no-show { color: var(--danger); }
+
+/* Event-type badges — schedule call types, colored into the gel family. */
+.badge-ev-Rehearsal { color: #57b98a; border-color: rgba(87, 185, 138, 0.4); background: rgba(87, 185, 138, 0.1); }
+.badge-ev-Dress-Rehearsal { color: #7fc0a0; border-color: rgba(127, 192, 160, 0.4); background: rgba(127, 192, 160, 0.1); }
+.badge-ev-Performance { color: var(--gel-light); border-color: rgba(217, 162, 74, 0.45); background: rgba(217, 162, 74, 0.12); }
+.badge-ev-Tech { color: var(--gel-fly); border-color: rgba(154, 138, 201, 0.42); background: rgba(154, 138, 201, 0.1); }
+.badge-ev-Meeting { color: var(--gel-sound); border-color: rgba(87, 169, 155, 0.42); background: rgba(87, 169, 155, 0.1); }
+.badge-ev-Fitting { color: var(--gel-projection); border-color: rgba(207, 125, 106, 0.42); background: rgba(207, 125, 106, 0.1); }
 
 /* Department "gel" swatches for cue-to-cue badges. */
 .badge-Lighting { color: var(--gel-light); border-color: rgba(217, 162, 74, 0.4); background: rgba(217, 162, 74, 0.1); }

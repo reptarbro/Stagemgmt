@@ -1,7 +1,7 @@
 // Simple offline cache for the Stage Manager app.
 // - Navigations: network-first (so a fresh deploy loads when online), cache fallback offline.
 // - Static assets: stale-while-revalidate (hashed filenames make this safe).
-const CACHE = 'stagemgmt-cache-v4'
+const CACHE = 'stagemgmt-cache-v5'
 
 self.addEventListener('install', () => {
   self.skipWaiting()
