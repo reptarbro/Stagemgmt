@@ -73,6 +73,22 @@ understudy/swing track sheets · integrations with existing tools.
 
 ### In progress
 
+### Live-trial feedback (2026-07)
+- [x] `[no-backend]` **Schedule: title & call time no longer required** - only type,
+  date, start, end, and location are mandatory now.
+- [x] `[no-backend]` **Schedule: "All cast" call option** - mirrors the props/costumes
+  rule. Flag-based so it stays correct as the roster changes; turning it on hides the
+  individual cast chips and leaves non-cast people addable as extras.
+- [x] `[no-backend]` **Schedule: picking a scene pre-calls its characters** - selecting
+  a scene in the event form auto-selects the cast in that scene's breakdown (additive,
+  deselect anyone not needed). Skipped when "All cast" is on.
+- [ ] `[needs-backend]` **SM-to-SM handoff / co-editing a production.** View-only links
+  (Share) and full backup export/import already cover "send it to the cast" and "move
+  my show to another device / hand a full copy to a colleague." Still missing: two SMs
+  editing the *same* live production with sync (shared account or per-show collaborator
+  access + merge). Backup import is currently a fork, not a shared book. Ties into
+  backlog #11 (accounts + team sync).
+
 ### Done
 - [x] **Base-site revision round (from 21 annotated screenshots):** Title Case app-wide ·
   fit-to-viewport (no dead space / iPad white gap) · bigger uniform row icons · sortable

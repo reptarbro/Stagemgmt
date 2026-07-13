@@ -908,12 +908,23 @@ function EventForm({
     }))
 
   const toggleScene = (id: string) =>
-    setF((s) => ({
-      ...s,
-      sceneIds: (s.sceneIds ?? []).includes(id)
-        ? (s.sceneIds ?? []).filter((x) => x !== id)
-        : [...(s.sceneIds ?? []), id],
-    }))
+    setF((s) => {
+      const on = (s.sceneIds ?? []).includes(id)
+      if (on) {
+        // Removing a scene never un-calls anyone - a person may be needed for
+        // another scene or reason. The user prunes the call list by hand.
+        return { ...s, sceneIds: (s.sceneIds ?? []).filter((x) => x !== id) }
+      }
+      // Adding a scene pre-selects the characters in it (if the breakdown is
+      // filled out) so the call list builds itself from the scenes. Additive
+      // only - deselect anyone not actually needed. Skipped when "all cast"
+      // is on, since the whole cast is already covered by the flag.
+      const chars = scenes.find((sc) => sc.id === id)?.characterIds ?? []
+      const calledPersonIds = s.calledAllCast
+        ? s.calledPersonIds
+        : Array.from(new Set([...s.calledPersonIds, ...chars]))
+      return { ...s, sceneIds: [...(s.sceneIds ?? []), id], calledPersonIds }
+    })
 
   // Turn "all cast" on/off. On: drop any individually-picked cast members
   // (they're covered by the flag) so the chips don't double up - mirrors Props.
@@ -989,7 +1000,7 @@ function EventForm({
         <>
           <div className="field-label">
             {profile.unit}(s) worked{' '}
-            <span className="faint">(optional - links to {term(production?.kind, 'scenes')})</span>
+            <span className="faint">(optional - picking one pre-calls its {term(production?.kind, 'character').toLowerCase()}s)</span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
             {scenes.map((s) => {
