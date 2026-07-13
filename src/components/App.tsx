@@ -3,7 +3,7 @@ import { NavLink, Navigate, Outlet, Route, Routes, useNavigate } from 'react-rou
 import { useStore } from '../lib/store'
 import { getLastBackup, markBackedUp } from '../lib/storage'
 import { daysToOpening, cueToCueActive, CUE_WINDOW_DAYS } from '../lib/dates'
-import { moduleVisible, term } from '../lib/productionKind'
+import { moduleVisible, moduleLabel } from '../lib/productionKind'
 import { ScrollToTop } from './ui'
 import { CloudAutoSync } from './CloudAutoSync'
 import { useSignedIn } from '../lib/cloud/auth'
@@ -49,6 +49,21 @@ const NAV: { to: string; icon: IconName; label: string }[] = [
   { to: '/reports', icon: 'reports', label: 'Reports' },
   { to: '/settings', icon: 'settings', label: 'Settings' },
 ]
+
+/** Gel color for each index tab's spine — a color-coded binder edge. */
+const TAB_COLOR: Record<string, string> = {
+  '/hub': 'var(--gel-spot)',
+  '/people': 'var(--go)',
+  '/schedule': 'var(--standby)',
+  '/scenes': 'var(--gel-sound)',
+  '/props': 'var(--gel-projection)',
+  '/line-notes': 'var(--gel-fly)',
+  '/script': 'var(--gel-spot)',
+  '/assets': 'var(--gel-deck)',
+  '/cues': 'var(--gel-light)',
+  '/reports': 'var(--info)',
+  '/settings': 'var(--text-dim)',
+}
 
 export function App() {
   return (
@@ -111,63 +126,51 @@ function Shell() {
   ]
   const nav = baseNav
     .filter((n) => moduleVisible(production, n.to))
-    .map((n) =>
-      n.to === '/scenes'
-        ? { ...n, label: term(kind, 'scenes') }
-        : n.to === '/script'
-          ? { ...n, label: term(kind, 'script') }
-          : n,
-    )
+    .map((n) => ({ ...n, label: moduleLabel(kind, n.to) }))
+
+  // Cue-light status for the calling-desk strip: STANDBY (amber) counting down
+  // to opening, flipping to GO (green) once tech is live / the show has opened.
+  const cue = cueActive
+    ? { cls: 'go', txt: 'TECH · GO' }
+    : dOpen == null
+      ? null
+      : dOpen > 0
+        ? { cls: 'standby', txt: `T‑${dOpen} · STANDBY` }
+        : dOpen === 0
+          ? { cls: 'go', txt: 'OPENING · GO' }
+          : { cls: 'go', txt: 'OPEN · GO' }
 
   return (
     <div className="app">
       <div className={`scrim ${menuOpen ? 'open' : ''}`} onClick={close} />
-      <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
+      <aside className={`deck-rail ${menuOpen ? 'open' : ''}`}>
         <NavLink to="/" className="brand" onClick={close} style={{ textDecoration: 'none', color: 'inherit' }}>
           <span className="brand-mark" style={{ display: 'flex' }}>
             <StandbyMark size={30} />
           </span>
           <div>
-            <div className="brand-name" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              {APP_NAME}
-            </div>
+            <div className="brand-name">{APP_NAME}</div>
             <div className="brand-sub">{APP_TAGLINE}</div>
           </div>
         </NavLink>
 
-        {data.productions.length > 1 && (
-          <div className="prod-switch">
-            <div className="field-label" style={{ marginBottom: 0 }}>
-              Production
-            </div>
-            <select
-              value={production.id}
-              onChange={(e) => setActiveProduction(e.target.value)}
-            >
-              {data.productions.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.title}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        <nav onClick={close}>
+        <div className="rail-label">Prompt Book</div>
+        <nav className="rail-nav" onClick={close}>
           {nav.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}
+              style={{ ['--tab' as string]: TAB_COLOR[n.to] ?? 'var(--accent-strong)' } as React.CSSProperties}
             >
               <span className="nav-icon"><NavIcon name={n.icon} /></span>
-              <span style={{ flex: 1 }}>{n.label}</span>
+              <span className="tab-label">{n.label}</span>
               {n.hint && <span className="nav-hint">{n.hint}</span>}
             </NavLink>
           ))}
         </nav>
 
-        <div className="sidebar-spacer" />
+        <div className="rail-spacer" />
 
         <div className="prod-switcher">
           {switcher && (
@@ -209,25 +212,33 @@ function Shell() {
             + New / Switch Production
           </button>
         </div>
-        <div className="hint" style={{ padding: '0 10px' }}>
-          Saved automatically in this browser.
+        <div className="hint" style={{ padding: '0 12px', fontFamily: 'var(--font-mono)', fontSize: '0.58rem', letterSpacing: '0.06em' }}>
+          Saved on this device.
         </div>
       </aside>
 
       <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <div className="topbar">
-          <button className="icon-btn" onClick={() => setMenuOpen((o) => !o)} aria-label="Menu">
+        <div className="deck-head">
+          <button className="icon-btn deck-menu" onClick={() => setMenuOpen((o) => !o)} aria-label="Menu">
             ☰
           </button>
-          <strong>{production.title}</strong>
-          <span style={{ width: 24 }} />
+          <div className="deck-title">
+            Calling&nbsp;<b>{production.title}</b>
+          </div>
+          <div className="deck-spacer" />
+          {cue && (
+            <span className={`cue-pill ${cue.cls}`}>
+              <span className="cue-dot" />
+              {cue.txt}
+            </span>
+          )}
         </div>
 
         <main className="main">
           <div className="main-inner">
             <BackupBanner />
             {/* Nearer boundary than the top-level one, so switching modules shows
-                the fallback only in the content area — the sidebar stays put. */}
+                the fallback only in the content area — the rail stays put. */}
             <Suspense fallback={<PageLoading />}>
               <Outlet />
             </Suspense>

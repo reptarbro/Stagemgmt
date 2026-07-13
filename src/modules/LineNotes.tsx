@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton } from '../components/ui'
+import { term, kindProfile } from '../lib/productionKind'
 import { formatDate, todayISO } from '../lib/format'
 import type { LineNote, LineNoteType, Person } from '../lib/types'
 
@@ -27,6 +28,17 @@ export function LineNotes() {
   const [editing, setEditing] = useState<LineNote | 'new' | null>(null)
   const [hideResolved, setHideResolved] = useState(false)
   const [actorFilter, setActorFilter] = useState<string | null>(null)
+
+  const kind = production?.kind
+  const label = term(kind, 'lineNotes') // 'Line Notes' or, for unscripted kinds, 'Notes'
+  const lower = label.toLowerCase()
+  const charLabel = term(kind, 'character')
+  const charLower = charLabel.toLowerCase()
+  const profile = kindProfile(kind)
+  // Scripted kinds (play, musical, one-act, other) track line accuracy; the
+  // running-order kinds (cabaret, dance, variety) just keep neutral notes.
+  const scripted = !profile.setlist
+  const unit = profile.unit
 
   const notes = production?.lineNotes ?? []
   const cast = useMemo(
@@ -58,8 +70,8 @@ export function LineNotes() {
   return (
     <>
       <PageHead
-        title="Line Notes"
-        subtitle="Track line accuracy by actor"
+        title={label}
+        subtitle={scripted ? `Track line accuracy by ${charLower}` : `Track notes by ${charLower}`}
         actions={
           <button className="btn btn-primary" onClick={() => setEditing('new')}>
             + Add note
@@ -68,15 +80,16 @@ export function LineNotes() {
       />
 
       {notes.length === 0 ? (
-        <EmptyState mark="📝" title="No line notes yet">
-          Once actors are off book, log dropped or paraphrased lines here — then hand each actor their
-          list.
+        <EmptyState mark="📝" title={`No ${lower} yet`}>
+          {scripted
+            ? `Once ${charLower}s are off book, log dropped or paraphrased lines here — then hand each ${charLower} their list.`
+            : `Log notes for each ${charLower} here — then hand each one their list.`}
         </EmptyState>
       ) : (
         <>
           {perActor.length > 0 && (
             <div className="card" style={{ padding: 14 }}>
-              <div className="card-title">Outstanding by actor</div>
+              <div className="card-title">Outstanding by {charLower}</div>
               <div className="row wrap" style={{ gap: 8 }}>
                 {perActor.map(([id, n]) => (
                   <button
@@ -90,7 +103,7 @@ export function LineNotes() {
                 ))}
               </div>
               <p className="hint" style={{ margin: '8px 0 0' }}>
-                Tap an actor to show only their notes.
+                Tap a {charLower} to show only their notes.
               </p>
             </div>
           )}
@@ -115,7 +128,7 @@ export function LineNotes() {
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Actor</th>
+                  <th>{charLabel}</th>
                   <th>Type</th>
                   <th>Where</th>
                   <th>Note</th>
@@ -159,6 +172,9 @@ export function LineNotes() {
         <LineNoteForm
           initial={editing === 'new' ? undefined : editing}
           cast={cast.length ? cast : people}
+          charLabel={charLabel}
+          scripted={scripted}
+          unit={unit}
           onClose={() => setEditing(null)}
           onSave={(vals) => {
             if (editing === 'new') addLineNote(vals)
@@ -174,14 +190,21 @@ export function LineNotes() {
 function LineNoteForm({
   initial,
   cast,
+  charLabel,
+  scripted,
+  unit,
   onClose,
   onSave,
 }: {
   initial?: LineNote
   cast: Person[]
+  charLabel: string
+  scripted: boolean
+  unit: string
   onClose: () => void
   onSave: (vals: Omit<LineNote, 'id'>) => void
 }) {
+  const noteWord = scripted ? 'line note' : 'note'
   const [f, setF] = useState<Omit<LineNote, 'id'>>({
     ...BLANK,
     personId: cast[0]?.id ?? '',
@@ -193,10 +216,10 @@ function LineNoteForm({
       setF((s) => ({ ...s, [k]: e.target.value }))
 
   return (
-    <Modal title={initial ? 'Edit line note' : 'Add line note'} onClose={onClose}>
+    <Modal title={`${initial ? 'Edit' : 'Add'} ${noteWord}`} onClose={onClose}>
       <div className="form-row">
         <label className="field">
-          <span className="field-label">Actor *</span>
+          <span className="field-label">{charLabel} *</span>
           <select value={f.personId} onChange={set('personId')}>
             <option value="">— choose —</option>
             {cast.map((p) => (
@@ -223,7 +246,9 @@ function LineNoteForm({
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Where (page / scene)</span>
+          <span className="field-label">
+            {scripted ? 'Where (page / scene)' : `Where (${unit.toLowerCase()})`}
+          </span>
           <input value={f.location} onChange={set('location')} placeholder="p. 34" />
         </label>
       </div>

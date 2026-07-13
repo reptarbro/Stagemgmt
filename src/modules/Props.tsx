@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar, SortTh, useSort } from '../components/ui'
+import { kindProfile } from '../lib/productionKind'
 import type { Person, PropCategory, PropItem, PropStatus } from '../lib/types'
 
 const CATEGORIES: PropCategory[] = ['Prop', 'Costume', 'Set', 'Furniture', 'Other']
@@ -50,6 +51,7 @@ export function Props() {
 
   const items = production?.props ?? []
   const people = production?.people ?? []
+  const unit = kindProfile(production?.kind).unit // "Scene" / "Number" / "Piece" / "Segment"
   const nameFor = (id: string) => people.find((p) => p.id === id)?.name ?? '—'
 
   const filtered = useMemo(
@@ -119,7 +121,7 @@ export function Props() {
                 <tr>
                   <SortTh label="Item" sortKey="name" ctrl={sort} />
                   <SortTh label="Category" sortKey="category" ctrl={sort} />
-                  <SortTh label="Scene" sortKey="sceneRef" ctrl={sort} />
+                  <SortTh label={unit} sortKey="sceneRef" ctrl={sort} />
                   <th>Used by</th>
                   <SortTh label="Status" sortKey="status" ctrl={sort} />
                   <th style={{ width: 96 }} className="no-print"></th>
@@ -174,6 +176,7 @@ export function Props() {
         <PropDetail
           item={viewing}
           nameFor={nameFor}
+          unit={unit}
           onClose={() => setViewing(null)}
           onEdit={() => {
             const i = viewing
@@ -187,6 +190,7 @@ export function Props() {
         <PropForm
           initial={editing === 'new' ? undefined : editing}
           people={people}
+          unit={unit}
           onClose={() => setEditing(null)}
           onSave={(vals) => {
             if (editing === 'new') addProp(vals)
@@ -202,11 +206,13 @@ export function Props() {
 function PropDetail({
   item,
   nameFor,
+  unit,
   onClose,
   onEdit,
 }: {
   item: PropItem
   nameFor: (id: string) => string
+  unit: string
   onClose: () => void
   onEdit: () => void
 }) {
@@ -218,7 +224,7 @@ function PropDetail({
           {item.status}
         </span>
         {needsSort(item) && <span title="Still to sort">⚠️</span>}
-        {item.sceneRef && <span className="tag">Scene {item.sceneRef}</span>}
+        {item.sceneRef && <span className="tag">{unit} {item.sceneRef}</span>}
       </div>
       <div className="field-label">Used by</div>
       <p className="small muted" style={{ marginTop: 0 }}>
@@ -241,11 +247,13 @@ function PropDetail({
 function PropForm({
   initial,
   people,
+  unit,
   onClose,
   onSave,
 }: {
   initial?: PropItem
   people: Person[]
+  unit: string
   onClose: () => void
   onSave: (vals: Omit<PropItem, 'id'>) => void
 }) {
@@ -294,7 +302,7 @@ function PropForm({
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Scene / Act <ReqStar /></span>
+          <span className="field-label">{unit} <ReqStar /></span>
           <input value={f.sceneRef} onChange={set('sceneRef')} placeholder="5.1" />
         </label>
       </div>
@@ -330,7 +338,7 @@ function PropForm({
       </label>
       {missing && (
         <p className="hint" style={{ color: 'var(--danger)', marginBottom: 8 }}>
-          Name, category, status, scene &amp; at least one handler are required.
+          Name, category, status, {unit.toLowerCase()} &amp; at least one handler are required.
         </p>
       )}
       <div className="modal-actions">

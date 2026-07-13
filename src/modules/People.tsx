@@ -854,7 +854,7 @@ function PersonForm({
       </label>
       {missing && (
         <p className="hint" style={{ color: 'var(--danger)', marginBottom: 8 }}>
-          Name, group, role, email &amp; phone are required.
+          Name, group &amp; role are required. Email and phone are optional.
         </p>
       )}
       <div className="modal-actions">

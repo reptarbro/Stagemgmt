@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../lib/store'
-import { PRODUCTION_KINDS, KIND_PROFILES, moduleVisible, term } from '../lib/productionKind'
+import { PRODUCTION_KINDS, KIND_PROFILES, moduleVisible, moduleLabel } from '../lib/productionKind'
 import type { ProductionKind } from '../lib/types'
 import { PageHead, ConfirmButton } from '../components/ui'
 import { markBackedUp } from '../lib/storage'
@@ -37,12 +37,12 @@ export function Settings() {
   // Optional modules a user can show/hide per show. Core modules (Hub, People,
   // Schedule, Reports, Settings) are always available and not listed here.
   const moduleToggles = [
-    { to: '/scenes', label: term(production?.kind, 'scenes') },
-    { to: '/props', label: 'Props & Costumes' },
-    { to: '/line-notes', label: 'Line Notes' },
-    { to: '/script', label: term(production?.kind, 'script') },
-    { to: '/assets', label: 'Assets' },
-    { to: '/cues', label: 'Cue-to-Cue' },
+    { to: '/scenes', label: moduleLabel(production?.kind, '/scenes') },
+    { to: '/props', label: moduleLabel(production?.kind, '/props') },
+    { to: '/line-notes', label: moduleLabel(production?.kind, '/line-notes') },
+    { to: '/script', label: moduleLabel(production?.kind, '/script') },
+    { to: '/assets', label: moduleLabel(production?.kind, '/assets') },
+    { to: '/cues', label: moduleLabel(production?.kind, '/cues') },
   ]
 
   // A COMPLETE, portable backup: the data model + every binary (uploaded script

@@ -93,14 +93,14 @@ export function Scenes() {
         <EmptyState mark={setlist ? '🎵' : '🎬'} title={`No ${term(production?.kind, 'scenes').toLowerCase()} yet`}>
           {setlist
             ? `Add each ${unit.toLowerCase()} in order — title, who's up${musicalKeys ? ', key' : ''}, and timing. You'll get a clean running order plus a who's-in-what grid.`
-            : `Add each scene (or French scene) and mark who's in it. You'll get an instant "who's called for what" grid to build rehearsal calls from.`}
+            : `Add each ${unit.toLowerCase()} and mark who's in it. You'll get an instant "who's called for what" grid to build rehearsal calls from.`}
         </EmptyState>
       ) : view === 'matrix' ? (
         <SceneMatrix scenes={scenes.filter((s) => !s.patter)} cast={cast} unit={unit} />
       ) : (
         <>
           <p className="hint no-print" style={{ marginTop: -4 }}>
-            Tap a scene for its full overview.
+            Tap a {unit.toLowerCase()} for its full overview.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {scenes.map((s) => (
@@ -143,7 +143,7 @@ export function Scenes() {
                     <button className="icon-btn" onClick={() => setEditing(s)} aria-label="Edit" title="Edit">
                       ✎
                     </button>
-                    <ConfirmButton className="icon-btn danger" ariaLabel="Delete scene" onConfirm={() => deleteScene(s.id)}>🗑</ConfirmButton>
+                    <ConfirmButton className="icon-btn danger" ariaLabel={`Delete ${unit.toLowerCase()}`} onConfirm={() => deleteScene(s.id)}>🗑</ConfirmButton>
                   </div>
                 </div>
               </div>
@@ -217,7 +217,7 @@ function SceneDetail({
       {scene.synopsis && (
         <p className="small" style={{ margin: '0 0 10px' }}>{scene.synopsis}</p>
       )}
-      <div className="field-label">{setlist ? `${charLabel}s` : 'Characters'} ({scene.characterIds.length})</div>
+      <div className="field-label">{charLabel}s ({scene.characterIds.length})</div>
       <div className="row wrap" style={{ gap: 5, marginBottom: 10 }}>
         {scene.characterIds.length === 0 ? (
           <span className="faint small">None marked</span>
@@ -381,7 +381,7 @@ function SceneForm({
       )}
 
       <div className="field-label">
-        {setlist ? `${charLabel}s` : 'Characters'} in this {unit.toLowerCase()} {!setlist && <ReqStar />}{' '}
+        {charLabel}s in this {unit.toLowerCase()} {!setlist && <ReqStar />}{' '}
         <span className="faint">({f.characterIds.length} selected)</span>
       </div>
       {cast.length === 0 ? (
@@ -418,7 +418,7 @@ function SceneForm({
         <p className="hint" style={{ color: 'var(--danger)', marginBottom: 8 }}>
           {setlist
             ? 'Order and title are required.'
-            : 'Number, title & at least one character are required.'}
+            : `Number, title & at least one ${charLabel.toLowerCase()} are required.`}
         </p>
       )}
       <div className="modal-actions">

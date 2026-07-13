@@ -18,6 +18,8 @@ export function Script() {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const script = production?.script
+  const label = term(production?.kind, 'script')
+  const lower = label.toLowerCase()
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -55,8 +57,8 @@ export function Script() {
   return (
     <>
       <PageHead
-        title={term(production?.kind, 'script')}
-        subtitle="Your prompt book document"
+        title={label}
+        subtitle={`The master ${lower} document`}
         actions={
           script ? (
             <button className="btn" onClick={() => fileRef.current?.click()} disabled={busy}>
@@ -82,13 +84,13 @@ export function Script() {
 
       {!script ? (
         <div className="card">
-          <EmptyState mark="📄" title="No script uploaded yet">
-            Upload your script as a single document (PDF works best). It's stored privately in this
+          <EmptyState mark="📄" title={`No ${lower} uploaded yet`}>
+            Upload your {lower} as a single document (PDF works best). It's stored privately in this
             browser so you can open it anytime.
           </EmptyState>
           <div style={{ textAlign: 'center' }}>
             <button className="btn btn-primary" onClick={() => fileRef.current?.click()} disabled={busy}>
-              {busy ? 'Saving…' : '⬆ Upload script'}
+              {busy ? 'Saving…' : `⬆ Upload ${lower}`}
             </button>
             <p className="hint" style={{ marginTop: 10 }}>
               Accepted: PDF, Word, TXT, RTF.
@@ -97,7 +99,7 @@ export function Script() {
         </div>
       ) : (
         <div className="card">
-          <div className="card-title">Current script</div>
+          <div className="card-title">Current {lower}</div>
           <div className="row-between wrap" style={{ gap: 12 }}>
             <div className="row" style={{ gap: 14 }}>
               <div style={{ fontSize: '2.4rem' }}>📄</div>

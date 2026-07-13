@@ -29,12 +29,19 @@
   --gel-spot: #ded4bf;
   --gel-deck: #66ab80;
   --gel-projection: #cf7d6a;
+  /* Binder rail sits DARKER than the page, so the content reads as an open
+     prompt-book page pulled forward from the closed edge of the book. */
+  --rail: #080706;
   --radius: 12px;
   --radius-sm: 8px;
   --shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
   --maxw: 1080px;
   --font-body: 'Raleway Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Montserrat Variable', 'Raleway Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* Operational monospace — call sheets, cue numbers, times, counts, labels.
+     This is how stage managers actually read data, and it's the strongest
+     signal that this is a calling desk, not a generic web dashboard. */
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Menlo', 'Consolas', monospace;
   font-family: var(--font-body);
 }
 
@@ -126,83 +133,146 @@ p {
   height: 100svh;
 }
 
-.sidebar {
-  width: 232px;
+/* ---------- Binder rail (index-tab navigation) ----------
+   The left edge of the stage manager's ring binder: a stack of colored index
+   tabs, one per section. The active tab is "flipped to" — it takes the page
+   color and its glowing spine lights up, reading as the open divider. This is
+   deliberately NOT a generic app sidebar of icon+label rows. */
+.deck-rail {
+  width: 234px;
   flex-shrink: 0;
-  background: var(--panel);
-  border-right: 1px solid var(--border);
-  padding: 18px 14px;
+  background: var(--rail);
+  border-right: 1px solid #000;
+  padding: 16px 0 14px 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  /* Plain flex child, full height. NOT position:sticky — sticky here promotes
-     the sidebar to its own compositing layer on iOS Safari, which then paints
-     ABOVE body-portaled fixed overlays after a scroll, making the modal appear
-     to "split" behind the sidebar. The flex shell already pins it in place. */
+  gap: 3px;
+  /* Plain flex child (see note in old sidebar): sticky broke iOS overlay paint. */
   position: relative;
   z-index: 1;
   height: 100vh;
   height: 100svh;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 8px 16px;
+  padding: 4px 8px 12px 6px;
 }
 .brand-mark {
   font-size: 1.5rem;
   filter: drop-shadow(0 0 7px rgba(47, 174, 107, 0.45));
 }
 .brand-name {
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.95rem;
 }
 .brand-sub {
-  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
   color: var(--text-faint);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.26em;
   text-transform: uppercase;
+  margin-top: 3px;
 }
 
-.nav-link {
+.rail-label {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: 10px 10px 5px 8px;
+}
+
+/* One index tab. --tab is its gel spine color, set per-module in the shell. */
+.tab {
+  --tab: var(--accent-strong);
+  position: relative;
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
+  padding: 9px 12px 9px 15px;
+  margin-left: 10px;
+  border: 1px solid transparent;
+  border-right: none;
+  border-radius: 9px 0 0 9px;
   color: var(--text-dim);
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: background 0.12s, color 0.12s;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, margin-left 0.12s;
 }
-.nav-link:hover {
-  background: var(--bg-elev);
-  color: var(--text);
+/* The colored index spine down the tab's left edge. */
+.tab::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--tab);
+  opacity: 0.5;
 }
-.nav-link.active {
-  background: linear-gradient(90deg, rgba(47, 174, 107, 0.16), rgba(159, 184, 166, 0.03));
+.tab:hover {
+  background: rgba(255, 255, 255, 0.03);
   color: var(--text);
-  box-shadow: inset 2px 0 0 var(--accent-strong);
+  margin-left: 6px;
+}
+.tab:hover::before {
+  opacity: 0.9;
+}
+.tab.active {
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--border);
+  border-right-color: var(--bg);
+  font-weight: 600;
+}
+.tab.active::before {
+  opacity: 1;
+  width: 4px;
+  left: -1px;
+  box-shadow: 0 0 13px -1px var(--tab);
 }
 .nav-icon {
-  width: 20px;
+  width: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-faint);
+  color: var(--tab);
+  opacity: 0.75;
 }
-.nav-link:hover .nav-icon {
-  color: var(--text-dim);
+.tab:hover .nav-icon,
+.tab.active .nav-icon {
+  opacity: 1;
 }
-.nav-link.active .nav-icon {
-  color: var(--accent-strong);
+.tab-label {
+  flex: 1;
 }
+.nav-hint {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--rail);
+  background: var(--tab);
+  border-radius: 3px;
+  padding: 1px 5px;
+  letter-spacing: 0.02em;
+  opacity: 0.9;
+}
+
 .prod-switcher {
   position: relative;
-  margin: 0 4px 10px;
+  margin: 8px 12px 6px 8px;
 }
 .switch-menu {
   position: absolute;
@@ -219,9 +289,10 @@ p {
   overflow-y: auto;
 }
 .switch-label {
-  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--text-faint);
   padding: 4px 8px 6px;
 }
@@ -245,17 +316,10 @@ p {
   color: var(--accent-strong);
   font-weight: 600;
 }
-.nav-hint {
-  font-size: 0.66rem;
-  color: var(--text-faint);
-  background: var(--bg-elev-2);
-  border-radius: 999px;
-  padding: 1px 7px;
-  letter-spacing: 0.02em;
-}
 
-.sidebar-spacer {
+.rail-spacer {
   flex: 1;
+  min-height: 8px;
 }
 
 .main {
@@ -268,9 +332,41 @@ p {
   -webkit-overflow-scrolling: touch;
   padding: 28px clamp(16px, 4vw, 44px) 40px;
 }
+/* The open prompt-book page: content is bound past a left margin rule, the way
+   a calling script sits in its binder. Cue/section content clears the binding. */
 .main-inner {
+  position: relative;
   max-width: var(--maxw);
   margin: 0 auto;
+  padding-left: 30px;
+}
+.main-inner::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 2px;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(230, 171, 76, 0.28) 6%,
+    rgba(230, 171, 76, 0.22) 94%,
+    transparent
+  );
+}
+/* Binding "punches" — three faint holes down the margin, unmistakably a binder. */
+.main-inner::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 12%;
+  height: 76%;
+  width: 9px;
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.55) 40%, transparent 42%);
+  background-size: 9px 33.333%;
+  background-repeat: repeat-y;
+  pointer-events: none;
 }
 
 /* Landing page scroll shell — Welcome renders outside .app, so it owns its own
@@ -291,17 +387,72 @@ p {
   box-sizing: border-box;
 }
 
-/* ---------- Topbar (mobile) ---------- */
-.topbar {
-  display: none;
+/* ---------- Calling-desk status strip ----------
+   A persistent header band across the top of the page, like the top of a
+   calling desk: the show it's called from, and a cue-light status (STANDBY
+   amber until tech, GO green once tech/run is live). */
+.deck-head {
+  display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--panel);
+  gap: 12px;
+  padding: 9px 18px;
+  background: linear-gradient(180deg, var(--bg-elev), var(--bg));
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 40;
+}
+.deck-menu {
+  display: none;
+}
+.deck-title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.deck-title b {
+  color: var(--text);
+  font-weight: 700;
+}
+.deck-spacer {
+  flex: 1;
+}
+.cue-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.cue-pill .cue-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 9px currentColor;
+}
+.cue-pill.standby {
+  color: var(--standby);
+  border-color: rgba(230, 171, 76, 0.4);
+  background: rgba(230, 171, 76, 0.09);
+}
+.cue-pill.go {
+  color: var(--go);
+  border-color: rgba(62, 203, 134, 0.45);
+  background: rgba(62, 203, 134, 0.1);
 }
 
 /* ---------- Page header ---------- */
@@ -406,9 +557,10 @@ p {
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
   color: var(--text-dim);
   margin-bottom: 12px;
 }
@@ -487,16 +639,22 @@ p {
 }
 .stat-label {
   color: var(--text);
-  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.1em;
   margin-top: 9px;
 }
 .stat-sub {
   color: var(--text-faint);
-  font-size: 0.75rem;
-  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  margin-top: 4px;
+}
+.mono {
+  font-family: var(--font-mono);
 }
 
 /* ---------- Buttons ---------- */
@@ -658,9 +816,10 @@ th {
   text-align: left;
   padding: 11px 14px;
   color: var(--text-faint);
-  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.1em;
   background: var(--panel);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
@@ -726,9 +885,12 @@ tbody tr:hover {
   align-items: center;
   gap: 5px;
   padding: 3px 9px;
-  border-radius: 999px;
-  font-size: 0.74rem;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
   font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   border: 1px solid var(--border);
   background: var(--bg-elev-2);
   color: var(--text-dim);
@@ -1199,21 +1361,27 @@ tbody tr:hover {
   .app {
     flex-direction: column;
   }
-  .sidebar {
+  .deck-rail {
     display: none;
   }
-  .sidebar.open {
+  .deck-rail.open {
     display: flex;
     position: fixed;
     z-index: 50;
-    width: 260px;
+    width: 264px;
     box-shadow: var(--shadow);
   }
-  .topbar {
-    display: flex;
+  .deck-menu {
+    display: inline-flex;
   }
   .main {
-    padding: 18px 16px 40px;
+    padding: 16px 14px 40px;
+  }
+  .main-inner {
+    padding-left: 22px;
+  }
+  .main-inner::after {
+    display: none;
   }
   .form-row,
   .form-row-3 {
