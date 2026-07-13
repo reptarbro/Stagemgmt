@@ -417,6 +417,13 @@ function SceneBoard({
   onDrop: (dragId: string, targetId: string) => void
 }) {
   const [dragId, setDragId] = useState<string | null>(null)
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  const toggleAct = (key: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
   const shown = filterChar ? scenes.filter((s) => s.characterIds.includes(filterChar)) : scenes
 
   // Group by act when the numbers imply acts; otherwise one flat grid.
@@ -461,10 +468,23 @@ function SceneBoard({
         </p>
       )}
 
-      {groups.map((g) => (
+      {groups.map((g) => {
+        const isCollapsed = !!g.label && collapsed.has(g.key)
+        return (
         <section key={g.key} style={{ marginTop: 14 }}>
-          {g.label && <div className="scene-act">{g.label}</div>}
-          {g.items.length === 0 ? (
+          {g.label && (
+            <button
+              type="button"
+              className="scene-act"
+              onClick={() => toggleAct(g.key)}
+              aria-expanded={!isCollapsed}
+            >
+              <span className="scene-act-chevron">{isCollapsed ? '▸' : '▾'}</span>
+              {g.label}
+              <span className="scene-act-count">{g.items.length}</span>
+            </button>
+          )}
+          {isCollapsed ? null : g.items.length === 0 ? (
             <p className="faint small">No {unit.toLowerCase()}s.</p>
           ) : (
             <div className="scene-grid">
@@ -489,7 +509,8 @@ function SceneBoard({
             </div>
           )}
         </section>
-      ))}
+        )
+      })}
     </>
   )
 }

@@ -836,20 +836,42 @@ p {
   display: flex;
   align-items: center;
   gap: 9px;
+  width: 100%;
   font-family: var(--font-mono);
   font-size: 0.74rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-dim);
   margin: 4px 0 10px;
+  /* It's a collapse toggle button — strip the native chrome. */
+  background: none;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+  text-align: left;
+}
+.scene-act:hover {
+  color: var(--text);
 }
 .scene-act::before {
   content: '';
+  flex: none;
   width: 14px;
   height: 2px;
   border-radius: 2px;
   background: var(--accent-strong);
   box-shadow: 0 0 8px -1px var(--accent-strong);
+}
+.scene-act-chevron {
+  flex: none;
+  color: var(--accent-strong);
+  font-size: 0.7rem;
+}
+.scene-act-count {
+  flex: none;
+  margin-left: auto;
+  color: var(--text-faint);
+  letter-spacing: 0.06em;
 }
 .scene-grid {
   display: grid;
