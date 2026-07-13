@@ -549,8 +549,28 @@ function EventDetail({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, margin: '0 0 12px' }}>
             {sortAgenda(event.agenda).map((a) => (
               <div key={a.id} className="row" style={{ gap: 10, alignItems: 'baseline' }}>
-                <span className="mono small" style={{ minWidth: 62, color: 'var(--accent)' }}>{a.time ? formatTime(a.time) : '—'}</span>
+                <span className="mono small" style={{ minWidth: 92, flex: 'none', color: 'var(--accent)' }}>
+                  {a.time ? formatTime(a.time) : '—'}
+                  {a.endTime ? `–${formatTime(a.endTime)}` : ''}
+                </span>
                 <span className="small">{a.what}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {hasPerPersonCalls(event) && (
+        <>
+          <div className="field-label">Individual calls</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, margin: '0 0 12px' }}>
+            {personCalls(event, called).map((c) => (
+              <div key={c.person.id} className="row" style={{ gap: 10, alignItems: 'baseline' }}>
+                <span className="mono small" style={{ minWidth: 92, flex: 'none', color: 'var(--accent)' }}>
+                  {c.inTime ? formatTime(c.inTime) : '—'}
+                  {c.outTime ? `–${formatTime(c.outTime)}` : ''}
+                </span>
+                <span className="small">{c.person.name}</span>
               </div>
             ))}
           </div>
@@ -603,11 +623,24 @@ function sortAgenda(items: AgendaItem[]): AgendaItem[] {
   return [...items].sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'))
 }
 
-function AgendaEditor({ items, onChange }: { items: AgendaItem[]; onChange: (list: AgendaItem[]) => void }) {
+function AgendaEditor({
+  items,
+  people,
+  onChange,
+}: {
+  items: AgendaItem[]
+  /** The people who can be assigned to a line (the event's called company). */
+  people: Person[]
+  onChange: (list: AgendaItem[]) => void
+}) {
   const add = () => onChange([...items, { id: newId(), time: '', what: '' }])
   const update = (id: string, patch: Partial<AgendaItem>) =>
     onChange(items.map((a) => (a.id === id ? { ...a, ...patch } : a)))
   const remove = (id: string) => onChange(items.filter((a) => a.id !== id))
+  const togglePerson = (item: AgendaItem, pid: string) => {
+    const cur = item.personIds ?? []
+    update(item.id, { personIds: cur.includes(pid) ? cur.filter((x) => x !== pid) : [...cur, pid] })
+  }
   return (
     <>
       <div className="row-between mb">
@@ -620,21 +653,99 @@ function AgendaEditor({ items, onChange }: { items: AgendaItem[]; onChange: (lis
       </div>
       {items.length === 0 ? (
         <p className="hint" style={{ marginTop: 0 }}>
-          Add lines like &ldquo;6:15 · Cast call&rdquo; or &ldquo;5:30 · Band, Zo — musician rehearsal&rdquo;. They print on the call sheet.
+          Add lines like &ldquo;6:15–7:00 · Cast call&rdquo;. Assign people to a line to give them their own
+          in/out time — the call sheet then lists each person&rsquo;s individual call.
         </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
-          {items.map((a) => (
-            <div key={a.id} className="row" style={{ gap: 6, alignItems: 'center' }}>
-              <input type="time" value={a.time} onChange={(e) => update(a.id, { time: e.target.value })} style={{ width: 116, flex: 'none' }} />
-              <input value={a.what} onChange={(e) => update(a.id, { what: e.target.value })} placeholder="e.g. Cast call — Robin, Aisha" style={{ flex: 1 }} />
-              <button type="button" className="icon-btn danger" aria-label="Remove line" onClick={() => remove(a.id)}>🗑</button>
-            </div>
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+          {items.map((a) => {
+            const assigned = a.personIds ?? []
+            return (
+              <div
+                key={a.id}
+                style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '8px 10px' }}
+              >
+                <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+                  <input
+                    type="time"
+                    value={a.time}
+                    onChange={(e) => update(a.id, { time: e.target.value })}
+                    style={{ width: 108, flex: 'none' }}
+                    aria-label="In / start time"
+                  />
+                  <span className="faint">–</span>
+                  <input
+                    type="time"
+                    value={a.endTime ?? ''}
+                    onChange={(e) => update(a.id, { endTime: e.target.value || undefined })}
+                    style={{ width: 108, flex: 'none' }}
+                    aria-label="Out / end time (optional)"
+                  />
+                  <input
+                    value={a.what}
+                    onChange={(e) => update(a.id, { what: e.target.value })}
+                    placeholder="e.g. Cast call, Fight call, Band"
+                    style={{ flex: 1, minWidth: 90 }}
+                  />
+                  <button type="button" className="icon-btn danger" aria-label="Remove line" onClick={() => remove(a.id)}>
+                    🗑
+                  </button>
+                </div>
+                {people.length > 0 && (
+                  <div className="row wrap" style={{ gap: 4, marginTop: 8, alignItems: 'center' }}>
+                    <span className="hint" style={{ flex: 'none' }}>Called:</span>
+                    {people.map((p) => {
+                      const on = assigned.includes(p.id)
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className={`btn btn-sm ${on ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={() => togglePerson(a, p.id)}
+                          style={{ borderRadius: 999, padding: '3px 9px', fontSize: '0.72rem' }}
+                        >
+                          {on ? '✓ ' : ''}
+                          {p.name.split(' ')[0]}
+                        </button>
+                      )
+                    })}
+                    {assigned.length === 0 && <span className="hint" style={{ flex: 'none' }}>everyone</span>}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </>
   )
+}
+
+/** Each called person's individual in/out for an event: the earliest start and
+    latest end of the agenda lines they're assigned to, falling back to the
+    event's own call/end time when they have no personal lines. */
+interface PersonCall {
+  person: Person
+  inTime?: string
+  outTime?: string
+}
+function personCalls(event: ScheduleEvent, called: Person[]): PersonCall[] {
+  const agenda = event.agenda ?? []
+  return called.map((p) => {
+    const lines = agenda.filter((a) => (a.personIds ?? []).includes(p.id))
+    const ins = lines.map((a) => a.time).filter(Boolean).sort()
+    const outs = lines.map((a) => a.endTime).filter((t): t is string => !!t).sort()
+    return {
+      person: p,
+      inTime: ins[0] || event.callTime || undefined,
+      outTime: outs[outs.length - 1] || event.endTime || undefined,
+    }
+  })
+}
+/** True when at least one agenda line assigns specific people (so per-person
+    calls are meaningful and worth showing). */
+function hasPerPersonCalls(event: ScheduleEvent): boolean {
+  return (event.agenda ?? []).some((a) => (a.personIds?.length ?? 0) > 0)
 }
 
 function CallSheet({
@@ -649,6 +760,8 @@ function CallSheet({
   onClose: () => void
 }) {
   const agenda = sortAgenda(event.agenda ?? [])
+  const perPerson = hasPerPersonCalls(event)
+  const calls = perPerson ? personCalls(event, called) : []
   const emailCallSheet = () => {
     const to = called.map((p) => p.email).filter(Boolean).join(',')
     const body = [
@@ -657,7 +770,10 @@ function CallSheet({
       event.location ? `Location: ${event.location}` : '',
       event.callTime ? `Call: ${formatTime(event.callTime)}` : '',
       '',
-      ...(agenda.length ? ['CALL TIMES', ...agenda.map((a) => `${a.time ? formatTime(a.time) : '—'}  ${a.what}`), ''] : []),
+      ...(agenda.length ? ['SCHEDULE', ...agenda.map((a) => `${a.time ? formatTime(a.time) : '—'}${a.endTime ? `–${formatTime(a.endTime)}` : ''}  ${a.what}`), ''] : []),
+      ...(perPerson
+        ? ['CALLS BY PERSON', ...calls.map((c) => `${c.person.name}: ${c.inTime ? formatTime(c.inTime) : '—'}${c.outTime ? ` – ${formatTime(c.outTime)}` : ''}`), '']
+        : []),
       called.length ? `Called: ${called.map((p) => p.name).join(', ')}` : '',
     ]
       .filter((l) => l !== '')
@@ -679,14 +795,17 @@ function CallSheet({
         <table className="sheet-table">
           <thead>
             <tr>
-              <th style={{ width: '20%' }}>Time</th>
+              <th style={{ width: '26%' }}>Time</th>
               <th>Call</th>
             </tr>
           </thead>
           <tbody>
             {agenda.map((a) => (
               <tr key={a.id}>
-                <td style={{ fontWeight: 700 }}>{a.time ? formatTime(a.time) : '—'}</td>
+                <td style={{ fontWeight: 700 }}>
+                  {a.time ? formatTime(a.time) : '—'}
+                  {a.endTime ? `–${formatTime(a.endTime)}` : ''}
+                </td>
                 <td>{a.what}</td>
               </tr>
             ))}
@@ -695,6 +814,31 @@ function CallSheet({
       ) : (
         <p className="muted small">No call times yet — add them on the event to build the hour-by-hour.</p>
       )}
+
+      {perPerson && (
+        <>
+          <div className="field-label" style={{ marginTop: 14 }}>Calls by person</div>
+          <table className="sheet-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th style={{ width: '22%' }}>In</th>
+                <th style={{ width: '22%' }}>Out</th>
+              </tr>
+            </thead>
+            <tbody>
+              {calls.map((c) => (
+                <tr key={c.person.id}>
+                  <td>{c.person.name}</td>
+                  <td style={{ fontWeight: 700 }}>{c.inTime ? formatTime(c.inTime) : '—'}</td>
+                  <td>{c.outTime ? formatTime(c.outTime) : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
       <div className="field-label" style={{ marginTop: 14 }}>Called{called.length ? ` (${called.length})` : ''}</div>
       <p className="small">{called.length ? called.map((p) => p.name).join(', ') : 'Whole company'}</p>
       <div className="no-print" style={{ marginTop: 12 }}>
@@ -883,7 +1027,11 @@ function EventForm({
         </div>
       )}
 
-      <AgendaEditor items={f.agenda ?? []} onChange={(list) => setF((s) => ({ ...s, agenda: list }))} />
+      <AgendaEditor
+        items={f.agenda ?? []}
+        people={pool}
+        onChange={(list) => setF((s) => ({ ...s, agenda: list }))}
+      />
 
       <label className="field">
         <span className="field-label">Notes</span>
