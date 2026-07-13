@@ -182,6 +182,13 @@ export interface PropItem {
   sceneRef?: string
   /** Person ids who handle/wear it. */
   usedByPersonIds: ID[]
+  /** True when the whole cast uses it — stored as a flag (not a snapshot of
+      ids) so it stays correct as the roster changes. Resolved to current cast
+      at display time; can combine with specific usedByPersonIds (e.g. a crew
+      handler). */
+  usedByAllCast?: boolean
+  /** Flagged as urgent — surfaces in the Priority filter and floated up top. */
+  priority?: boolean
   status: PropStatus
   notes?: string
   /** ISO time of the last local edit — used to auto-merge across devices. */

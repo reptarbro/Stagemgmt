@@ -25,8 +25,16 @@ const BLANK: Omit<PropItem, 'id'> = {
   quantity: '',
   sceneRef: '',
   usedByPersonIds: [],
+  usedByAllCast: false,
+  priority: false,
   status: 'Needed',
   notes: '',
+}
+
+/** "All cast" + any specific names, joined — or "—". */
+function usedByLabel(i: PropItem, nameFor: (id: string) => string): string {
+  const parts = [i.usedByAllCast ? 'All cast' : null, ...i.usedByPersonIds.map(nameFor)].filter(Boolean)
+  return parts.length ? (parts.join(', ') as string) : '—'
 }
 
 type SortKey = 'name' | 'category' | 'sceneRef' | 'status'
@@ -47,7 +55,8 @@ export function Props() {
   const { production, addProp, updateProp, deleteProp } = useStore()
   const [editing, setEditing] = useState<PropItem | 'new' | null>(null)
   const [viewing, setViewing] = useState<PropItem | null>(null)
-  const [filter, setFilter] = useState<'All' | PropCategory>('All')
+  const [bulk, setBulk] = useState(false)
+  const [filter, setFilter] = useState<'All' | PropCategory | 'Priority'>('All')
   const sort = useSort<SortKey>('name')
 
   const items = production?.props ?? []
@@ -56,16 +65,25 @@ export function Props() {
   const nameFor = (id: string) => people.find((p) => p.id === id)?.name ?? '—'
 
   const filtered = useMemo(
-    () => items.filter((i) => (filter === 'All' ? true : i.category === filter)),
+    () =>
+      items.filter((i) =>
+        filter === 'All' ? true : filter === 'Priority' ? !!i.priority : i.category === filter,
+      ),
     [items, filter],
   )
-  const rows = sort.sorted(filtered, sortVal)
+  // Column sort, then float priority items to the top (stable — keeps the
+  // column order within each group).
+  const rows = useMemo(() => {
+    const s = sort.sorted(filtered, sortVal)
+    return [...s].sort((a, b) => Number(!!b.priority) - Number(!!a.priority))
+  }, [filtered, sort])
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {}
     for (const i of items) c[i.category] = (c[i.category] ?? 0) + 1
     return c
   }, [items])
+  const priorityCount = items.filter((i) => i.priority).length
 
   const outstanding = items.filter(needsSort).length
 
@@ -79,9 +97,14 @@ export function Props() {
             : 'Running lists'
         }
         actions={
-          <button className="btn btn-primary" onClick={() => setEditing('new')}>
-            + Add Item
-          </button>
+          <>
+            <button className="btn" onClick={() => setBulk(true)}>
+              ⧉ Add Multiple
+            </button>
+            <button className="btn btn-primary" onClick={() => setEditing('new')}>
+              + Add Item
+            </button>
+          </>
         }
       />
 
@@ -100,6 +123,15 @@ export function Props() {
             >
               All <span className="chip-ct">{items.length}</span>
             </button>
+            {priorityCount > 0 && (
+              <button
+                className={`btn btn-sm ${filter === 'Priority' ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setFilter('Priority')}
+                style={{ borderRadius: 999, color: filter === 'Priority' ? undefined : 'var(--warn)' }}
+              >
+                ⚡ Priority <span className="chip-ct">{priorityCount}</span>
+              </button>
+            )}
             {CATEGORIES.filter((c) => counts[c]).map((c) => (
               <button
                 key={c}
@@ -133,6 +165,7 @@ export function Props() {
                   <tr key={i.id} className="row-tap" onClick={() => setViewing(i)}>
                     <td>
                       <div style={{ fontWeight: 600 }}>
+                        {i.priority && <span title="High priority" style={{ color: 'var(--warn)', marginRight: 4 }}>⚡</span>}
                         {i.name}
                         {i.quantity && <span className="faint small" style={{ fontWeight: 400 }}> · ×{i.quantity}</span>}
                       </div>
@@ -142,11 +175,7 @@ export function Props() {
                       <span className="tag">{i.category}</span>
                     </td>
                     <td className="small">{i.sceneRef || '—'}</td>
-                    <td className="small">
-                      {i.usedByPersonIds.length
-                        ? i.usedByPersonIds.map(nameFor).join(', ')
-                        : '—'}
-                    </td>
+                    <td className="small">{usedByLabel(i, nameFor)}</td>
                     <td>
                       <span className="row" style={{ gap: 4, whiteSpace: 'nowrap' }}>
                         <span
@@ -203,6 +232,16 @@ export function Props() {
           }}
         />
       )}
+
+      {bulk && (
+        <PropsBulkAdd
+          onClose={() => setBulk(false)}
+          onAdd={(rows) => {
+            rows.forEach((r) => addProp(r))
+            setBulk(false)
+          }}
+        />
+      )}
     </>
   )
 }
@@ -223,6 +262,9 @@ function PropDetail({
   return (
     <Modal title={item.name} onClose={onClose}>
       <div className="row wrap" style={{ gap: 8, marginBottom: 12 }}>
+        {item.priority && (
+          <span className="badge" style={{ color: 'var(--warn)', borderColor: 'currentColor' }}>⚡ Priority</span>
+        )}
         <span className="tag">{item.category}</span>
         {item.quantity && <span className="tag">×{item.quantity}</span>}
         <span className="badge" style={{ color: STATUS_COLOR[item.status], borderColor: 'currentColor' }}>
@@ -233,7 +275,7 @@ function PropDetail({
       </div>
       <div className="field-label">Used by</div>
       <p className="small muted" style={{ marginTop: 0 }}>
-        {item.usedByPersonIds.length ? item.usedByPersonIds.map(nameFor).join(', ') : '—'}
+        {usedByLabel(item, nameFor)}
       </p>
       {item.notes && (
         <>
@@ -313,13 +355,42 @@ function PropForm({
         </label>
       </div>
 
+      <label className="row" style={{ gap: 8, cursor: 'pointer', marginBottom: 14 }}>
+        <input
+          type="checkbox"
+          checked={!!f.priority}
+          onChange={(e) => setF((s) => ({ ...s, priority: e.target.checked }))}
+        />
+        <span className="small" style={{ color: f.priority ? 'var(--warn)' : undefined }}>
+          ⚡ High priority — needed urgently
+        </span>
+      </label>
+
       <div className="field-label">
-        Used by <span className="faint">({f.usedByPersonIds.length} selected)</span>
+        Used by{' '}
+        <span className="faint">
+          (
+          {[f.usedByAllCast ? 'all cast' : null, f.usedByPersonIds.length ? `${f.usedByPersonIds.length} more` : null]
+            .filter(Boolean)
+            .join(' + ') || 'none'}
+          )
+        </span>
       </div>
       {people.length === 0 ? (
         <p className="hint">Add people first to assign handlers.</p>
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 140, overflowY: 'auto', marginBottom: 14 }}>
+          {people.some((p) => p.group === 'Cast') && (
+            <button
+              type="button"
+              className={`btn btn-sm ${f.usedByAllCast ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setF((s) => ({ ...s, usedByAllCast: !s.usedByAllCast }))}
+              style={{ borderRadius: 999 }}
+              title="Everyone in the Cast — stays correct as the cast changes"
+            >
+              {f.usedByAllCast ? '✓ ' : ''}👥 All cast
+            </button>
+          )}
           {people.map((p) => {
             const on = f.usedByPersonIds.includes(p.id)
             return (
@@ -358,6 +429,96 @@ function PropForm({
         </button>
         <button className="btn btn-primary" disabled={missing} onClick={() => onSave(f)}>
           Save
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
+/** Rapid multi-item entry — a row per item (name · category · qty · priority),
+    like People's "Add Multiple". Blank-name rows are ignored. */
+function PropsBulkAdd({
+  onClose,
+  onAdd,
+}: {
+  onClose: () => void
+  onAdd: (rows: Omit<PropItem, 'id'>[]) => void
+}) {
+  type Row = { name: string; category: PropCategory; quantity: string; priority: boolean }
+  const blankRow = (): Row => ({ name: '', category: 'Prop', quantity: '', priority: false })
+  const [rows, setRows] = useState<Row[]>([blankRow(), blankRow(), blankRow()])
+  const update = (i: number, patch: Partial<Row>) =>
+    setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, ...patch } : r)))
+  const remove = (i: number) => setRows((rs) => (rs.length > 1 ? rs.filter((_, idx) => idx !== i) : rs))
+  const ready = rows.filter((r) => r.name.trim())
+
+  return (
+    <Modal title="Add Multiple Items" onClose={onClose} className="modal-wide">
+      <p className="small muted" style={{ marginTop: 0 }}>
+        Log a batch fast — just name &amp; category. Everything starts as <strong>Needed</strong>; open any
+        item later to add handlers, scene, and notes.
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+        {rows.map((r, i) => (
+          <div key={i} className="row" style={{ gap: 6, alignItems: 'center' }}>
+            <input
+              value={r.name}
+              onChange={(e) => update(i, { name: e.target.value })}
+              placeholder="Item name"
+              style={{ flex: 1, minWidth: 90 }}
+              autoFocus={i === 0}
+            />
+            <select
+              value={r.category}
+              onChange={(e) => update(i, { category: e.target.value as PropCategory })}
+              style={{ width: 118, flex: 'none' }}
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <input
+              value={r.quantity}
+              onChange={(e) => update(i, { quantity: e.target.value })}
+              placeholder="Qty"
+              style={{ width: 60, flex: 'none' }}
+            />
+            <button
+              type="button"
+              className={`btn btn-sm ${r.priority ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => update(i, { priority: !r.priority })}
+              title="High priority"
+              style={{ flex: 'none', padding: '6px 9px' }}
+            >
+              ⚡
+            </button>
+            <button type="button" className="icon-btn danger" aria-label="Remove row" onClick={() => remove(i)}>
+              🗑
+            </button>
+          </div>
+        ))}
+      </div>
+      <button type="button" className="btn btn-sm btn-ghost" onClick={() => setRows((rs) => [...rs, blankRow()])}>
+        + Add row
+      </button>
+      <div className="modal-actions">
+        <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+        <button
+          className="btn btn-primary"
+          disabled={ready.length === 0}
+          onClick={() =>
+            onAdd(
+              ready.map((r) => ({
+                ...BLANK,
+                name: r.name.trim(),
+                category: r.category,
+                quantity: r.quantity.trim() || undefined,
+                priority: r.priority,
+              })),
+            )
+          }
+        >
+          Add {ready.length || ''} item{ready.length === 1 ? '' : 's'}
         </button>
       </div>
     </Modal>
