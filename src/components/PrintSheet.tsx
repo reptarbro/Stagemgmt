@@ -41,11 +41,14 @@ export function PrintSheet({
         <div className="modal sheet-modal" onClick={(e) => e.stopPropagation()}>
           <div className="row-between no-print" style={{ marginBottom: 14, gap: 8, flexWrap: 'wrap' }}>
             <span className="hint">{hint}</span>
+            {/* Order: the green/primary actions grouped first (built-in Print/PDF
+                plus any the caller passes), then secondary actions, then Close —
+                so greens never bookend the plain buttons. */}
             <div className="row wrap" style={{ gap: 6 }}>
-              {actions}
               <button className="btn btn-sm btn-primary" onClick={print}>
                 🖨 Print / PDF
               </button>
+              {actions}
               <button className="btn btn-sm btn-ghost" onClick={onClose}>
                 Close
               </button>
