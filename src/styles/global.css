@@ -821,6 +821,145 @@ p {
   font-family: var(--font-mono);
 }
 
+/* ---------- Scene board (matrix + tappable scene grid) ---------- */
+.scene-matrix {
+  max-height: 300px;
+  overflow: auto;
+}
+.scene-matrix-h:hover {
+  color: var(--text);
+}
+.scene-matrix-h.active {
+  color: var(--accent-strong);
+}
+.scene-act {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 4px 0 10px;
+}
+.scene-act::before {
+  content: '';
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent-strong);
+  box-shadow: 0 0 8px -1px var(--accent-strong);
+}
+.scene-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
+  gap: 12px;
+}
+.scene-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 118px;
+  padding: 12px 12px 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(176deg, var(--bg-elev-2), var(--bg-elev) 64%);
+  box-shadow: inset 0 1px 0 rgba(231, 225, 208, 0.045), 0 12px 26px -20px rgba(0, 0, 0, 0.9);
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.12s;
+}
+.scene-tile:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent-strong) 45%, var(--border));
+}
+.scene-tile.dragging {
+  opacity: 0.4;
+}
+.scene-tile-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.scene-num {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.scene-count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--accent-strong);
+  min-width: 18px;
+  text-align: center;
+}
+.scene-attention {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warn);
+  box-shadow: 0 0 8px var(--warn);
+}
+.scene-tile-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin-top: 6px;
+  line-height: 1.25;
+  flex: 1;
+}
+.scene-tile-meta {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  margin-top: 4px;
+}
+.scene-inits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 8px;
+}
+.scene-init {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.scene-init.more {
+  color: var(--text-faint);
+}
+.scene-reorder {
+  position: absolute;
+  bottom: 5px;
+  right: 6px;
+  display: flex;
+  gap: 0;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.scene-tile:hover .scene-reorder {
+  opacity: 1;
+}
+.scene-reorder .icon-btn {
+  min-width: 26px;
+  min-height: 26px;
+  font-size: 0.95rem;
+  padding: 2px;
+}
+/* Touch devices can't hover — keep the reorder arrows visible (drag-and-drop
+   isn't reliable on touch, so the arrows are the reorder path there). */
+@media (hover: none) {
+  .scene-reorder {
+    opacity: 0.85;
+  }
+}
+
 /* ---------- Buttons ---------- */
 .btn {
   display: inline-flex;

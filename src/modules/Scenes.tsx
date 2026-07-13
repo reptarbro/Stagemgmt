@@ -26,6 +26,25 @@ function compareScenes(a: Scene, b: Scene): number {
   return 0
 }
 
+const ACT_WORDS = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten']
+/** The act a scene belongs to, derived from its number: "1.3" / "2-1" → "1"/"2".
+    A flat number like "7" has no act (returns null → flat grid). */
+function actOf(number: string): string | null {
+  const m = number.trim().match(/^(\d+)\s*[.:–\-]/)
+  return m ? m[1] : null
+}
+function actLabel(act: string): string {
+  const n = Number(act)
+  return ACT_WORDS[n] ? `Act ${ACT_WORDS[n]}` : `Act ${act}`
+}
+/** Compact initials for a scene tile chip, e.g. "Robin Okafor" → "RO". */
+function initialsOf(label: string): string {
+  const parts = label.trim().split(/\s+/).filter(Boolean)
+  if (!parts.length) return '—'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
 const BLANK: Omit<Scene, 'id'> = {
   number: '',
   title: '',
@@ -36,15 +55,50 @@ const BLANK: Omit<Scene, 'id'> = {
 }
 
 export function Scenes() {
-  const { production, addScene, updateScene, deleteScene } = useStore()
+  const { production, addScene, updateScene, deleteScene, updateProduction } = useStore()
   const [editing, setEditing] = useState<Scene | 'new' | null>(null)
   const [viewing, setViewing] = useState<Scene | null>(null)
-  const [view, setView] = useState<'list' | 'matrix'>('list')
-
-  const scenes = useMemo(() => [...(production?.scenes ?? [])].sort(compareScenes), [production?.scenes])
   const profile = kindProfile(production?.kind)
   const { setlist, musicalKeys, unit } = profile
+  // Plays default to the Board (matrix + tappable scene grid); set lists keep
+  // their running-order list, with the matrix as the alternate.
+  const [view, setView] = useState<'board' | 'list' | 'matrix'>(setlist ? 'list' : 'board')
+  const [filterChar, setFilterChar] = useState<string | null>(null)
+
+  // Board grid honors the stored array order (so drag/reorder sticks); the
+  // list & matrix show numeric order for a stable reference.
+  const rawScenes = production?.scenes ?? []
+  const scenes = useMemo(() => [...(production?.scenes ?? [])].sort(compareScenes), [production?.scenes])
   const charLabel = term(production?.kind, 'character')
+
+  // Reorder within the board: move a scene one slot up/down among its act peers.
+  const moveScene = (id: string, dir: -1 | 1) => {
+    if (!production) return
+    const arr = [...(production.scenes ?? [])]
+    const i = arr.findIndex((s) => s.id === id)
+    if (i < 0) return
+    const act = actOf(arr[i].number)
+    let j = i + dir
+    while (j >= 0 && j < arr.length && actOf(arr[j].number) !== act) j += dir
+    if (j < 0 || j >= arr.length) return
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    updateProduction(production.id, { scenes: arr })
+  }
+  // Drag-drop (desktop): drop `dragId` onto `targetId`, reordering the array.
+  const dropScene = (dragId: string, targetId: string) => {
+    if (!production || dragId === targetId) return
+    const arr = [...(production.scenes ?? [])]
+    const from = arr.findIndex((s) => s.id === dragId)
+    const to = arr.findIndex((s) => s.id === targetId)
+    if (from < 0 || to < 0) return
+    const [moved] = arr.splice(from, 1)
+    arr.splice(arr.findIndex((s) => s.id === targetId) + (to > from ? 1 : 0), 0, moved)
+    updateProduction(production.id, { scenes: arr })
+  }
+  const sortByNumber = () => {
+    if (!production) return
+    updateProduction(production.id, { scenes: [...(production.scenes ?? [])].sort(compareScenes) })
+  }
   // Only cast are useful as "characters in a scene".
   const cast = useMemo(
     () => (production?.people ?? []).filter((p) => p.group === 'Cast'),
@@ -68,19 +122,34 @@ export function Scenes() {
           <>
             {scenes.length > 0 && cast.length > 0 && (
               <div className="row" style={{ gap: 4 }}>
+                {!setlist && (
+                  <button
+                    className={`btn btn-sm ${view === 'board' ? 'btn-primary' : 'btn-ghost'}`}
+                    onClick={() => setView('board')}
+                  >
+                    Board
+                  </button>
+                )}
                 <button
                   className={`btn btn-sm ${view === 'list' ? 'btn-primary' : 'btn-ghost'}`}
                   onClick={() => setView('list')}
                 >
                   List
                 </button>
-                <button
-                  className={`btn btn-sm ${view === 'matrix' ? 'btn-primary' : 'btn-ghost'}`}
-                  onClick={() => setView('matrix')}
-                >
-                  Grid
-                </button>
+                {setlist && (
+                  <button
+                    className={`btn btn-sm ${view === 'matrix' ? 'btn-primary' : 'btn-ghost'}`}
+                    onClick={() => setView('matrix')}
+                  >
+                    Grid
+                  </button>
+                )}
               </div>
+            )}
+            {view === 'board' && scenes.length > 1 && (
+              <button className="btn btn-sm btn-ghost" onClick={sortByNumber} title="Reset the board to numeric order">
+                ↕ Sort by number
+              </button>
             )}
             <button className="btn btn-primary" onClick={() => setEditing('new')}>
               + Add {unit}
@@ -95,6 +164,19 @@ export function Scenes() {
             ? `Add each ${unit.toLowerCase()} in order — title, who's up${musicalKeys ? ', key' : ''}, and timing. You'll get a clean running order plus a who's-in-what grid.`
             : `Add each ${unit.toLowerCase()} and mark who's in it. You'll get an instant "who's called for what" grid to build rehearsal calls from.`}
         </EmptyState>
+      ) : view === 'board' ? (
+        <SceneBoard
+          scenes={rawScenes}
+          cast={cast}
+          unit={unit}
+          charLabel={charLabel}
+          nameFor={nameFor}
+          filterChar={filterChar}
+          setFilterChar={setFilterChar}
+          onView={setViewing}
+          onMove={moveScene}
+          onDrop={dropScene}
+        />
       ) : view === 'matrix' ? (
         <SceneMatrix scenes={scenes.filter((s) => !s.patter)} cast={cast} unit={unit} />
       ) : (
@@ -241,21 +323,44 @@ function SceneDetail({
   )
 }
 
-function SceneMatrix({ scenes, cast, unit }: { scenes: Scene[]; cast: Person[]; unit: string }) {
+function SceneMatrix({
+  scenes,
+  cast,
+  unit,
+  activeChar,
+  onToggleChar,
+}: {
+  scenes: Scene[]
+  cast: Person[]
+  unit: string
+  /** When set, the board is filtered to this character; the column is lit. */
+  activeChar?: string | null
+  /** Tapping a character header toggles the board filter (board mode only). */
+  onToggleChar?: (id: string) => void
+}) {
   if (cast.length === 0) {
     return <p className="muted small">Add cast members on the People page to build the grid.</p>
   }
   return (
-    <div className="table-wrap">
+    <div className="table-wrap scene-matrix">
       <table>
         <thead>
           <tr>
             <th>{unit}</th>
-            {cast.map((p) => (
-              <th key={p.id} style={{ textAlign: 'center' }}>
-                {p.character || p.name}
-              </th>
-            ))}
+            {cast.map((p) => {
+              const on = activeChar === p.id
+              return (
+                <th
+                  key={p.id}
+                  className={onToggleChar ? `scene-matrix-h ${on ? 'active' : ''}` : undefined}
+                  style={{ textAlign: 'center', cursor: onToggleChar ? 'pointer' : undefined }}
+                  onClick={onToggleChar ? () => onToggleChar(p.id) : undefined}
+                  title={onToggleChar ? `Show only ${p.character || p.name}'s ${unit.toLowerCase()}s` : undefined}
+                >
+                  {p.character || p.name}
+                </th>
+              )
+            })}
             <th style={{ textAlign: 'center' }}>#</th>
           </tr>
         </thead>
@@ -267,7 +372,7 @@ function SceneMatrix({ scenes, cast, unit }: { scenes: Scene[]; cast: Person[]; 
                 {s.title && <div className="faint small">{s.title}</div>}
               </td>
               {cast.map((p) => (
-                <td key={p.id} style={{ textAlign: 'center' }}>
+                <td key={p.id} style={{ textAlign: 'center', background: activeChar === p.id ? 'rgba(87,185,138,.08)' : undefined }}>
                   {s.characterIds.includes(p.id) ? (
                     <span style={{ color: 'var(--accent)' }}>●</span>
                   ) : (
@@ -282,6 +387,172 @@ function SceneMatrix({ scenes, cast, unit }: { scenes: Scene[]; cast: Person[]; 
           ))}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+/** The scene board: a condensed who's-in matrix on top, then a grid of tappable
+    scene squares grouped by act (derived from the number) — reorderable. */
+function SceneBoard({
+  scenes,
+  cast,
+  unit,
+  charLabel,
+  nameFor,
+  filterChar,
+  setFilterChar,
+  onView,
+  onMove,
+  onDrop,
+}: {
+  scenes: Scene[]
+  cast: Person[]
+  unit: string
+  charLabel: string
+  nameFor: (id: string) => string
+  filterChar: string | null
+  setFilterChar: (id: string | null) => void
+  onView: (s: Scene) => void
+  onMove: (id: string, dir: -1 | 1) => void
+  onDrop: (dragId: string, targetId: string) => void
+}) {
+  const [dragId, setDragId] = useState<string | null>(null)
+  const shown = filterChar ? scenes.filter((s) => s.characterIds.includes(filterChar)) : scenes
+
+  // Group by act when the numbers imply acts; otherwise one flat grid.
+  const derivable = scenes.some((s) => actOf(s.number) !== null)
+  const groups: { key: string; label: string; items: Scene[] }[] = []
+  if (derivable) {
+    const map = new Map<string, Scene[]>()
+    for (const s of shown) {
+      const a = actOf(s.number) ?? '~'
+      if (!map.has(a)) map.set(a, [])
+      map.get(a)!.push(s)
+    }
+    for (const k of [...map.keys()].sort((a, b) => (a === '~' ? 1 : b === '~' ? -1 : Number(a) - Number(b)))) {
+      groups.push({ key: k, label: k === '~' ? 'Other' : actLabel(k), items: map.get(k)! })
+    }
+  } else {
+    groups.push({ key: 'all', label: '', items: shown })
+  }
+
+  const activeName = filterChar ? nameFor(filterChar) : ''
+
+  return (
+    <>
+      <SceneMatrix
+        scenes={scenes.filter((s) => !s.patter)}
+        cast={cast}
+        unit={unit}
+        activeChar={filterChar}
+        onToggleChar={(id) => setFilterChar(filterChar === id ? null : id)}
+      />
+
+      {filterChar ? (
+        <div className="row" style={{ gap: 8, margin: '14px 0 2px', alignItems: 'center' }}>
+          <span className="small">
+            Showing {unit.toLowerCase()}s with <strong>{activeName}</strong>
+          </span>
+          <button className="btn btn-sm btn-ghost" onClick={() => setFilterChar(null)}>✕ Clear</button>
+        </div>
+      ) : (
+        <p className="hint no-print" style={{ margin: '14px 0 2px' }}>
+          Tap a {unit.toLowerCase()} to open it · tap a name above to filter · drag or use ↑↓ to reorder.
+        </p>
+      )}
+
+      {groups.map((g) => (
+        <section key={g.key} style={{ marginTop: 14 }}>
+          {g.label && <div className="scene-act">{g.label}</div>}
+          {g.items.length === 0 ? (
+            <p className="faint small">No {unit.toLowerCase()}s.</p>
+          ) : (
+            <div className="scene-grid">
+              {g.items.map((s) => (
+                <SceneTile
+                  key={s.id}
+                  scene={s}
+                  charLabel={charLabel}
+                  nameFor={nameFor}
+                  dragging={dragId === s.id}
+                  onView={() => onView(s)}
+                  onMoveUp={() => onMove(s.id, -1)}
+                  onMoveDown={() => onMove(s.id, 1)}
+                  onDragStart={() => setDragId(s.id)}
+                  onDragEnd={() => setDragId(null)}
+                  onDropHere={() => {
+                    if (dragId) onDrop(dragId, s.id)
+                    setDragId(null)
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      ))}
+    </>
+  )
+}
+
+function SceneTile({
+  scene,
+  charLabel,
+  nameFor,
+  dragging,
+  onView,
+  onMoveUp,
+  onMoveDown,
+  onDragStart,
+  onDragEnd,
+  onDropHere,
+}: {
+  scene: Scene
+  charLabel: string
+  nameFor: (id: string) => string
+  dragging: boolean
+  onView: () => void
+  onMoveUp: () => void
+  onMoveDown: () => void
+  onDragStart: () => void
+  onDragEnd: () => void
+  onDropHere: () => void
+}) {
+  const count = scene.characterIds.length
+  const initials = scene.characterIds.slice(0, 6).map((id) => initialsOf(nameFor(id)))
+  const extra = count - initials.length
+  const meta = scene.page ? `p. ${scene.page}` : scene.duration ? scene.duration : ''
+  const stop = (e: React.MouseEvent) => e.stopPropagation()
+  return (
+    <div
+      className={`scene-tile ${dragging ? 'dragging' : ''}`}
+      onClick={onView}
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault()
+        onDropHere()
+      }}
+    >
+      <div className="scene-tile-head">
+        <span className="scene-num">{scene.number || '—'}</span>
+        <span className="scene-count" title={`${count} ${charLabel.toLowerCase()}${count === 1 ? '' : 's'}`}>
+          {count === 0 ? <span className="scene-attention" title={`No ${charLabel.toLowerCase()}s marked`} /> : count}
+        </span>
+      </div>
+      <div className="scene-tile-title tcase">{scene.title || 'Untitled'}</div>
+      {meta && <div className="scene-tile-meta">{meta}</div>}
+      <div className="scene-inits">
+        {initials.map((ini, i) => (
+          <span key={i} className="scene-init">{ini}</span>
+        ))}
+        {extra > 0 && <span className="scene-init more">+{extra}</span>}
+      </div>
+      <div className="scene-reorder no-print" onClick={stop}>
+        <button className="icon-btn" aria-label="Move earlier" onClick={onMoveUp}>↑</button>
+        <button className="icon-btn" aria-label="Move later" onClick={onMoveDown}>↓</button>
+      </div>
     </div>
   )
 }
