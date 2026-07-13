@@ -201,7 +201,7 @@ function Shell() {
             </button>
           )}
           <NavLink to="/" className="deck-brand" aria-label="Home">
-            <StandbyMark size={22} />
+            <StandbyMark size={27} />
             <span className="deck-brand-name">{APP_NAME}</span>
           </NavLink>
           <span className="deck-div">/</span>

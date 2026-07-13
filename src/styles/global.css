@@ -473,9 +473,9 @@ p {
 .deck-brand-name {
   font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.17em;
   text-transform: uppercase;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   color: var(--text);
 }
 /* Divider between the brand lockup and the "CALLING <show>" title. */
