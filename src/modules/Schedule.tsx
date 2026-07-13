@@ -287,6 +287,7 @@ function EventRow({
   const att = getAttendance(event.id)
   const totalCalled = event.calledPersonIds.length || production?.people.length || 0
   const summary = att ? summarize(att) : null
+  const [callSheet, setCallSheet] = useState(false)
 
   const people = production?.people ?? []
   const pool = event.calledPersonIds.length
@@ -347,6 +348,9 @@ function EventRow({
                 : '🖊 Sign-in · Upload'
               : '🖊 Sign-in Sheet'}
           </button>
+          <button className="btn btn-sm btn-ghost" onClick={() => setCallSheet(true)} title="Call sheet — print, save PDF, or email">
+            📋 Call Sheet
+          </button>
           <button className="btn btn-sm btn-ghost" onClick={onView} title="View details">
             View
           </button>
@@ -359,6 +363,9 @@ function EventRow({
         <div className="hint" style={{ marginTop: 8 }}>
           Add people on the People page to track attendance.
         </div>
+      )}
+      {callSheet && production && (
+        <CallSheet event={event} production={production} called={pool} onClose={() => setCallSheet(false)} />
       )}
     </div>
   )

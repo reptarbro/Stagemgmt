@@ -6,6 +6,8 @@ import { term } from '../lib/productionKind'
 import { newId } from '../lib/storage'
 import { formatDateShort, formatTime, todayISO } from '../lib/format'
 import { contactsCSV, downloadText, slug } from '../lib/exporters'
+import { ShareModal } from '../components/ShareModal'
+import { CLOUD_ENABLED } from '../lib/cloud/config'
 import type { Conflict, Person, PersonGroup, Production } from '../lib/types'
 
 const GROUPS: PersonGroup[] = [
@@ -78,6 +80,7 @@ export function People() {
   const [bulk, setBulk] = useState(false)
   const [avail, setAvail] = useState(false)
   const [printing, setPrinting] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const [filter, setFilter] = useState<'All' | PersonGroup>('All')
   const [q, setQ] = useState('')
   const sort = useSort<SortKey>('name')
@@ -155,6 +158,11 @@ export function People() {
               {people.length > 0 && (
                 <button className="btn btn-sm" onClick={() => setAvail(true)} title="Add unavailability for the whole company">
                   🗓 Availability
+                </button>
+              )}
+              {CLOUD_ENABLED && people.length > 0 && (
+                <button className="btn btn-sm" onClick={() => setShowShare(true)} title="Share a read-only contact sheet & schedule with the cast">
+                  🔗 Share
                 </button>
               )}
             </div>
@@ -308,6 +316,7 @@ export function People() {
       {printing && production && (
         <CastListSheet production={production} people={people} onClose={() => setPrinting(false)} />
       )}
+      {showShare && <ShareModal onClose={() => setShowShare(false)} />}
     </>
   )
 }
