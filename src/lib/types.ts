@@ -34,6 +34,11 @@ export interface Person {
   role: string
   /** For cast: the character(s) they play. Kept separate from role for clarity. */
   character?: string
+  /** Additional hats this person wears — e.g. a director who also performs.
+      Each carries its own group + role so the person appears under every list
+      they belong to. The primary `group`/`role` above stays authoritative for
+      sorting and sheets. */
+  altRoles?: { group: PersonGroup; role: string }[]
   email?: string
   phone?: string
   emergencyContactName?: string

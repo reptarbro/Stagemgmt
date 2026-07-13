@@ -20,6 +20,16 @@ const GROUPS: PersonGroup[] = [
   'Other',
 ]
 
+/** Every group a person belongs to — primary plus any alt-role groups (deduped). */
+function personGroups(p: Person): PersonGroup[] {
+  const set = new Set<PersonGroup>([p.group])
+  for (const a of p.altRoles ?? []) set.add(a.group)
+  return [...set]
+}
+function personInGroup(p: Person, g: PersonGroup): boolean {
+  return p.group === g || (p.altRoles ?? []).some((a) => a.group === g)
+}
+
 const BLANK: Omit<Person, 'id'> = {
   name: '',
   group: 'Cast',
@@ -95,12 +105,13 @@ export function People() {
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase()
     return people
-      .filter((p) => (filter === 'All' ? true : p.group === filter))
+      .filter((p) => (filter === 'All' ? true : personInGroup(p, filter)))
       .filter(
         (p) =>
           !term ||
           p.name.toLowerCase().includes(term) ||
           p.role.toLowerCase().includes(term) ||
+          (p.altRoles ?? []).some((a) => a.role.toLowerCase().includes(term)) ||
           (p.character ?? '').toLowerCase().includes(term),
       )
   }, [people, filter, q])
@@ -119,7 +130,7 @@ export function People() {
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {}
-    for (const p of people) c[p.group] = (c[p.group] ?? 0) + 1
+    for (const p of people) for (const g of personGroups(p)) c[g] = (c[g] ?? 0) + 1
     return c
   }, [people])
 
@@ -219,11 +230,19 @@ export function People() {
                       <div style={{ fontWeight: 600 }}>{p.name}</div>
                     </td>
                     <td>
-                      <span className={`badge badge-${p.group}`}>{p.group}</span>
+                      <div className="row wrap" style={{ gap: 4 }}>
+                        <span className={`badge badge-${p.group}`}>{p.group}</span>
+                        {(p.altRoles ?? []).map((a, i) => (
+                          <span key={i} className={`badge badge-${a.group}`}>{a.group}</span>
+                        ))}
+                      </div>
                     </td>
                     <td>
                       <div>{p.role || '—'}</div>
                       {p.character && <div className="faint small">as {p.character}</div>}
+                      {(p.altRoles ?? []).map((a, i) => (
+                        <div key={i} className="faint small">{a.role}</div>
+                      ))}
                     </td>
                     <td className="small" style={{ whiteSpace: 'nowrap' }}>
                       {p.email && (
@@ -398,6 +417,9 @@ function PersonDetail({
         <span className={`badge badge-${person.group}`}>{person.group}</span>
         {person.role && <span className="tag">{person.role}</span>}
         {person.character && <span className="tag">as {person.character}</span>}
+        {(person.altRoles ?? []).map((a, i) => (
+          <span key={i} className={`badge badge-${a.group}`} title={a.group}>{a.role}</span>
+        ))}
       </div>
 
       <DetailRow label="Email" value={person.email && <a href={`mailto:${person.email}`}>{person.email}</a>} />
@@ -830,6 +852,14 @@ function PersonForm({
           <input value={f.character} onChange={set('character')} placeholder="e.g. Puck" />
         </label>
       </div>
+      <div className="field-label">
+        Additional roles{' '}
+        <span className="faint">(optional — extra hats, e.g. a director who also performs; shown under each list)</span>
+      </div>
+      <AltRolesEditor
+        value={f.altRoles ?? []}
+        onChange={(list) => setF((s) => ({ ...s, altRoles: list.length ? list : undefined }))}
+      />
       <div className="form-row">
         <label className="field">
           <span className="field-label">Email</span>
@@ -870,11 +900,66 @@ function PersonForm({
         <button className="btn btn-ghost" onClick={onClose}>
           Cancel
         </button>
-        <button className="btn btn-primary" disabled={missing} onClick={() => onSave(f)}>
+        <button
+          className="btn btn-primary"
+          disabled={missing}
+          onClick={() => {
+            const altRoles = (f.altRoles ?? []).filter((a) => a.role.trim())
+            onSave({ ...f, altRoles: altRoles.length ? altRoles : undefined })
+          }}
+        >
           Save
         </button>
       </div>
     </Modal>
+  )
+}
+
+/** Editor for a person's extra roles — each an independent group + role. */
+function AltRolesEditor({
+  value,
+  onChange,
+}: {
+  value: { group: PersonGroup; role: string }[]
+  onChange: (v: { group: PersonGroup; role: string }[]) => void
+}) {
+  const update = (i: number, patch: Partial<{ group: PersonGroup; role: string }>) =>
+    onChange(value.map((a, idx) => (idx === i ? { ...a, ...patch } : a)))
+  return (
+    <div style={{ marginBottom: 14 }}>
+      {value.map((a, i) => (
+        <div key={i} className="row" style={{ gap: 6, marginBottom: 6 }}>
+          <select
+            value={a.group}
+            onChange={(e) => update(i, { group: e.target.value as PersonGroup })}
+            style={{ maxWidth: 150, flex: 'none' }}
+          >
+            {GROUPS.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
+          <input
+            value={a.role}
+            onChange={(e) => update(i, { role: e.target.value })}
+            placeholder="e.g. Director"
+            style={{ flex: 1 }}
+          />
+          <button
+            type="button"
+            className="icon-btn danger"
+            aria-label="Remove role"
+            onClick={() => onChange(value.filter((_, idx) => idx !== i))}
+          >
+            🗑
+          </button>
+        </div>
+      ))}
+      <button type="button" className="btn btn-sm btn-ghost" onClick={() => onChange([...value, { group: 'Creative', role: '' }])}>
+        + Add another role
+      </button>
+    </div>
   )
 }
 
