@@ -62,9 +62,9 @@ export function ShareModal({ onClose }: { onClose: () => void }) {
 
   const email = () => {
     if (!link) return
-    const subject = `${production?.title ?? 'Production'} — view-only link`
+    const subject = `${production?.title ?? 'Production'} - view-only link`
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
-      `Here's a read-only view of the show:\n\n${link}\n\nNo login needed — open it on any device.`,
+      `Here's a read-only view of the show:\n\n${link}\n\nNo login needed - open it on any device.`,
     )}`
   }
 
@@ -84,7 +84,7 @@ export function ShareModal({ onClose }: { onClose: () => void }) {
       ) : (
         <>
           <p className="small muted" style={{ marginTop: 0 }}>
-            Create a read-only link anyone can open — no login. Line notes, reports, and private
+            Create a read-only link anyone can open - no login. Line notes, reports, and private
             contact details are never included.
           </p>
 

@@ -51,7 +51,7 @@ function timeOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string)
     day, an inclusive date range, and a recurring-weekly window. */
 export function conflictCoversDate(c: Conflict, evDate: string): boolean {
   if (evDate < c.date) return false
-  // End of the window: explicit endDate, else the single day — unless it's an
+  // End of the window: explicit endDate, else the single day - unless it's an
   // open-ended weekly pattern (no endDate = ongoing).
   const end = c.endDate && c.endDate >= c.date ? c.endDate : c.repeatWeekly ? null : c.date
   if (end && evDate > end) return false
@@ -367,7 +367,7 @@ function EventRow({
                 : '🖊 Sign-in · Upload'
               : '🖊 Sign-in Sheet'}
           </button>
-          <button className="btn btn-sm btn-ghost" onClick={() => setCallSheet(true)} title="Call sheet — print, save PDF, or email">
+          <button className="btn btn-sm btn-ghost" onClick={() => setCallSheet(true)} title="Call sheet - print, save PDF, or email">
             📋 Call Sheet
           </button>
           <button className="btn btn-sm btn-ghost" onClick={onView} title="View details">
@@ -488,7 +488,7 @@ function CalendarView({
           Next ›
         </button>
       </div>
-      {/* Legend — quick key for what the colors mean. */}
+      {/* Legend - quick key for what the colors mean. */}
       <div className="cal-legend no-print">
         {typesPresent.map((t) => (
           <span key={t} className="cal-legend-item">
@@ -577,7 +577,7 @@ function EventDetail({
             {sortAgenda(event.agenda).map((a) => (
               <div key={a.id} className="row" style={{ gap: 10, alignItems: 'baseline' }}>
                 <span className="mono small" style={{ minWidth: 92, flex: 'none', color: 'var(--accent)' }}>
-                  {a.time ? formatTime(a.time) : '—'}
+                  {a.time ? formatTime(a.time) : '-'}
                   {a.endTime ? `–${formatTime(a.endTime)}` : ''}
                 </span>
                 <span className="small">{a.what}</span>
@@ -594,7 +594,7 @@ function EventDetail({
             {personCalls(event, called).map((c) => (
               <div key={c.person.id} className="row" style={{ gap: 10, alignItems: 'baseline' }}>
                 <span className="mono small" style={{ minWidth: 92, flex: 'none', color: 'var(--accent)' }}>
-                  {c.inTime ? formatTime(c.inTime) : '—'}
+                  {c.inTime ? formatTime(c.inTime) : '-'}
                   {c.outTime ? `–${formatTime(c.outTime)}` : ''}
                 </span>
                 <span className="small">{c.person.name}</span>
@@ -609,7 +609,7 @@ function EventDetail({
         <span className="faint">({event.calledPersonIds.length ? called.length : 'whole company'})</span>
       </div>
       <p className="small muted" style={{ marginTop: 0 }}>
-        {called.length === 0 ? '—' : called.map((p) => p.name).join(', ')}
+        {called.length === 0 ? '-' : called.map((p) => p.name).join(', ')}
       </p>
 
       {conflicted.length > 0 && (
@@ -617,7 +617,7 @@ function EventDetail({
           <div className="small" style={{ color: 'var(--danger)', fontWeight: 600 }}>⚠️ Availability conflicts</div>
           <ul className="list-reset small" style={{ marginTop: 4 }}>
             {conflicted.map((p) => (
-              <li key={p.id}>{p.name} — {formatConflict(eventConflict(p, event)!)}</li>
+              <li key={p.id}>{p.name} - {formatConflict(eventConflict(p, event)!)}</li>
             ))}
           </ul>
         </div>
@@ -668,7 +668,7 @@ function AgendaEditor({
     <>
       <div className="row-between mb">
         <div className="field-label" style={{ margin: 0 }}>
-          Call times / agenda <span className="faint">(optional — the hour-by-hour)</span>
+          Call times / agenda <span className="faint">(optional - the hour-by-hour)</span>
         </div>
         <button type="button" className="btn btn-sm btn-ghost" onClick={add}>
           + Time
@@ -677,7 +677,7 @@ function AgendaEditor({
       {items.length === 0 ? (
         <p className="hint" style={{ marginTop: 0 }}>
           Add lines like &ldquo;6:15–7:00 · Cast call&rdquo;. Assign people to a line to give them their own
-          in/out time — the call sheet then lists each person&rsquo;s individual call.
+          in/out time - the call sheet then lists each person&rsquo;s individual call.
         </p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
@@ -788,26 +788,26 @@ function CallSheet({
   const emailCallSheet = () => {
     const to = called.map((p) => p.email).filter(Boolean).join(',')
     const body = [
-      `${production.title} — Call Sheet`,
+      `${production.title} - Call Sheet`,
       `${event.type}${event.title ? ` · ${event.title}` : ''} · ${formatDate(event.date)}`,
       event.location ? `Location: ${event.location}` : '',
       event.callTime ? `Call: ${formatTime(event.callTime)}` : '',
       '',
-      ...(agenda.length ? ['SCHEDULE', ...agenda.map((a) => `${a.time ? formatTime(a.time) : '—'}${a.endTime ? `–${formatTime(a.endTime)}` : ''}  ${a.what}`), ''] : []),
+      ...(agenda.length ? ['SCHEDULE', ...agenda.map((a) => `${a.time ? formatTime(a.time) : '-'}${a.endTime ? `–${formatTime(a.endTime)}` : ''}  ${a.what}`), ''] : []),
       ...(perPerson
-        ? ['CALLS BY PERSON', ...calls.map((c) => `${c.person.name}: ${c.inTime ? formatTime(c.inTime) : '—'}${c.outTime ? ` – ${formatTime(c.outTime)}` : ''}`), '']
+        ? ['CALLS BY PERSON', ...calls.map((c) => `${c.person.name}: ${c.inTime ? formatTime(c.inTime) : '-'}${c.outTime ? ` – ${formatTime(c.outTime)}` : ''}`), '']
         : []),
       called.length ? `Called: ${called.map((p) => p.name).join(', ')}` : '',
     ]
       .filter((l) => l !== '')
       .join('\n')
-    const subject = `Call Sheet — ${production.title} — ${formatDate(event.date)}`
+    const subject = `Call Sheet - ${production.title} - ${formatDate(event.date)}`
     window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   }
   return (
     <PrintSheet hint="Print or save the call sheet as a PDF, or email it to the called company." onClose={onClose}>
       <div className="sheet-head">
-        <h2>{production.title} — Call Sheet</h2>
+        <h2>{production.title} - Call Sheet</h2>
         <div className="sheet-sub">
           {event.type}
           {event.title ? ` · ${event.title}` : ''} · {formatDate(event.date)}
@@ -826,7 +826,7 @@ function CallSheet({
             {agenda.map((a) => (
               <tr key={a.id}>
                 <td style={{ fontWeight: 700 }}>
-                  {a.time ? formatTime(a.time) : '—'}
+                  {a.time ? formatTime(a.time) : '-'}
                   {a.endTime ? `–${formatTime(a.endTime)}` : ''}
                 </td>
                 <td>{a.what}</td>
@@ -835,7 +835,7 @@ function CallSheet({
           </tbody>
         </table>
       ) : (
-        <p className="muted small">No call times yet — add them on the event to build the hour-by-hour.</p>
+        <p className="muted small">No call times yet - add them on the event to build the hour-by-hour.</p>
       )}
 
       {perPerson && (
@@ -853,8 +853,8 @@ function CallSheet({
               {calls.map((c) => (
                 <tr key={c.person.id}>
                   <td>{c.person.name}</td>
-                  <td style={{ fontWeight: 700 }}>{c.inTime ? formatTime(c.inTime) : '—'}</td>
-                  <td>{c.outTime ? formatTime(c.outTime) : '—'}</td>
+                  <td style={{ fontWeight: 700 }}>{c.inTime ? formatTime(c.inTime) : '-'}</td>
+                  <td>{c.outTime ? formatTime(c.outTime) : '-'}</td>
                 </tr>
               ))}
             </tbody>
@@ -972,7 +972,7 @@ function EventForm({
         <>
           <div className="field-label">
             {profile.unit}(s) worked{' '}
-            <span className="faint">(optional — links to {term(production?.kind, 'scenes')})</span>
+            <span className="faint">(optional - links to {term(production?.kind, 'scenes')})</span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
             {scenes.map((s) => {
@@ -1043,7 +1043,7 @@ function EventForm({
           <ul className="list-reset small" style={{ marginTop: 4 }}>
             {warnings.map(({ p, c }) => (
               <li key={p.id}>
-                <strong>{p.name}</strong> — {formatConflict(c)}
+                <strong>{p.name}</strong> - {formatConflict(c)}
               </li>
             ))}
           </ul>
@@ -1079,7 +1079,7 @@ function EventForm({
 
 const STATUSES: AttendanceStatus[] = ['unmarked', 'present', 'late', 'absent', 'excused', 'no-show']
 const STATUS_LABEL: Record<AttendanceStatus, string> = {
-  unmarked: '—',
+  unmarked: '-',
   present: 'Present',
   late: 'Late',
   absent: 'Absent',
@@ -1109,7 +1109,7 @@ function AttendanceModal({ event, onClose }: { event: ScheduleEvent; onClose: ()
   }
 
   const scenesText = sceneLabels(event.sceneIds, production?.scenes ?? [])
-  const heading = `Attendance · ${event.title || event.type}${scenesText ? ` — ${scenesText}` : ''}`
+  const heading = `Attendance · ${event.title || event.type}${scenesText ? ` - ${scenesText}` : ''}`
 
   return (
     <Modal title={heading} onClose={onClose}>
@@ -1196,7 +1196,7 @@ function SignInSheet({
     <PrintSheet hint="Print or save the sign-in sheet as a PDF, then post it at the callboard." onClose={onClose}>
       {isPast && <SignedSheetPanel event={event} />}
       <div className="sheet-head">
-        <h2>{production?.title} — Sign-in Sheet</h2>
+        <h2>{production?.title} - Sign-in Sheet</h2>
         <div className="sheet-sub">
           {event.type}
           {event.title ? ` · ${event.title}` : ''} · {formatDate(event.date)}
@@ -1246,7 +1246,7 @@ function SignInSheet({
  */
 function SignedSheetPanel({ event }: { event: ScheduleEvent }) {
   const { production, updateEvent } = useStore()
-  // Read the live event from the store — the modal's `event` prop is a snapshot
+  // Read the live event from the store - the modal's `event` prop is a snapshot
   // taken when it opened, so it wouldn't reflect an upload made just now.
   const live = production?.events.find((e) => e.id === event.id) ?? event
   const [url, setUrl] = useState<string | null>(null)
@@ -1354,7 +1354,7 @@ function SignedSheetPanel({ event }: { event: ScheduleEvent }) {
       )}
       {uploadedAt && url && isPdf && (
         <p className="small muted" style={{ marginTop: 10, marginBottom: 0 }}>
-          PDF uploaded — tap “View full size” to open it.
+          PDF uploaded - tap “View full size” to open it.
         </p>
       )}
     </div>

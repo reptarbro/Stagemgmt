@@ -7,7 +7,7 @@ import { StandbyMark, APP_NAME } from '../components/Brand'
 // don't run JS). If you edit the text or the constants below, update those two
 // files to match so the in-app and public versions don't drift.
 
-/** Human-readable "last updated" — bump when the text below changes. */
+/** Human-readable "last updated" - bump when the text below changes. */
 const UPDATED = 'July 8, 2026'
 /** Where people reach a human about privacy or these terms. */
 const CONTACT = 'Tiffany.rexach@gmail.com'
@@ -76,7 +76,7 @@ export function PrivacyPolicy() {
         creative contacts (names, roles, characters, email addresses, phone numbers, emergency contact
         names and numbers, and notes); availability and attendance; schedules; scenes, props, line
         notes, reports and cues; an uploaded script document; and photos or scans of signed sign-in
-        sheets. Some of this is personal information about <em>other people</em> — see "Information
+        sheets. Some of this is personal information about <em>other people</em> - see "Information
         about other people" below.
       </p>
 
@@ -205,7 +205,7 @@ export function Terms() {
       <p>
         The app is provided "as is" and "as available," without warranties of any kind. We do not
         guarantee that it will be uninterrupted, error-free, or that data synced to the cloud can never
-        be lost. This is why local-first storage and exportable backups exist — please use them.
+        be lost. This is why local-first storage and exportable backups exist - please use them.
       </p>
 
       <h2>Limitation of liability</h2>

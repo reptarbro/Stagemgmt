@@ -1,7 +1,7 @@
 import type { Production, ProductionKind } from './types'
 
 /** Everything that varies by show type: labels and which modules show. The
-    data model is identical across kinds — this is a presentation layer. */
+    data model is identical across kinds - this is a presentation layer. */
 export interface KindProfile {
   label: string
   /** One-line description shown in the type picker. */
@@ -45,7 +45,7 @@ export const KIND_PROFILES: Record<ProductionKind, KindProfile> = {
   },
   cabaret: {
     label: 'Cabaret / Concert',
-    blurb: 'A cabaret or concert set — songs, not a script.',
+    blurb: 'A cabaret or concert set - songs, not a script.',
     terms: { scenes: 'Set List', character: 'Performer', script: 'Running Order', lineNotes: 'Notes' },
     unit: 'Number',
     setlist: true,
@@ -100,7 +100,7 @@ export function term(kind: ProductionKind | undefined, key: keyof KindProfile['t
   return kindProfile(kind).terms[key]
 }
 
-/** Module labels that don't vary by kind — genuinely universal SM vocabulary
+/** Module labels that don't vary by kind - genuinely universal SM vocabulary
     (props, costume, cue, report, schedule, contact all stay put). */
 const STATIC_MODULE_LABELS: Record<string, string> = {
   '/props': 'Props & Costumes',

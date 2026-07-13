@@ -90,7 +90,7 @@ export function Assets() {
     setBusy(false)
     if (failed) {
       setErr(
-        `${failed} file${failed > 1 ? 's' : ''} couldn't be saved — the file may be too large for this browser's storage.`,
+        `${failed} file${failed > 1 ? 's' : ''} couldn't be saved - the file may be too large for this browser's storage.`,
       )
     }
   }
@@ -139,7 +139,7 @@ export function Assets() {
       {assets.length === 0 ? (
         <div className="card">
           <EmptyState mark="📎" title="No files yet">
-            Keep the show's supporting files here — headshots, signed contracts, budgets, design
+            Keep the show's supporting files here - headshots, signed contracts, budgets, design
             renderings, riders, anything. They're stored privately on this device, sync to your account
             when you're signed in, and travel in your backups.
           </EmptyState>
@@ -148,7 +148,7 @@ export function Assets() {
               {busy ? 'Uploading…' : '⬆ Upload files'}
             </button>
             <p className="hint" style={{ marginTop: 10 }}>
-              Any file type. Pick several at once — tap a row afterward to file it or link it to a person.
+              Any file type. Pick several at once - tap a row afterward to file it or link it to a person.
             </p>
           </div>
         </div>
@@ -230,7 +230,7 @@ export function Assets() {
                     <td>
                       <span className="tag">{a.category}</span>
                     </td>
-                    <td className="small">{nameFor(a.personId) || '—'}</td>
+                    <td className="small">{nameFor(a.personId) || '-'}</td>
                     <td className="small" style={{ whiteSpace: 'nowrap' }}>{humanSize(a.size)}</td>
                     <td className="small" style={{ whiteSpace: 'nowrap' }}>{formatDate(a.uploadedAt)}</td>
                     <td className="no-print">
@@ -312,7 +312,7 @@ function AssetForm({
         <label className="field">
           <span className="field-label">Linked to</span>
           <select value={personId} onChange={(e) => setPersonId(e.target.value)}>
-            <option value="">— nobody —</option>
+            <option value="">- nobody -</option>
             {roster.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}

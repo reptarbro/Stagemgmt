@@ -4,16 +4,16 @@ import { slug } from './exporters'
 
 /** Clean, human-readable title used as the PDF's document title & email subject. */
 export function reportSubject(report: Report, production: Production): string {
-  return `${production.title} — ${report.type} Report — ${formatDate(report.date)}`
+  return `${production.title} - ${report.type} Report - ${formatDate(report.date)}`
 }
 
 /** Build a clean, page-filling PDF of a rehearsal/performance report.
     jsPDF (and its lazy html2canvas/dompurify deps) is imported on demand so it
-    stays out of the initial bundle — it's only needed when someone exports. */
+    stays out of the initial bundle - it's only needed when someone exports. */
 export async function buildReportPDF(report: Report, production: Production): Promise<Blob> {
   const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ unit: 'pt', format: 'letter' })
-  // Document title (shown in viewer tab / file info) — the report's "subject".
+  // Document title (shown in viewer tab / file info) - the report's "subject".
   doc.setProperties({ title: reportSubject(report, production) })
   const margin = 54
   const pageW = doc.internal.pageSize.getWidth()

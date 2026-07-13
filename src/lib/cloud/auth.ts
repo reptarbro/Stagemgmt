@@ -4,7 +4,7 @@ import { CLOUD_ENABLED } from './config'
 
 /**
  * Reactive "is the user signed in to Cloud Sync?" for UI that must change with
- * auth — e.g. the local-only backup nudge, which is misleading once data also
+ * auth - e.g. the local-only backup nudge, which is misleading once data also
  * lives in the cloud. Returns false when cloud is disabled or signed out.
  */
 export function useSignedIn(): boolean {

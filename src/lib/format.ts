@@ -1,6 +1,6 @@
 /** Format an ISO date ("2026-07-15") as "Wed, Jul 15, 2026". Empty-safe. */
 export function formatDate(iso?: string): string {
-  if (!iso) return '—'
+  if (!iso) return '-'
   const d = parseISODate(iso)
   if (!d) return iso
   return d.toLocaleDateString(undefined, {
@@ -13,7 +13,7 @@ export function formatDate(iso?: string): string {
 
 /** Short form: "Jul 15". */
 export function formatDateShort(iso?: string): string {
-  if (!iso) return '—'
+  if (!iso) return '-'
   const d = parseISODate(iso)
   if (!d) return iso
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })

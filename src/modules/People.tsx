@@ -20,7 +20,7 @@ const GROUPS: PersonGroup[] = [
   'Other',
 ]
 
-/** Every group a person belongs to — primary plus any alt-role groups (deduped). */
+/** Every group a person belongs to - primary plus any alt-role groups (deduped). */
 function personGroups(p: Person): PersonGroup[] {
   const set = new Set<PersonGroup>([p.group])
   for (const a of p.altRoles ?? []) set.add(a.group)
@@ -124,7 +124,7 @@ export function People() {
   const emailAll = () => {
     if (!production || withEmail.length === 0) return
     const bcc = withEmail.map((p) => p.email).join(',')
-    const label = filter === 'All' ? production.title : `${production.title} — ${filter}`
+    const label = filter === 'All' ? production.title : `${production.title} - ${filter}`
     window.location.href = `mailto:?bcc=${encodeURIComponent(bcc)}&subject=${encodeURIComponent(`${label}: `)}`
   }
 
@@ -238,7 +238,7 @@ export function People() {
                       </div>
                     </td>
                     <td>
-                      <div>{p.role || '—'}</div>
+                      <div>{p.role || '-'}</div>
                       {p.character && <div className="faint small">as {p.character}</div>}
                       {(p.altRoles ?? []).map((a, i) => (
                         <div key={i} className="faint small">{a.role}</div>
@@ -268,7 +268,7 @@ export function People() {
                         </div>
                       )}
                       {!p.email && !p.phone && !p.emergencyContactName && (
-                        <span className="faint">—</span>
+                        <span className="faint">-</span>
                       )}
                     </td>
                     <td className="no-print">
@@ -353,7 +353,7 @@ function CastListSheet({
   return (
     <PrintSheet hint="Print or save the cast &amp; crew list as a PDF." onClose={onClose}>
       <div className="sheet-head">
-        <h2>{production.title} — Cast List</h2>
+        <h2>{production.title} - Cast List</h2>
         <div className="sheet-sub">
           Cast &amp; Crew Contact Sheet
           {production.company ? ` · ${production.company}` : ''}
@@ -379,7 +379,7 @@ function CastListSheet({
                 <td style={{ fontWeight: 700 }}>{p.name}</td>
                 <td>{p.group}</td>
                 <td>
-                  {p.role || '—'}
+                  {p.role || '-'}
                   {p.character ? (
                     <>
                       {' '}
@@ -390,7 +390,7 @@ function CastListSheet({
                 <td>
                   {p.email || ''}
                   {p.email && p.phone ? <br /> : null}
-                  {p.phone || (!p.email ? '—' : '')}
+                  {p.phone || (!p.email ? '-' : '')}
                 </td>
               </tr>
             ))
@@ -495,7 +495,7 @@ function DetailRow({ label, value }: { label: string; value?: React.ReactNode })
   return (
     <div className="row-between" style={{ padding: '6px 0', gap: 12 }}>
       <span className="faint small">{label}</span>
-      <span className="small" style={{ fontWeight: 550, textAlign: 'right' }}>{value || '—'}</span>
+      <span className="small" style={{ fontWeight: 550, textAlign: 'right' }}>{value || '-'}</span>
     </div>
   )
 }
@@ -673,7 +673,7 @@ function MultiAddModal({
               <span className="field-label">Character</span>
               <input
                 value={r.character}
-                placeholder={r.group === 'Cast' ? 'e.g. Puck' : '—'}
+                placeholder={r.group === 'Cast' ? 'e.g. Puck' : '-'}
                 onChange={(e) => update(r.key, { character: e.target.value })}
               />
             </div>
@@ -731,7 +731,7 @@ function AvailabilityModal({
   onClose: () => void
   updatePerson: (id: string, patch: Partial<Person>) => void
 }) {
-  // Cast first, then everyone else — same tidy order as the roster.
+  // Cast first, then everyone else - same tidy order as the roster.
   const ordered = [...people].sort(
     (a, b) => (a.group === 'Cast' ? 0 : 1) - (b.group === 'Cast' ? 0 : 1) || a.name.localeCompare(b.name),
   )
@@ -740,7 +740,7 @@ function AvailabilityModal({
   return (
     <Modal title="Cast &amp; Crew Availability" onClose={onClose} className="modal-wide">
       <p className="small muted" style={{ marginTop: 0 }}>
-        Add the dates each person can't attend — a single day, a range (vacation,
+        Add the dates each person can't attend - a single day, a range (vacation,
         another show), or a weekly pattern (work, class). These flag automatically
         on the Schedule when someone's called.
       </p>
@@ -821,7 +821,7 @@ function PersonForm({
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
       setF((s) => ({ ...s, [k]: e.target.value }))
 
-  // Only name, group, and role are required — contact details are optional.
+  // Only name, group, and role are required - contact details are optional.
   const missing = !f.name.trim() || !f.group || !f.role.trim()
 
   return (
@@ -854,7 +854,7 @@ function PersonForm({
       </div>
       <div className="field-label">
         Additional roles{' '}
-        <span className="faint">(optional — extra hats, e.g. a director who also performs; shown under each list)</span>
+        <span className="faint">(optional - extra hats, e.g. a director who also performs; shown under each list)</span>
       </div>
       <AltRolesEditor
         value={f.altRoles ?? []}
@@ -915,7 +915,7 @@ function PersonForm({
   )
 }
 
-/** Editor for a person's extra roles — each an independent group + role. */
+/** Editor for a person's extra roles - each an independent group + role. */
 function AltRolesEditor({
   value,
   onChange,
@@ -1026,7 +1026,7 @@ function ConflictsEditor({
       {!hideLabel && (
         <div className="field-label">
           Availability conflicts{' '}
-          <span className="faint">(when they can't attend — flagged on the schedule)</span>
+          <span className="faint">(when they can't attend - flagged on the schedule)</span>
         </div>
       )}
       {sorted.length > 0 && (
@@ -1133,7 +1133,7 @@ function ConflictsEditor({
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="reason (optional) — e.g. vacation, work, other show"
+          placeholder="reason (optional) - e.g. vacation, work, other show"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault()

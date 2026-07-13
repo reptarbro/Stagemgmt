@@ -30,7 +30,7 @@ function stableStringify(value: unknown): string {
     Input is a JSON string; it's canonicalized first (keys sorted, whitespace
     stripped) so a pretty-printed local copy and a compact, key-reordered copy
     round-tripped through Postgres jsonb hash to the SAME value for identical
-    data — otherwise the "already in sync" check never matches and the auto-sync
+    data - otherwise the "already in sync" check never matches and the auto-sync
     engine churns (pull/push on every poll and focus). Falls back to hashing the
     raw string if it isn't valid JSON. */
 export function dataSignature(s: string): string {
@@ -133,7 +133,7 @@ export async function pullAll(importJSON: ImportFn): Promise<{ ok: boolean; erro
     return { ok: false, error: error.message, files: 0 }
   }
   if (!data) {
-    return { ok: false, error: 'Nothing in the cloud yet — Push from a device that has your show first.', files: 0 }
+    return { ok: false, error: 'Nothing in the cloud yet - Push from a device that has your show first.', files: 0 }
   }
 
   let count = 0
@@ -154,7 +154,7 @@ export async function pullAll(importJSON: ImportFn): Promise<{ ok: boolean; erro
   return { ...res, files: count }
 }
 
-/** Download any binaries that exist in the cloud but not on this device — used
+/** Download any binaries that exist in the cloud but not on this device - used
     after an auto-merge so an asset/script/sign-in file added on another device
     follows its metadata here. Only fetches what's missing, so it's cheap to call
     on every reconcile. Returns the number of files pulled down. */
@@ -181,7 +181,7 @@ export async function downloadMissingFiles(): Promise<number> {
 /** Delete everything this account has stored in the cloud: every uploaded
     binary under the user's folder and the app_state data row. Runs while the
     session is still valid (call before deleting the auth account / signing
-    out). Does NOT touch this device's local copy — that stays local-first.
+    out). Does NOT touch this device's local copy - that stays local-first.
     Returns the number of files removed. */
 export async function deleteCloudData(): Promise<{ files: number }> {
   const user = await currentUser()
@@ -210,7 +210,7 @@ export async function deleteCloudData(): Promise<{ files: number }> {
 }
 
 /** Delete the auth account itself via a server-side RPC (`delete_account`, a
-    SECURITY DEFINER function that removes the caller from auth.users — see
+    SECURITY DEFINER function that removes the caller from auth.users - see
     supabase/delete_account.sql). Returns false if the function isn't installed
     yet, so the caller can fall back to data-deletion + sign-out. */
 export async function deleteAuthAccount(): Promise<boolean> {

@@ -22,7 +22,7 @@ export function Modal({
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  // Portal to <body> so the fixed backdrop is anchored to the viewport — not
+  // Portal to <body> so the fixed backdrop is anchored to the viewport - not
   // trapped inside .main (a scroll container), which on iOS Safari would clip
   // the modal behind the sidebar. Centers over the whole screen every time.
   return createPortal(
@@ -56,7 +56,7 @@ export function ConfirmButton({
   onConfirm: () => void
   children?: ReactNode
   className?: string
-  /** Accessible name — set for icon-only buttons (🗑) that otherwise have none.
+  /** Accessible name - set for icon-only buttons (🗑) that otherwise have none.
       Leave unset when `children` is meaningful text (that becomes the name). */
   ariaLabel?: string
   title?: string

@@ -1,4 +1,4 @@
-/** App identity — the StandBy cue-light mark and name, used across the app. */
+/** App identity - the StandBy cue-light mark and name, used across the app. */
 
 export const APP_NAME = 'StandBy'
 export const APP_TAGLINE = 'Prompt Book'

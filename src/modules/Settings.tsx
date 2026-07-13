@@ -64,7 +64,7 @@ export function Settings() {
       if (nav.canShare && nav.canShare({ files: [file] })) {
         try {
           await nav.share!({ files: [file], title: 'StandBy backup' } as ShareData)
-          setMsg('Backup shared — open it on the other device and Import.')
+          setMsg('Backup shared - open it on the other device and Import.')
           return
         } catch (err) {
           if ((err as Error).name === 'AbortError') {
@@ -81,7 +81,7 @@ export function Settings() {
       a.click()
       URL.revokeObjectURL(url)
       const kb = Math.round(blob.size / 1024)
-      setMsg(`Full backup downloaded (${kb} KB — includes your script & photos).`)
+      setMsg(`Full backup downloaded (${kb} KB - includes your script & photos).`)
     } catch (e) {
       setMsg(`Export failed: ${(e as Error).message}`)
     } finally {
@@ -97,8 +97,8 @@ export function Settings() {
     reader.onload = async () => {
       const res = await applyBackupText(String(reader.result), importJSON)
       if (!res.ok) setMsg(`Import failed: ${res.error}`)
-      else if (res.bundle) setMsg(`Restored everything — ${res.files} file(s) included.`)
-      else setMsg('Restored (data only — this file had no bundled script/photos).')
+      else if (res.bundle) setMsg(`Restored everything - ${res.files} file(s) included.`)
+      else setMsg('Restored (data only - this file had no bundled script/photos).')
       setBusy(false)
     }
     reader.readAsText(file)
@@ -115,14 +115,14 @@ export function Settings() {
         </div>
       )}
 
-      {/* Storage overview — across every production. */}
+      {/* Storage overview - across every production. */}
       <div className="card">
         <div className="card-title">Storage</div>
         <div className="grid grid-4">
           <Stat value={realProductions.length} label="Productions" />
           <Stat value={totalPeople} label="People (all shows)" />
           <Stat value={totalEvents} label="Events (all shows)" />
-          <Stat value={production?.title ?? '—'} label="Current" small />
+          <Stat value={production?.title ?? '-'} label="Current" small />
         </div>
       </div>
 
@@ -175,7 +175,7 @@ export function Settings() {
         <div className="card">
           <div className="card-title">Share with your cast</div>
           <p className="small muted">
-            Create a read-only link anyone can open — no login needed. You choose whether to include
+            Create a read-only link anyone can open - no login needed. You choose whether to include
             the schedule and the company list; line notes, reports, and private contact details are
             never shared. Revoke anytime.
           </p>
@@ -186,8 +186,8 @@ export function Settings() {
       <div className="card">
         <div className="card-title">Demo</div>
         <p className="small muted">
-          Preview a fully-populated sample show — cast &amp; crew, schedule, scenes, props, line notes,
-          cues, and a filed report — to see how everything fits together. It's clearly marked as a sample
+          Preview a fully-populated sample show - cast &amp; crew, schedule, scenes, props, line notes,
+          cues, and a filed report - to see how everything fits together. It's clearly marked as a sample
           and you can remove it in one tap; your real shows aren't affected.
         </p>
         <div className="row wrap" style={{ gap: 10 }}>
@@ -199,7 +199,7 @@ export function Settings() {
                 className="btn"
                 onClick={() => {
                   setActiveProduction(s.id)
-                  setMsg(`Viewing the ${KIND_PROFILES[k].label} sample — see the Production Hub.`)
+                  setMsg(`Viewing the ${KIND_PROFILES[k].label} sample - see the Production Hub.`)
                 }}
               >
                 View {KIND_PROFILES[k].label} sample
@@ -210,7 +210,7 @@ export function Settings() {
                 className="btn"
                 onClick={() => {
                   loadSampleProduction(k)
-                  setMsg(`${KIND_PROFILES[k].label} sample loaded — see the Production Hub.`)
+                  setMsg(`${KIND_PROFILES[k].label} sample loaded - see the Production Hub.`)
                 }}
               >
                 {k === 'cabaret' ? '🎵' : '✨'} {KIND_PROFILES[k].label} sample
@@ -234,8 +234,8 @@ export function Settings() {
       <div className="card">
         <div className="card-title">Backup &amp; move to another device</div>
         <p className="small muted">
-          Your data lives only in this browser. Export a <strong>complete backup</strong> — every
-          production plus your uploaded script and sign-in photos, all in one file — then import it on
+          Your data lives only in this browser. Export a <strong>complete backup</strong> - every
+          production plus your uploaded script and sign-in photos, all in one file - then import it on
           another device (iPad → desktop → phone). On phones/tablets, Export opens the share sheet so you
           can AirDrop or message it straight over.
         </p>
@@ -255,7 +255,7 @@ export function Settings() {
           />
         </div>
         <p className="hint" style={{ marginTop: 10 }}>
-          Import <strong>replaces</strong> everything currently in this browser — so export here first if
+          Import <strong>replaces</strong> everything currently in this browser - so export here first if
           this device has changes you want to keep.
         </p>
       </div>
@@ -265,7 +265,7 @@ export function Settings() {
       <div className="card">
         <div className="card-title">Help &amp; feedback</div>
         <p className="small muted">
-          Using the app on a show? Send a quick note — what worked, what didn't, and what you wish it
+          Using the app on a show? Send a quick note - what worked, what didn't, and what you wish it
           did. It goes straight to us in the app; no email needed.
         </p>
         <div className="row wrap" style={{ gap: 10 }}>
@@ -277,7 +277,7 @@ export function Settings() {
           <button
             className="btn btn-ghost btn-sm"
             onClick={() => {
-              const subject = 'StandBy — feedback'
+              const subject = 'StandBy - feedback'
               const body =
                 'What I was doing:\n\nWhat happened / what I wish it did:\n\nDevice & browser:\n'
               window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`

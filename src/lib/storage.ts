@@ -99,7 +99,7 @@ export function newId(): string {
 }
 
 // ---------------------------------------------------------------------------
-// Script files (binary) live in IndexedDB — localStorage is too small for PDFs.
+// Script files (binary) live in IndexedDB - localStorage is too small for PDFs.
 // ---------------------------------------------------------------------------
 
 const DB_NAME = 'stagemgmt.files'
@@ -143,7 +143,7 @@ export async function getScriptFile(key: string): Promise<Blob | null> {
   return result
 }
 
-/** Every stored binary (script PDFs, sign-in photos) with its key — used to
+/** Every stored binary (script PDFs, sign-in photos) with its key - used to
     pack a complete, portable backup that includes files, not just the model. */
 export async function getAllFiles(): Promise<{ key: string; blob: Blob }[]> {
   const db = await openFileDB()
@@ -163,7 +163,7 @@ export async function getAllFiles(): Promise<{ key: string; blob: Blob }[]> {
   return result
 }
 
-/** Just the keys of every stored binary (no blob loads) — used by the sync
+/** Just the keys of every stored binary (no blob loads) - used by the sync
     engine to find which cloud files this device is missing. */
 export async function getAllFileKeys(): Promise<string[]> {
   const db = await openFileDB()

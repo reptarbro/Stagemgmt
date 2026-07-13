@@ -168,7 +168,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
 
       loadSampleProduction: (kind = 'play') => {
-        // One sample per kind — switch to it if present, else build it.
+        // One sample per kind - switch to it if present, else build it.
         const existing = data.productions.find((p) => p.isSample && (p.kind ?? 'play') === kind)
         if (existing) {
           setData((d) => ({ ...d, activeProductionId: existing.id }))

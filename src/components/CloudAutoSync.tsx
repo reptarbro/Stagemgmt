@@ -35,7 +35,7 @@ function hasRealData(json: string): boolean {
  *    when the app is hidden or closing (so the last edits are never stranded);
  *  - reconciles with the cloud on open, when the app returns to the foreground,
  *    and on a slow poll while open, pulling if this device is behind.
- * It never auto-clobbers when BOTH sides changed since the last sync — that
+ * It never auto-clobbers when BOTH sides changed since the last sync - that
  * case is left to the manual Push/Pull buttons. Manual controls always win.
  */
 export function CloudAutoSync() {
@@ -57,7 +57,7 @@ export function CloudAutoSync() {
   // device's data with the cloud copy (adds from either side survive, newest
   // edit wins per record, deletes are tombstoned) via mergeAppData, adopt the
   // result locally, and push it up if the cloud is behind. The merge converges,
-  // so both devices land on identical state — no conflict, no Push/Pull needed.
+  // so both devices land on identical state - no conflict, no Push/Pull needed.
   // Safe to call repeatedly (focus, poll, realtime, debounced change).
   const reconcile = async () => {
     if (syncing.current) return
@@ -68,7 +68,7 @@ export function CloudAutoSync() {
       const cloud = await fetchCloudState()
 
       if (!cloud) {
-        // No cloud copy yet — seed it from this device if it has real data.
+        // No cloud copy yet - seed it from this device if it has real data.
         if (hasRealData(localJson)) await pushAll(localJson)
         setSyncedSignature(localSig)
         setSyncStatus('synced')
@@ -100,14 +100,14 @@ export function CloudAutoSync() {
     }
   }
 
-  // Push unsynced local changes right now — used when the app is hidden/closing,
+  // Push unsynced local changes right now - used when the app is hidden/closing,
   // where the debounce timer might not get to fire.
   const flushPush = async () => {
     if (pushTimer.current) {
       clearTimeout(pushTimer.current)
       pushTimer.current = null
     }
-    // Never overwrite the cloud on the way out when a conflict is already known —
+    // Never overwrite the cloud on the way out when a conflict is already known -
     // the user must resolve it with a manual Push/Pull, same as reconcile.
     if (getSyncStatus().state === 'conflict') return
     const json = exportRef.current()
@@ -202,7 +202,7 @@ export function CloudAutoSync() {
 
   // Realtime: subscribe to this user's cloud row so another device's push lands
   // here in ~1s instead of waiting for the focus/30s-poll reconcile. On any
-  // change we just run reconcile() — it re-checks the cloud against our last
+  // change we just run reconcile() - it re-checks the cloud against our last
   // sync and only PULLS when this device has no unsynced edits (pushes when only
   // we changed, flags a conflict when both did), so it can't clobber local work.
   // Our own push echoes back as a change too, but reconcile then sees cloud ==

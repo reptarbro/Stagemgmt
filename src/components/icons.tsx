@@ -1,12 +1,12 @@
 /**
- * Monochrome line-icon set for navigation — inherits `currentColor` so it
+ * Monochrome line-icon set for navigation - inherits `currentColor` so it
  * tints with the nav state (sage when idle, emerald when active). Keeps the
  * whole app in the favicon's restrained palette instead of full-color emoji.
  */
 
 const P = {
   stroke: 'currentColor',
-  strokeWidth: 1.7,
+  strokeWidth: 2.1,
   fill: 'none',
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
@@ -25,7 +25,7 @@ export type IconName =
   | 'assets'
   | 'settings'
 
-export function NavIcon({ name, size = 20 }: { name: IconName; size?: number }) {
+export function NavIcon({ name, size = 22 }: { name: IconName; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" {...P} aria-hidden="true">
       {ICONS[name]}

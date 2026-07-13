@@ -34,7 +34,7 @@ export interface Person {
   role: string
   /** For cast: the character(s) they play. Kept separate from role for clarity. */
   character?: string
-  /** Additional hats this person wears — e.g. a director who also performs.
+  /** Additional hats this person wears - e.g. a director who also performs.
       Each carries its own group + role so the person appears under every list
       they belong to. The primary `group`/`role` above stays authoritative for
       sorting and sheets. */
@@ -46,7 +46,7 @@ export interface Person {
   notes?: string
   /** Dates this person can't attend, surfaced against the schedule. */
   conflicts?: Conflict[]
-  /** ISO time of the last local edit — used to auto-merge across devices. */
+  /** ISO time of the last local edit - used to auto-merge across devices. */
   updatedAt?: string
 }
 
@@ -95,7 +95,7 @@ export interface ScheduleEvent {
   signInUploadedAt?: string
   /** MIME type of the uploaded signed sheet, e.g. "image/jpeg", "application/pdf". */
   signInMime?: string
-  /** ISO time of the last local edit — used to auto-merge across devices. */
+  /** ISO time of the last local edit - used to auto-merge across devices. */
   updatedAt?: string
 }
 
@@ -111,7 +111,7 @@ export type AttendanceStatus =
 export interface Attendance {
   eventId: ID
   records: Record<ID, { status: AttendanceStatus; note?: string }>
-  /** ISO time of the last local edit — used to auto-merge across devices. */
+  /** ISO time of the last local edit - used to auto-merge across devices. */
   updatedAt?: string
 }
 
@@ -143,11 +143,11 @@ export interface Report {
   sections: ReportSection[]
   scheduleNote?: string
   createdAt: string
-  /** ISO time of the last local edit — used to auto-merge across devices. */
+  /** ISO time of the last local edit - used to auto-merge across devices. */
   updatedAt?: string
 }
 
-/** A unit of the play — a French scene, a numbered scene, or a song. */
+/** A unit of the play - a French scene, a numbered scene, or a song. */
 export interface Scene {
   id: ID
   /** Free-form label/number, e.g. "1.1", "Act 2 Sc 3", "Prologue". */
@@ -165,7 +165,7 @@ export interface Scene {
   duration?: string
   /** Set-list only: a spoken patter/banter row between numbers, not a song. */
   patter?: boolean
-  /** ISO time of the last local edit — used to auto-merge across devices. */
+  /** ISO time of the last local edit - used to auto-merge across devices. */
   updatedAt?: string
 }
 
@@ -182,16 +182,16 @@ export interface PropItem {
   sceneRef?: string
   /** Person ids who handle/wear it. */
   usedByPersonIds: ID[]
-  /** True when the whole cast uses it — stored as a flag (not a snapshot of
+  /** True when the whole cast uses it - stored as a flag (not a snapshot of
       ids) so it stays correct as the roster changes. Resolved to current cast
       at display time; can combine with specific usedByPersonIds (e.g. a crew
       handler). */
   usedByAllCast?: boolean
-  /** Flagged as urgent — surfaces in the Priority filter and floated up top. */
+  /** Flagged as urgent - surfaces in the Priority filter and floated up top. */
   priority?: boolean
   status: PropStatus
   notes?: string
-  /** ISO time of the last local edit — used to auto-merge across devices. */
+  /** ISO time of the last local edit - used to auto-merge across devices. */
   updatedAt?: string
 }
 
@@ -214,7 +214,7 @@ export interface LineNote {
   type: LineNoteType
   note?: string
   resolved?: boolean
-  /** ISO time of the last local edit — used to auto-merge across devices. */
+  /** ISO time of the last local edit - used to auto-merge across devices. */
   updatedAt?: string
 }
 
@@ -230,7 +230,7 @@ export interface Cue {
   /** Call number, e.g. "Q1", "LX 12", "SQ 3". */
   number: string
   dept: CueDept
-  /** Where it fires — page/scene + line or a visual, e.g. "p.12 / 'goodnight'". */
+  /** Where it fires - page/scene + line or a visual, e.g. "p.12 / 'goodnight'". */
   placement?: string
   /** What happens on the GO. */
   action?: string
@@ -238,7 +238,7 @@ export interface Cue {
   standby?: string
   status: CueStatus
   notes?: string
-  /** ISO time of the last local edit — used to auto-merge across devices. */
+  /** ISO time of the last local edit - used to auto-merge across devices. */
   updatedAt?: string
 }
 
@@ -251,7 +251,7 @@ export interface ScriptMeta {
   uploadedAt: string
 }
 
-/** How an uploaded asset is filed. Free-form use is fine — these are just the
+/** How an uploaded asset is filed. Free-form use is fine - these are just the
     grouping chips (headshots, contracts, budgets, design plates, etc.). */
 export type AssetCategory =
   | 'Headshot'
@@ -262,7 +262,7 @@ export type AssetCategory =
   | 'Photo'
   | 'Other'
 
-/** A general file kept with the production — a headshot, a signed contract, a
+/** A general file kept with the production - a headshot, a signed contract, a
     budget spreadsheet, a set rendering, and so on. The bytes live in IndexedDB
     under `asset:<id>` (so they sync to the cloud and pack into backups like any
     other binary); this is just the metadata shown in the Assets list. */
@@ -274,10 +274,10 @@ export interface Asset {
   /** Bytes, for the size readout and storage totals. */
   size: number
   uploadedAt: string
-  /** Optional person this file belongs to — e.g. whose headshot it is. */
+  /** Optional person this file belongs to - e.g. whose headshot it is. */
   personId?: ID
   note?: string
-  /** ISO time of the last local edit — used to auto-merge across devices.
+  /** ISO time of the last local edit - used to auto-merge across devices.
       (Distinct from uploadedAt, which is when the bytes were first added.) */
   updatedAt?: string
 }
@@ -312,7 +312,7 @@ export interface Production {
   script?: ScriptMeta
   /** General uploaded files kept with the show (headshots, contracts, budgets…). */
   assets: Asset[]
-  /** What kind of show this is — drives module labels and default visibility.
+  /** What kind of show this is - drives module labels and default visibility.
       Undefined means a classic play (back-compat with pre-kinds data). */
   kind?: ProductionKind
   /** Per-show module show/hide overrides keyed by nav path (e.g. '/line-notes').

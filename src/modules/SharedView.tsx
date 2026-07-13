@@ -76,7 +76,7 @@ export function SharedView() {
                       <div className="shared-agenda">
                         {e.agenda.map((a, j) => (
                           <div key={j} className="row" style={{ gap: 10, alignItems: 'baseline' }}>
-                            <span className="shared-time">{a.time ? formatTime(a.time) : '—'}</span>
+                            <span className="shared-time">{a.time ? formatTime(a.time) : '-'}</span>
                             <span className="small">{a.what}</span>
                           </div>
                         ))}
@@ -94,7 +94,7 @@ export function SharedView() {
                   <div key={i} className="row-between shared-person">
                     <span>
                       <strong>{p.name}</strong>
-                      {p.character ? <span className="muted"> — {p.character}</span> : null}
+                      {p.character ? <span className="muted"> - {p.character}</span> : null}
                     </span>
                     <span className="muted small">{p.role}</span>
                   </div>

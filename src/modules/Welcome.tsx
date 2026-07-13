@@ -267,10 +267,10 @@ export function Welcome() {
         </div>
         <input ref={fileRef} type="file" accept="application/json,.json" onChange={onImport} style={{ display: 'none' }} />
 
-        {/* Sample chooser — tap a show type to open a fully-built demo. */}
+        {/* Sample chooser - tap a show type to open a fully-built demo. */}
         {sampleChoosing && (
           <div className="card" style={{ textAlign: 'left', marginTop: 10, padding: 12 }}>
-            <p className="hint" style={{ margin: '0 0 8px' }}>Pick a sample to explore — it opens right away:</p>
+            <p className="hint" style={{ margin: '0 0 8px' }}>Pick a sample to explore - it opens right away:</p>
             <div className="row wrap" style={{ gap: 8 }}>
               <button
                 type="button"
@@ -278,7 +278,7 @@ export function Welcome() {
                 style={{ flex: 1, minWidth: 170, justifyContent: 'flex-start' }}
                 onClick={() => openSample('play')}
               >
-                🎭&nbsp; Theater — A Midsummer Night's Dream
+                🎭&nbsp; Theater - A Midsummer Night's Dream
               </button>
               <button
                 type="button"
@@ -286,7 +286,7 @@ export function Welcome() {
                 style={{ flex: 1, minWidth: 170, justifyContent: 'flex-start' }}
                 onClick={() => openSample('cabaret')}
               >
-                🎵&nbsp; Cabaret — The Blue Room
+                🎵&nbsp; Cabaret - The Blue Room
               </button>
             </div>
           </div>

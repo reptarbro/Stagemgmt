@@ -1,5 +1,5 @@
 :root {
-  /* "Callboard" — warm black-box ground, bone rules, cue-light + gel system.
+  /* "Callboard" - warm black-box ground, bone rules, cue-light + gel system.
      Surfaces step UP from the ground so panels read as lit desks, not a flat
      field: ground (darkest) < panel/chrome < card < elevated. */
   --bg: #0c0b08;
@@ -11,18 +11,18 @@
   --text: #f1ece0; /* warm ivory */
   --text-dim: #a8a18e; /* warm grey */
   --text-faint: #6f6a5b;
-  --accent: #57b98a; /* muted green — the pervasive, calm accent */
-  --accent-strong: #3ecb86; /* GO green — primary actions & key highlights */
-  --accent-deep: #2a9a63; /* deep green — gradient partner / pressed */
+  --accent: #57b98a; /* muted green - the pervasive, calm accent */
+  --accent-strong: #3ecb86; /* GO green - primary actions & key highlights */
+  --accent-deep: #2a9a63; /* deep green - gradient partner / pressed */
   --accent-ink: #08160e; /* dark ink for text on green */
-  --warn: #e6ab4c; /* amber — standby light / attention */
+  --warn: #e6ab4c; /* amber - standby light / attention */
   --danger: #d9705b;
   --success: #3ecb86;
   --info: #7fb0c9;
   --bone: #e7e1d0; /* marquee rule / structural ink, used sparingly */
   --standby: #e6ab4c; /* cue light: standby (amber) */
   --go: #3ecb86; /* cue light: GO (green) */
-  /* Department "gel" swatches — a real color system, deliberately muted. */
+  /* Department "gel" swatches - a real color system, deliberately muted. */
   --gel-light: #d9a24a;
   --gel-sound: #57a99b;
   --gel-fly: #9a8ac9;
@@ -38,7 +38,7 @@
   --maxw: 1080px;
   --font-body: 'Raleway Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Montserrat Variable', 'Raleway Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  /* Operational monospace — call sheets, cue numbers, times, counts, labels.
+  /* Operational monospace - call sheets, cue numbers, times, counts, labels.
      This is how stage managers actually read data, and it's the strongest
      signal that this is a calling desk, not a generic web dashboard. */
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', 'Menlo', 'Consolas', monospace;
@@ -165,7 +165,7 @@ p {
 .app {
   display: flex;
   /* Fixed to the smallest viewport height (svh = address-bar-visible height) so
-     the shell always fits the visible area exactly — the page never scrolls,
+     the shell always fits the visible area exactly - the page never scrolls,
      only .main scrolls inside it. No rubber-band into empty background. */
   height: 100vh;
   height: 100svh;
@@ -173,7 +173,7 @@ p {
 
 /* ---------- Binder rail (index-tab navigation) ----------
    The left edge of the stage manager's ring binder: a stack of colored index
-   tabs, one per section. The active tab is "flipped to" — it takes the page
+   tabs, one per section. The active tab is "flipped to" - it takes the page
    color and its glowing spine lights up, reading as the open divider. This is
    deliberately NOT a generic app sidebar of icon+label rows. */
 .deck-rail {
@@ -293,12 +293,12 @@ p {
   box-shadow: 0 0 13px -1px var(--tab);
 }
 .nav-icon {
-  width: 18px;
+  width: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--tab);
-  opacity: 0.75;
+  opacity: 1;
 }
 .tab:hover .nav-icon,
 .tab.active .nav-icon {
@@ -404,7 +404,7 @@ p {
   );
 }
 
-/* Landing page scroll shell — Welcome renders outside .app, so it owns its own
+/* Landing page scroll shell - Welcome renders outside .app, so it owns its own
    scroll the same way, keeping body locked. */
 .welcome-scroll {
   height: 100vh;
@@ -514,14 +514,14 @@ p {
   flex: none;
 }
 @media (max-width: 560px) {
-  /* On phones the brand wordmark crowds the show title — keep just the mark. */
+  /* On phones the brand wordmark crowds the show title - keep just the mark. */
   .deck-brand-name {
     display: none;
   }
 }
 
 /* ---------- Hub folder-tile launcher ----------
-   On the Hub, the sections aren't a rail — they're the tabs of the open binder,
+   On the Hub, the sections aren't a rail - they're the tabs of the open binder,
    a grid of color-coded folder tiles standing where the rail would be. */
 .hub-cols {
   align-items: stretch; /* Next Up & Key Dates line up to equal height */
@@ -608,7 +608,7 @@ p {
   align-items: center;
   color: var(--tab);
   font-size: 1.7rem;
-  opacity: 0.92;
+  opacity: 1;
 }
 .hub-tile-icon svg {
   width: 30px;
@@ -633,7 +633,7 @@ p {
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
 }
-/* The "GO light" — a bold, glowing green segment riding the header rule at the
+/* The "GO light" - a bold, glowing green segment riding the header rule at the
    left. This is the marquee accent, tied to the cue-light brand. */
 .page-head::after {
   content: '';
@@ -728,7 +728,7 @@ p {
   color: var(--text-dim);
   margin-bottom: 12px;
 }
-/* Small cue-tick before every section label — the marquee bar at desk scale. */
+/* Small cue-tick before every section label - the marquee bar at desk scale. */
 .card-title::before {
   content: '';
   flex: none;
@@ -843,7 +843,7 @@ p {
   text-transform: uppercase;
   color: var(--text-dim);
   margin: 4px 0 10px;
-  /* It's a collapse toggle button — strip the native chrome. */
+  /* It's a collapse toggle button - strip the native chrome. */
   background: none;
   border: none;
   padding: 4px 0;
@@ -1053,7 +1053,7 @@ p {
   font-size: 0.95rem;
   padding: 2px;
 }
-/* Touch devices can't hover — keep the reorder arrows visible (drag-and-drop
+/* Touch devices can't hover - keep the reorder arrows visible (drag-and-drop
    isn't reliable on touch, so the arrows are the reorder path there). */
 @media (hover: none) {
   .scene-reorder {
@@ -1137,7 +1137,7 @@ textarea {
   font-size: 0.92rem;
   font-family: inherit;
 }
-/* Checkboxes & radios are NOT full-width text fields — undo the box styling
+/* Checkboxes & radios are NOT full-width text fields - undo the box styling
    above so they render as native controls that sit snug against their label,
    instead of stretching across the row and shoving the label to the far edge. */
 input[type='checkbox'],
@@ -1157,7 +1157,7 @@ input[type='radio'] {
 /* Date/time controls styled to match text inputs on EVERY engine.
    The native iOS/Safari widget renders its value inside
    ::-webkit-date-and-time-value, which defaults to centered text with its own
-   min-width — that produced the offset "empty box" look. We strip the native
+   min-width - that produced the offset "empty box" look. We strip the native
    chrome (appearance:none), force a full-width box, and left-align the value so
    date/time fields are indistinguishable from a normal text field everywhere. */
 input[type='date'],
@@ -1217,7 +1217,7 @@ textarea {
   /* Horizontal-scroll affordance (Lea Verou technique): the two "cover"
      gradients (local) sit flush at each edge and vanish only when there's more
      to scroll toward; the radial "shadows" (scroll) then peek out, signalling
-     the table pans sideways — so a clipped column reads as intentional, not
+     the table pans sideways - so a clipped column reads as intentional, not
      broken. Cells are transparent, so these show through the body rows. */
   background:
     linear-gradient(to right, var(--bg-elev) 28%, rgba(21, 27, 24, 0)) 0 0 / 34px 100% no-repeat,
@@ -1317,7 +1317,7 @@ tbody tr:hover {
   color: var(--text-dim);
   white-space: nowrap;
 }
-/* Group badges — harmonized into the brand family (greens · sage · amber · olive). */
+/* Group badges - harmonized into the brand family (greens · sage · amber · olive). */
 .badge-Cast { color: #46b87f; border-color: rgba(70, 184, 127, 0.35); background: rgba(70, 184, 127, 0.08); }
 .badge-Crew { color: #9fb8a6; border-color: rgba(159, 184, 166, 0.35); background: rgba(159, 184, 166, 0.08); }
 .badge-Creative { color: #6cc3c0; border-color: rgba(108, 195, 192, 0.35); background: rgba(108, 195, 192, 0.08); }
@@ -1329,7 +1329,7 @@ tbody tr:hover {
 .badge-excused { color: var(--info); }
 .badge-no-show { color: var(--danger); }
 
-/* Event-type badges — schedule call types, colored into the gel family. */
+/* Event-type badges - schedule call types, colored into the gel family. */
 .badge-ev-Rehearsal { color: #57b98a; border-color: rgba(87, 185, 138, 0.4); background: rgba(87, 185, 138, 0.1); }
 .badge-ev-Dress-Rehearsal { color: #7fc0a0; border-color: rgba(127, 192, 160, 0.4); background: rgba(127, 192, 160, 0.1); }
 .badge-ev-Performance { color: var(--gel-light); border-color: rgba(217, 162, 74, 0.45); background: rgba(217, 162, 74, 0.12); }
@@ -1527,7 +1527,7 @@ tbody tr:hover {
   white-space: nowrap;
 }
 /* The click/tap toggle (.open) is the source of truth so a second tap always
-   hides it. Hover-preview is layered on ONLY for real pointer devices — on
+   hides it. Hover-preview is layered on ONLY for real pointer devices - on
    touch, iOS keeps a sticky :hover after a tap, which would otherwise pin the
    contact open until you tapped elsewhere. */
 .ice-badge.open .ice-detail,
@@ -1598,11 +1598,11 @@ tbody tr:hover {
   min-height: 40px;
   background: transparent;
   border: none;
-  color: var(--text-dim);
+  color: var(--text);
   cursor: pointer;
   padding: 8px;
   border-radius: 8px;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   line-height: 1;
 }
 .icon-btn:hover {
@@ -1612,7 +1612,7 @@ tbody tr:hover {
 .icon-btn.danger {
   color: var(--danger);
 }
-/* Row action cluster — keeps edit/attach/delete the same size, aligned. */
+/* Row action cluster - keeps edit/attach/delete the same size, aligned. */
 .row-actions {
   display: inline-flex;
   align-items: center;
@@ -1732,8 +1732,8 @@ tbody tr:hover {
 }
 
 /* Printable-sheet preview (screen). A print sheet (call sheet, sign-in, cast
-   list, report) opens on a SOLID ground — no translucent blur showing whatever
-   modal or page sits behind it — so it reads as its own clean document. */
+   list, report) opens on a SOLID ground - no translucent blur showing whatever
+   modal or page sits behind it - so it reads as its own clean document. */
 .sheet-print-root .modal-backdrop {
   background: var(--bg);
   backdrop-filter: none;
@@ -1938,13 +1938,13 @@ tbody tr:hover {
   color: var(--text);
 }
 
-/* Warning variant — sync conflict (amber, distinct from the sage backup nudge). */
+/* Warning variant - sync conflict (amber, distinct from the sage backup nudge). */
 .backup-banner.sync-conflict {
   background: linear-gradient(90deg, rgba(224, 168, 70, 0.16), rgba(224, 168, 70, 0.04));
   border-color: rgba(224, 168, 70, 0.5);
 }
 
-/* Legal pages (Privacy, Terms) — comfortable long-form reading. */
+/* Legal pages (Privacy, Terms) - comfortable long-form reading. */
 .legal-body {
   line-height: 1.6;
   color: var(--text);

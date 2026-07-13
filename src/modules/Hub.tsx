@@ -43,7 +43,7 @@ export function Hub() {
           className="backup-banner no-print"
           style={{ marginBottom: 18, textDecoration: 'none' }}
         >
-          <span>💡 Tech is near — your Cue-to-Cue calling sheet is open.</span>
+          <span>💡 Tech is near - your Cue-to-Cue calling sheet is open.</span>
           <span className="small" style={{ fontWeight: 600, flexShrink: 0 }}>Open →</span>
         </Link>
       )}
@@ -66,7 +66,7 @@ export function Hub() {
         </button>
         <button type="button" className="stat stat-tap cue-bone" onClick={() => navigate('/schedule')}>
           <div className="stat-value">
-            {opening === null ? '—' : opening > 0 ? opening : opening === 0 ? '🎉' : '✓'}
+            {opening === null ? '-' : opening > 0 ? opening : opening === 0 ? '🎉' : '✓'}
           </div>
           <div className="stat-label">
             {opening === null
@@ -136,7 +136,7 @@ export function Hub() {
         </div>
       </div>
 
-      {/* Separator bar, then the binder's folder tabs — the Hub's launcher,
+      {/* Separator bar, then the binder's folder tabs - the Hub's launcher,
           standing in for the rail that's hidden on this page. */}
       <div className="hub-sep">
         <span>Open a section</span>
@@ -171,7 +171,7 @@ export function Hub() {
             ) : (
               [...production.people]
                 // Cast first, then everyone else (crew/production/creative…),
-                // each block alphabetical. No user sort control — just tidy.
+                // each block alphabetical. No user sort control - just tidy.
                 .sort((a, b) => {
                   const rank = (g: string) => (g === 'Cast' ? 0 : 1)
                   return rank(a.group) - rank(b.group) || a.name.localeCompare(b.name)
@@ -238,7 +238,7 @@ function KeyValue({ label, value }: { label: string; value?: string }) {
     <div className="row-between" style={{ padding: '7px 0' }}>
       <span className="faint small">{label}</span>
       <span className="small" style={{ fontWeight: 550 }}>
-        {value || '—'}
+        {value || '-'}
       </span>
     </div>
   )

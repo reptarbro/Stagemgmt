@@ -22,7 +22,7 @@ export const NAV: NavItem[] = [
   { to: '/settings', icon: 'settings', label: 'Settings' },
 ]
 
-/** Gel color for each section — the color-coded binder edge / folder tab. */
+/** Gel color for each section - the color-coded binder edge / folder tab. */
 export const TAB_COLOR: Record<string, string> = {
   '/hub': 'var(--gel-spot)',
   '/people': 'var(--go)',

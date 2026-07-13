@@ -57,7 +57,7 @@ export function CueToCue() {
     <>
       <PageHead
         title="Cue-to-Cue"
-        subtitle="Calling script — standbys, cues & status"
+        subtitle="Calling script - standbys, cues & status"
         actions={
           <div className="row wrap no-print" style={{ gap: 6 }}>
             {cues.length > 0 && (
@@ -82,7 +82,7 @@ export function CueToCue() {
           </span>
         ) : (
           <span className="small muted">
-            💡 The cue-to-cue calling sheet is built for tech week — this page will step forward on its
+            💡 The cue-to-cue calling sheet is built for tech week - this page will step forward on its
             own about {CUE_WINDOW_DAYS} days before opening.{' '}
             {d !== null ? `Opening is ${d} days out; it will activate in ${d - CUE_WINDOW_DAYS} days.` : 'Set an opening night on the Hub to start the countdown.'}{' '}
             You can still draft cues now.
@@ -92,7 +92,7 @@ export function CueToCue() {
 
       {cues.length === 0 ? (
         <EmptyState mark="💡" title="No cues yet">
-          Add your first standby/GO — light, sound, fly, deck, and spot cues — to build the calling script.
+          Add your first standby/GO - light, sound, fly, deck, and spot cues - to build the calling script.
         </EmptyState>
       ) : (
         <>
@@ -130,8 +130,8 @@ export function CueToCue() {
                     <td>
                       <span className={`badge badge-${c.dept}`}>{c.dept}</span>
                     </td>
-                    <td className="small">{c.placement || '—'}</td>
-                    <td className="small">{c.action || '—'}</td>
+                    <td className="small">{c.placement || '-'}</td>
+                    <td className="small">{c.action || '-'}</td>
                     <td>
                       <span className={`badge cue-${c.status}`}>{STATUS_LABEL[c.status]}</span>
                     </td>

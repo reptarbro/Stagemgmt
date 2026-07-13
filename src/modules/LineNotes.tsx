@@ -60,7 +60,7 @@ export function LineNotes() {
     [notes, hideResolved, actorFilter],
   )
 
-  // Per-actor outstanding counts — handy for "who needs to be off book".
+  // Per-actor outstanding counts - handy for "who needs to be off book".
   const perActor = useMemo(() => {
     const c: Record<string, number> = {}
     for (const n of notes) if (!n.resolved) c[n.personId] = (c[n.personId] ?? 0) + 1
@@ -82,8 +82,8 @@ export function LineNotes() {
       {notes.length === 0 ? (
         <EmptyState mark="📝" title={`No ${lower} yet`}>
           {scripted
-            ? `Once ${charLower}s are off book, log dropped or paraphrased lines here — then hand each ${charLower} their list.`
-            : `Log notes for each ${charLower} here — then hand each one their list.`}
+            ? `Once ${charLower}s are off book, log dropped or paraphrased lines here - then hand each ${charLower} their list.`
+            : `Log notes for each ${charLower} here - then hand each one their list.`}
         </EmptyState>
       ) : (
         <>
@@ -143,8 +143,8 @@ export function LineNotes() {
                     <td>
                       <span className="tag">{n.type}</span>
                     </td>
-                    <td className="small">{n.location || '—'}</td>
-                    <td className="small" style={{ whiteSpace: 'pre-wrap' }}>{n.note || '—'}</td>
+                    <td className="small">{n.location || '-'}</td>
+                    <td className="small" style={{ whiteSpace: 'pre-wrap' }}>{n.note || '-'}</td>
                     <td>
                       <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
                         <button
@@ -221,7 +221,7 @@ function LineNoteForm({
         <label className="field">
           <span className="field-label">{charLabel} *</span>
           <select value={f.personId} onChange={set('personId')}>
-            <option value="">— choose —</option>
+            <option value="">- choose -</option>
             {cast.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.character ? `${p.character} (${p.name})` : p.name}

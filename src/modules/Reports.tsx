@@ -10,7 +10,7 @@ import type { Report, ReportSection, ReportType } from '../lib/types'
 
 const REPORT_TYPES: ReportType[] = ['Rehearsal', 'Dress Rehearsal', 'Performance']
 
-/** A lean default set — SMs add Sound, Video, etc. as needed. */
+/** A lean default set - SMs add Sound, Video, etc. as needed. */
 const DEFAULT_SECTIONS = ['Scenic / Props', 'Costumes', 'Lighting', 'Stage Management']
 
 function blankSections(): ReportSection[] {
@@ -138,7 +138,7 @@ function ReportEditor({
     setF((s) => ({ ...s, [k]: v }))
 
   // Auto-fill the report from the linked event: scenes worked, running time,
-  // attendance exceptions, and the next call — so the SM isn't retyping what
+  // attendance exceptions, and the next call - so the SM isn't retyping what
   // the schedule already knows. Non-destructive: fills empty fields, appends
   // (deduped) to ones that already have text.
   const fillFromEvent = () => {
@@ -164,7 +164,7 @@ function ReportEditor({
           .filter(([, r]) => r.status !== 'present' && r.status !== 'unmarked')
           .map(([pid, r]) => {
             const p = production.people.find((x) => x.id === pid)
-            return p ? `${p.name} — ${r.status}${r.note ? ` (${r.note})` : ''}` : null
+            return p ? `${p.name} - ${r.status}${r.note ? ` (${r.note})` : ''}` : null
           })
           .filter((t): t is string => !!t)
       : []
@@ -173,7 +173,7 @@ function ReportEditor({
       .filter((e) => e.id !== ev.id && (e.date > ev.date || (e.date === ev.date && (e.callTime ?? '') > (ev.callTime ?? ''))))
       .sort((a, b) => a.date.localeCompare(b.date) || (a.callTime ?? '').localeCompare(b.callTime ?? ''))[0]
     const nextText = next
-      ? `Next: ${next.title || next.type} — ${formatDate(next.date)}${next.callTime ? ` · Call ${formatTime(next.callTime)}` : ''}${next.location ? ` · ${next.location}` : ''}`
+      ? `Next: ${next.title || next.type} - ${formatDate(next.date)}${next.callTime ? ` · Call ${formatTime(next.callTime)}` : ''}${next.location ? ` · ${next.location}` : ''}`
       : ''
 
     const mergeText = (existing: string | undefined, add: string) => {
@@ -272,7 +272,7 @@ function ReportEditor({
               value={f.eventId ?? ''}
               onChange={(e) => setField('eventId', e.target.value || undefined)}
             >
-              <option value="">— none —</option>
+              <option value="">- none -</option>
               {eventsOnDate.map((e) => (
                 <option key={e.id} value={e.id}>
                   {e.title || e.type}
@@ -460,14 +460,14 @@ function ReportViewer({ report, onClose }: { report: Report; onClose: () => void
 
   return (
     <PrintSheet
-      hint="Ready to distribute — download the PDF, copy the text, or print."
+      hint="Ready to distribute - download the PDF, copy the text, or print."
       onClose={onClose}
       actions={
         <>
           <button className="btn btn-sm btn-primary" onClick={download}>
             ⤓ Download PDF
           </button>
-          <button className="btn btn-sm" onClick={emailDraft} title="Email to production/creative/crew (BCC), report text in the body — attach the PDF if you like">
+          <button className="btn btn-sm" onClick={emailDraft} title="Email to production/creative/crew (BCC), report text in the body - attach the PDF if you like">
             ✉ Email to crew
           </button>
           <button className="btn btn-sm" onClick={copy}>

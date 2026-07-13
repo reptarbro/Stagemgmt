@@ -1,7 +1,7 @@
 {
   "name": "StandBy",
   "short_name": "StandBy",
-  "description": "Track and manage theatrical productions — people, schedule, attendance, reports.",
+  "description": "Track and manage theatrical productions - people, schedule, attendance, reports.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

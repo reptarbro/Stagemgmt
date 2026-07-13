@@ -69,7 +69,7 @@ export function makeSampleProduction(): Production {
     { id: ev1, type: 'Rehearsal' as const, title: 'Act 1 Blocking', date: iso(-6),
       callTime: '18:30', startTime: '19:00', endTime: '22:00', location: 'Rehearsal Rm B',
       calledPersonIds: [puck, oberon, titania], sceneIds: [sc1], notes: 'Off-book for scene 1.' },
-    { id: ev2, type: 'Rehearsal' as const, title: 'Lovers — Act 2', date: iso(-2),
+    { id: ev2, type: 'Rehearsal' as const, title: 'Lovers - Act 2', date: iso(-2),
       callTime: '18:30', startTime: '19:00', endTime: '22:00', location: 'Rehearsal Rm B',
       calledPersonIds: [hermia, lysander, puck], sceneIds: [sc3], notes: '' },
     { id: newId(), type: 'Tech' as const, title: 'Tech / dry run', date: iso(5),
@@ -146,7 +146,7 @@ export function makeSampleProduction(): Production {
           { id: newId(), text: 'Puck excused; understudy walked the track.' },
         ] },
       ],
-      scheduleNote: 'Next call: Tech / dry run — 12:00 on Main Stage.',
+      scheduleNote: 'Next call: Tech / dry run - 12:00 on Main Stage.',
       createdAt: new Date().toISOString() },
   ]
 
@@ -160,7 +160,7 @@ export function makeSampleProduction(): Production {
     openingNight: iso(10),
     closingNight: iso(24),
     isSample: true,
-    notes: 'Sample production — tap Settings → “Remove sample” to clear it anytime.',
+    notes: 'Sample production - tap Settings → “Remove sample” to clear it anytime.',
     people,
     events,
     attendance,
@@ -220,7 +220,7 @@ export function makeCabaretSample(): Production {
     { id: newId(), number: '5', title: 'Story: how we met', characterIds: [viv, cole], patter: true, duration: '2:00',
       synopsis: 'Banter leading into the duet.', notes: '' },
     { id: newId(), number: '6', title: "It Don't Mean a Thing", characterIds: [viv, cole], key: 'C', duration: '2:50',
-      synopsis: 'Up-tempo duet.', notes: 'Button — cut light on the last hit.' },
+      synopsis: 'Up-tempo duet.', notes: 'Button - cut light on the last hit.' },
     { id: newId(), number: '7', title: 'Guest introduction', characterIds: [viv], patter: true, duration: '0:45',
       synopsis: 'Bring on Lena.', notes: '' },
     { id: newId(), number: '8', title: 'Cry Me a River', characterIds: [lena], key: 'Em', duration: '4:05',
@@ -265,7 +265,7 @@ export function makeCabaretSample(): Production {
       usedByPersonIds: [viv], status: 'In progress' as const, notes: '' },
   ]
 
-  // Cues (cue-to-cue) — a music set is dense with LX + sound -------------
+  // Cues (cue-to-cue) - a music set is dense with LX + sound -------------
   const cues = [
     { id: newId(), number: 'LX 1', dept: 'Lighting' as const, placement: '#1 / Overture',
       action: 'House to half; warm piano special up.', standby: 'Standby LX 1.', status: 'set' as const, notes: '' },
@@ -283,7 +283,7 @@ export function makeCabaretSample(): Production {
   const reports = [
     { id: newId(), type: 'Rehearsal' as const, date: iso(-3), eventId: ev1,
       summary: 'Ran the full set with the trio. Tempos locked; two transitions to tighten.',
-      workedOn: 'All nine, in order — ~3h including a break.',
+      workedOn: 'All nine, in order - ~3h including a break.',
       sections: [
         { id: newId(), title: 'Music', notes: [
           { id: newId(), text: 'Pull #6 tempo back a hair; land the button cleaner.' },
@@ -292,16 +292,16 @@ export function makeCabaretSample(): Production {
           { id: newId(), text: 'Guest mic gain a touch hot on #8.' },
         ] },
         { id: newId(), title: 'Stage Management', notes: [
-          { id: newId(), text: 'Patter #5 runs long — flag for time at the show.' },
+          { id: newId(), text: 'Patter #5 runs long - flag for time at the show.' },
         ] },
       ],
-      scheduleNote: 'Next call: Sound check & cue-to-cue — 16:00 at The Blue Room.',
+      scheduleNote: 'Next call: Sound check & cue-to-cue - 16:00 at The Blue Room.',
       createdAt: new Date().toISOString() },
   ]
 
   return {
     id: newId(),
-    title: 'The Blue Room — A Cabaret Evening',
+    title: 'The Blue Room - A Cabaret Evening',
     company: 'Bathtub Gin Collective',
     venue: 'The Blue Room',
     director: 'Marcus Webb',
@@ -310,7 +310,7 @@ export function makeCabaretSample(): Production {
     openingNight: iso(6),
     closingNight: iso(6),
     isSample: true,
-    notes: 'Sample cabaret — tap Settings → “Remove sample” to clear it anytime.',
+    notes: 'Sample cabaret - tap Settings → “Remove sample” to clear it anytime.',
     people,
     events,
     attendance,

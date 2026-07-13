@@ -5,7 +5,7 @@
 //     (deterministic tiebreak when equal, so devices agree without a server).
 //   • Deletes are tombstones (a deleted id stays gone unless it was edited later).
 //   • Ordering is taken from the cloud copy, with this device's not-yet-in-cloud
-//     records appended — so after each device pushes once, every device converges
+//     records appended - so after each device pushes once, every device converges
 //     to the exact same array (no ping-pong) while keeping meaningful order
 //     (e.g. the cue sheet) intact.
 // The merge is order-stable given a fixed cloud, so reconcile(local, cloud) run
@@ -18,7 +18,7 @@ function recTime(r: unknown): string {
   return (o && (o.updatedAt || o.createdAt || o.uploadedAt)) || ''
 }
 
-/** Canonical (key-sorted) serialization — for a device-independent tiebreak. */
+/** Canonical (key-sorted) serialization - for a device-independent tiebreak. */
 function stable(v: unknown): string {
   if (v === null || typeof v !== 'object') return JSON.stringify(v) ?? 'null'
   if (Array.isArray(v)) return '[' + v.map(stable).join(',') + ']'

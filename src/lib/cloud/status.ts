@@ -1,7 +1,7 @@
 // A tiny observable for the current cloud-sync state, so the UI can show what
 // the auto-sync engine (CloudAutoSync) is doing without threading props around.
 // The important one is 'conflict': both this device and the cloud changed since
-// the last sync, so auto-sync deliberately stops to avoid clobbering either —
+// the last sync, so auto-sync deliberately stops to avoid clobbering either -
 // the user resolves it with a manual Push or Pull.
 import { useSyncExternalStore } from 'react'
 

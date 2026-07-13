@@ -8,7 +8,7 @@ const CATEGORIES = ['Bug', 'Idea', 'Confusing', 'Praise'] as const
 type Category = (typeof CATEGORIES)[number]
 
 /** A lightweight in-app feedback form that writes straight to the private
-    Supabase `feedback` table — no email step. Works signed-in or not. */
+    Supabase `feedback` table - no email step. Works signed-in or not. */
 export function FeedbackForm({ onClose }: { onClose: () => void }) {
   const { production } = useStore()
   const [category, setCategory] = useState<Category>('Idea')
@@ -55,7 +55,7 @@ export function FeedbackForm({ onClose }: { onClose: () => void }) {
     <Modal title="Send feedback" onClose={onClose}>
       {state === 'done' ? (
         <div>
-          <p style={{ marginTop: 0 }}>Thanks — that's landed. 🎭</p>
+          <p style={{ marginTop: 0 }}>Thanks - that's landed. 🎭</p>
           <p className="small muted">Real notes from real shows are exactly what shapes what gets built next.</p>
           <div className="modal-actions">
             <button className="btn btn-primary" onClick={onClose}>
@@ -91,7 +91,7 @@ export function FeedbackForm({ onClose }: { onClose: () => void }) {
           </label>
           <label className="field">
             <span className="field-label">
-              Email <span className="faint">(optional — only if you'd like a reply)</span>
+              Email <span className="faint">(optional - only if you'd like a reply)</span>
             </span>
             <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
           </label>

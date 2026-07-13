@@ -40,7 +40,7 @@ function actLabel(act: string): string {
 /** Compact initials for a scene tile chip, e.g. "Robin Okafor" → "RO". */
 function initialsOf(label: string): string {
   const parts = label.trim().split(/\s+/).filter(Boolean)
-  if (!parts.length) return '—'
+  if (!parts.length) return '-'
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
@@ -106,7 +106,7 @@ export function Scenes() {
   )
   const nameFor = (id: string) => {
     const p = production?.people.find((x) => x.id === id)
-    return p ? p.character || p.name : '—'
+    return p ? p.character || p.name : '-'
   }
 
   return (
@@ -115,7 +115,7 @@ export function Scenes() {
         title={term(production?.kind, 'scenes')}
         subtitle={
           setlist
-            ? `Running Order — ${charLabel.toLowerCase()}s${musicalKeys ? ', keys' : ''} & timings`
+            ? `Running Order - ${charLabel.toLowerCase()}s${musicalKeys ? ', keys' : ''} & timings`
             : `${term(production?.kind, 'scenes')} & ${charLabel.toLowerCase()} breakdown`
         }
         actions={
@@ -161,7 +161,7 @@ export function Scenes() {
       {scenes.length === 0 ? (
         <EmptyState mark={setlist ? '🎵' : '🎬'} title={`No ${term(production?.kind, 'scenes').toLowerCase()} yet`}>
           {setlist
-            ? `Add each ${unit.toLowerCase()} in order — title, who's up${musicalKeys ? ', key' : ''}, and timing. You'll get a clean running order plus a who's-in-what grid.`
+            ? `Add each ${unit.toLowerCase()} in order - title, who's up${musicalKeys ? ', key' : ''}, and timing. You'll get a clean running order plus a who's-in-what grid.`
             : `Add each ${unit.toLowerCase()} and mark who's in it. You'll get an instant "who's called for what" grid to build rehearsal calls from.`}
         </EmptyState>
       ) : view === 'board' ? (
@@ -195,7 +195,7 @@ export function Scenes() {
                 <div className="row-between wrap" style={{ gap: 10 }}>
                   <div style={{ minWidth: 200 }}>
                     <div className="row" style={{ gap: 8 }}>
-                      <span className="badge">{s.number || '—'}</span>
+                      <span className="badge">{s.number || '-'}</span>
                       <strong className={s.patter ? 'muted' : 'tcase'} style={s.patter ? { fontStyle: 'italic', fontWeight: 500 } : undefined}>
                         {s.title || `Untitled ${unit.toLowerCase()}`}
                       </strong>
@@ -290,7 +290,7 @@ function SceneDetail({
   return (
     <Modal title={`${scene.number}${scene.title ? ` · ${scene.title}` : ''}`} onClose={onClose}>
       <div className="row wrap" style={{ gap: 8, marginBottom: 12 }}>
-        <span className="badge">{scene.number || '—'}</span>
+        <span className="badge">{scene.number || '-'}</span>
         {scene.patter && <span className="tag">🎤 patter</span>}
         {!setlist && scene.page && <span className="tag">p. {scene.page}</span>}
         {musicalKeys && !scene.patter && scene.key && <span className="tag">key {scene.key}</span>}
@@ -368,7 +368,7 @@ function SceneMatrix({
           {scenes.map((s) => (
             <tr key={s.id}>
               <td>
-                <strong>{s.number || '—'}</strong>
+                <strong>{s.number || '-'}</strong>
                 {s.title && <div className="faint small">{s.title}</div>}
               </td>
               {cast.map((p) => (
@@ -392,7 +392,7 @@ function SceneMatrix({
 }
 
 /** A compact "who's in what" index: one row per character with the scenes they
-    appear in, as chips. Replaces the wide sparse dot-matrix — same tap-to-filter,
+    appear in, as chips. Replaces the wide sparse dot-matrix - same tap-to-filter,
     a fraction of the width, and it scales cleanly to a big cast. */
 function CharacterIndex({
   scenes,
@@ -429,10 +429,10 @@ function CharacterIndex({
             <span className="char-count">{mine.length}</span>
             <span className="char-scenes">
               {mine.length === 0 ? (
-                <span className="faint small">—</span>
+                <span className="faint small">-</span>
               ) : (
                 mine.map((s) => (
-                  <span key={s.id} className="char-scene-chip">{s.number || '—'}</span>
+                  <span key={s.id} className="char-scene-chip">{s.number || '-'}</span>
                 ))
               )}
             </span>
@@ -444,7 +444,7 @@ function CharacterIndex({
 }
 
 /** The scene board: the who's-in index on top, then a grid of tappable scene
-    squares grouped by act (derived from the number) — reorderable. */
+    squares grouped by act (derived from the number) - reorderable. */
 function SceneBoard({
   scenes,
   cast,
@@ -609,7 +609,7 @@ function SceneTile({
       }}
     >
       <div className="scene-tile-head">
-        <span className="scene-num">{scene.number || '—'}</span>
+        <span className="scene-num">{scene.number || '-'}</span>
         <span className="scene-count" title={`${count} ${charLabel.toLowerCase()}${count === 1 ? '' : 's'}`}>
           {count === 0 ? <span className="scene-attention" title={`No ${charLabel.toLowerCase()}s marked`} /> : count}
         </span>

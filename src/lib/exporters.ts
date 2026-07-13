@@ -20,7 +20,7 @@ export function slug(s: string): string {
 /** Plain-text version of a report, for copy/paste or email body. */
 export function reportToText(r: Report, prod: Production): string {
   const L: string[] = []
-  L.push(`${prod.title} — ${r.type} Report`)
+  L.push(`${prod.title} - ${r.type} Report`)
   L.push(formatDate(r.date))
   if (prod.company) L.push(prod.company)
   L.push('')

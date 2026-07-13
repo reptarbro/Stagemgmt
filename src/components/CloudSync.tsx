@@ -12,7 +12,7 @@ function appBaseUrl(): string {
   return window.location.href.split('#')[0].split('?')[0]
 }
 
-/** Optional account-backed sync. Signed out, it changes nothing — the app stays
+/** Optional account-backed sync. Signed out, it changes nothing - the app stays
     local-first. Signed in, you can Push this device's data to the cloud and Pull
     it onto another (data model + uploaded script/photos). */
 export function CloudSync() {
@@ -24,13 +24,13 @@ export function CloudSync() {
   const status = useSyncStatus()
   const handledSignIn = useRef(false)
 
-  // Nothing to do on sign-in but reassure — the auto-sync engine (CloudAutoSync)
+  // Nothing to do on sign-in but reassure - the auto-sync engine (CloudAutoSync)
   // merges this device with the cloud on its own (on sign-in, focus, a poll, and
   // realtime), so shows appear here automatically with no Push/Pull to press.
   const onSignedIn = async () => {
     if (handledSignIn.current) return
     handledSignIn.current = true
-    setMsg('Signed in — your shows sync automatically across your devices.')
+    setMsg('Signed in - your shows sync automatically across your devices.')
   }
 
   // Keep the "last synced" line fresh as the engine works.
@@ -115,7 +115,7 @@ export function CloudSync() {
       setSyncStatus('idle')
       setMsg(
         accountGone
-          ? `Account and cloud data deleted (${r.files} file(s) removed). Your copy on this device is untouched — export a backup if you want to keep it.`
+          ? `Account and cloud data deleted (${r.files} file(s) removed). Your copy on this device is untouched - export a backup if you want to keep it.`
           : `Cloud data deleted (${r.files} file(s) removed) and you're signed out. Your copy on this device is untouched.`,
       )
     } catch (e) {
@@ -132,7 +132,7 @@ export function CloudSync() {
       </div>
       <p className="small muted">
         Sign in to sync your shows across your devices. It happens automatically and merges changes from
-        every device — add a person on your iPad and a headshot on your laptop and you'll see both, no
+        every device - add a person on your iPad and a headshot on your laptop and you'll see both, no
         buttons to press. Signed out, nothing leaves this device.
       </p>
 
@@ -169,7 +169,7 @@ export function CloudSync() {
       {stage === 'sent' && (
         <div>
           <p className="small" style={{ margin: '2px 0 10px' }}>
-            📩 Sign-in link sent to <strong>{email}</strong>. Open it <strong>on this device</strong> —
+            📩 Sign-in link sent to <strong>{email}</strong>. Open it <strong>on this device</strong> -
             you'll come back here signed in. (Same tab or a new one is fine.)
           </p>
           <div className="row wrap" style={{ gap: 8 }}>
@@ -198,7 +198,7 @@ export function CloudSync() {
 
           <p className="small muted" style={{ marginTop: 0 }}>
             ✓ Syncing automatically. To use another device, just open StandBy there and sign in with the
-            same account — your shows appear on their own, and edits on any device merge together.
+            same account - your shows appear on their own, and edits on any device merge together.
           </p>
 
           <div className="row wrap" style={{ gap: 10 }}>
@@ -225,7 +225,7 @@ export function CloudSync() {
             </div>
             <p className="hint" style={{ marginTop: 8 }}>
               Removes your cloud copy and account for good. This <strong>cannot be undone.</strong> The
-              copy on this device stays put — export a backup first if you want to keep it.
+              copy on this device stays put - export a backup first if you want to keep it.
             </p>
           </div>
         </>

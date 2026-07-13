@@ -31,10 +31,10 @@ const BLANK: Omit<PropItem, 'id'> = {
   notes: '',
 }
 
-/** "All cast" + any specific names, joined — or "—". */
+/** "All cast" + any specific names, joined - or "-". */
 function usedByLabel(i: PropItem, nameFor: (id: string) => string): string {
   const parts = [i.usedByAllCast ? 'All cast' : null, ...i.usedByPersonIds.map(nameFor)].filter(Boolean)
-  return parts.length ? (parts.join(', ') as string) : '—'
+  return parts.length ? (parts.join(', ') as string) : '-'
 }
 
 type SortKey = 'name' | 'category' | 'sceneRef' | 'status'
@@ -62,7 +62,7 @@ export function Props() {
   const items = production?.props ?? []
   const people = production?.people ?? []
   const unit = kindProfile(production?.kind).unit // "Scene" / "Number" / "Piece" / "Segment"
-  const nameFor = (id: string) => people.find((p) => p.id === id)?.name ?? '—'
+  const nameFor = (id: string) => people.find((p) => p.id === id)?.name ?? '-'
 
   const filtered = useMemo(
     () =>
@@ -71,7 +71,7 @@ export function Props() {
       ),
     [items, filter],
   )
-  // Column sort, then float priority items to the top (stable — keeps the
+  // Column sort, then float priority items to the top (stable - keeps the
   // column order within each group).
   const rows = useMemo(() => {
     const s = sort.sorted(filtered, sortVal)
@@ -93,7 +93,7 @@ export function Props() {
         title="Props & Costumes"
         subtitle={
           items.length
-            ? `${outstanding} of ${items.length} still need sorting (not yet Ready) — flagged with ⚠️`
+            ? `${outstanding} of ${items.length} still need sorting (not yet Ready) - flagged with ⚠️`
             : 'Running lists'
         }
         actions={
@@ -110,7 +110,7 @@ export function Props() {
 
       {items.length === 0 ? (
         <EmptyState mark="🎩" title="Nothing tracked yet">
-          Log props, costumes, set pieces, and furniture — where they're used, who handles them, and
+          Log props, costumes, set pieces, and furniture - where they're used, who handles them, and
           whether they're ready.
         </EmptyState>
       ) : (
@@ -174,7 +174,7 @@ export function Props() {
                     <td>
                       <span className="tag">{i.category}</span>
                     </td>
-                    <td className="small">{i.sceneRef || '—'}</td>
+                    <td className="small">{i.sceneRef || '-'}</td>
                     <td className="small">{usedByLabel(i, nameFor)}</td>
                     <td>
                       <span className="row" style={{ gap: 4, whiteSpace: 'nowrap' }}>
@@ -185,7 +185,7 @@ export function Props() {
                           {i.status}
                         </span>
                         {needsSort(i) && (
-                          <span className="flag-warn" title="Still to sort — not yet Ready">⚠️</span>
+                          <span className="flag-warn" title="Still to sort - not yet Ready">⚠️</span>
                         )}
                       </span>
                     </td>
@@ -318,7 +318,7 @@ function PropForm({
         : [...s.usedByPersonIds, id],
     }))
 
-  // Only the essentials are required now — quantity, scene, and handlers are all
+  // Only the essentials are required now - quantity, scene, and handlers are all
   // optional so an item can be logged fast and filled in later.
   const missing = !f.name.trim() || !f.category || !f.status
 
@@ -362,7 +362,7 @@ function PropForm({
           onChange={(e) => setF((s) => ({ ...s, priority: e.target.checked }))}
         />
         <span className="small" style={{ color: f.priority ? 'var(--warn)' : undefined }}>
-          ⚡ High priority — needed urgently
+          ⚡ High priority - needed urgently
         </span>
       </label>
 
@@ -384,14 +384,30 @@ function PropForm({
             <button
               type="button"
               className={`btn btn-sm ${f.usedByAllCast ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setF((s) => ({ ...s, usedByAllCast: !s.usedByAllCast }))}
+              onClick={() =>
+                setF((s) => {
+                  const turningOn = !s.usedByAllCast
+                  return {
+                    ...s,
+                    usedByAllCast: turningOn,
+                    // Turning "All cast" on clears any individually-picked cast
+                    // members (they're now covered); crew/other handlers stay.
+                    usedByPersonIds: turningOn
+                      ? s.usedByPersonIds.filter((id) => people.find((p) => p.id === id)?.group !== 'Cast')
+                      : s.usedByPersonIds,
+                  }
+                })
+              }
               style={{ borderRadius: 999 }}
-              title="Everyone in the Cast — stays correct as the cast changes"
+              title="Everyone in the Cast, kept correct as the cast changes"
             >
               {f.usedByAllCast ? '✓ ' : ''}👥 All cast
             </button>
           )}
           {people.map((p) => {
+            // While "All cast" is on, cast members are covered by it - hide them
+            // so the picker only offers people not already included.
+            if (f.usedByAllCast && p.group === 'Cast') return null
             const on = f.usedByPersonIds.includes(p.id)
             return (
               <button
@@ -435,7 +451,7 @@ function PropForm({
   )
 }
 
-/** Rapid multi-item entry — a row per item (name · category · qty · priority),
+/** Rapid multi-item entry - a row per item (name · category · qty · priority),
     like People's "Add Multiple". Blank-name rows are ignored. */
 function PropsBulkAdd({
   onClose,
@@ -455,7 +471,7 @@ function PropsBulkAdd({
   return (
     <Modal title="Add Multiple Items" onClose={onClose} className="modal-wide">
       <p className="small muted" style={{ marginTop: 0 }}>
-        Log a batch fast — just name &amp; category. Everything starts as <strong>Needed</strong>; open any
+        Log a batch fast - just name &amp; category. Everything starts as <strong>Needed</strong>; open any
         item later to add handlers, scene, and notes.
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>

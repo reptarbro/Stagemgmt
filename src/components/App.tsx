@@ -13,8 +13,8 @@ import { NavIcon } from './icons'
 import { Welcome } from '../modules/Welcome'
 // A failed dynamic import is almost always a STALE CHUNK after a deploy: the
 // previously-installed service worker still controls the first post-deploy
-// load and can't serve the new hashed chunk, so the import rejects and — with
-// no boundary — the whole app would blank with a dead back button. Recover by
+// load and can't serve the new hashed chunk, so the import rejects and - with
+// no boundary - the whole app would blank with a dead back button. Recover by
 // reloading once (which lets the new service worker take over and fetch fresh
 // chunks); the timestamp guard prevents a reload loop if a chunk is truly gone.
 const RELOAD_KEY = 'sb-chunk-reload-at'
@@ -93,7 +93,7 @@ class RootErrorBoundary extends Component<{ children: ReactNode }, { failed: boo
         >
           <StandbyMark size={36} />
           <p style={{ color: 'var(--text-dim)', maxWidth: 320, lineHeight: 1.5 }}>
-            Something interrupted loading this page. Reloading usually fixes it — your data is safe.
+            Something interrupted loading this page. Reloading usually fixes it - your data is safe.
           </p>
           <button className="btn btn-primary" onClick={this.handleReload}>
             Reload StandBy
@@ -111,7 +111,7 @@ class RootErrorBoundary extends Component<{ children: ReactNode }, { failed: boo
 }
 
 export function App() {
-  // Reaching a successful mount means chunks are loading fine — clear any prior
+  // Reaching a successful mount means chunks are loading fine - clear any prior
   // reload marker so a future stale deploy can self-heal again.
   useEffect(() => {
     try {
@@ -127,12 +127,12 @@ export function App() {
       <RootErrorBoundary>
       <Suspense fallback={<PageLoading />}>
       <Routes>
-        {/* Home / landing — every fresh entry starts here. */}
+        {/* Home / landing - every fresh entry starts here. */}
         <Route path="/" element={<Welcome />} />
-        {/* Standalone legal pages — linkable without an active production. */}
+        {/* Standalone legal pages - linkable without an active production. */}
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<Terms />} />
-        {/* Chromeless, read-only shared view — opened from a share link, no login. */}
+        {/* Chromeless, read-only shared view - opened from a share link, no login. */}
         <Route path="/view/:token" element={<SharedView />} />
         {/* App pages share the sidebar shell. */}
         <Route element={<Shell />}>
@@ -175,7 +175,7 @@ function Shell() {
   const cueActive = cueToCueActive(production)
   const cueHint = dOpen === null || cueActive ? undefined : `in ${dOpen - CUE_WINDOW_DAYS}d`
 
-  // The visible nav — and a couple of labels — depend on the show's kind.
+  // The visible nav - and a couple of labels - depend on the show's kind.
   const kind = production.kind
   const nav = NAV.filter((n) => moduleVisible(production, n.to)).map((n) => ({
     ...n,
@@ -198,7 +198,7 @@ function Shell() {
   return (
     <div className={`app ${onHub ? 'app-hub' : ''}`}>
       <div className={`scrim ${menuOpen ? 'open' : ''}`} onClick={close} />
-      {/* The Hub is the binder's cover — no rail there; its own folder-tile grid
+      {/* The Hub is the binder's cover - no rail there; its own folder-tile grid
           is the launcher. Every other page shows the rail. */}
       {!onHub && (
       <aside className={`deck-rail ${menuOpen ? 'open' : ''}`}>
@@ -304,7 +304,7 @@ function Shell() {
           <div className="main-inner">
             <BackupBanner />
             {/* Nearer boundary than the top-level one, so switching modules shows
-                the fallback only in the content area — the rail stays put. */}
+                the fallback only in the content area - the rail stays put. */}
             <Suspense fallback={<PageLoading />}>
               <Outlet />
             </Suspense>
@@ -335,7 +335,7 @@ function BackupBanner() {
   const last = getLastBackup()
   const overdue = hasData && (last === 0 || Date.now() - last > WEEK_MS)
   // Signed in, the data also lives in the cloud (and syncs automatically), so
-  // the "on this device only — back it up or lose it" nudge is both alarming
+  // the "on this device only - back it up or lose it" nudge is both alarming
   // and inaccurate. Suppress it; a full export is still available in Settings.
   if (!overdue || dismissed || signedIn) return null
 
@@ -355,7 +355,7 @@ function BackupBanner() {
     <div className="backup-banner no-print">
       <span>
         💾 Your data lives on this device only.{' '}
-        {last === 0 ? 'Back it up' : "It's been a while — back up again"} so you don't lose it.
+        {last === 0 ? 'Back it up' : "It's been a while - back up again"} so you don't lose it.
       </span>
       <span className="row" style={{ gap: 8, flexShrink: 0 }}>
         <button className="btn btn-sm btn-primary" onClick={doExport}>
