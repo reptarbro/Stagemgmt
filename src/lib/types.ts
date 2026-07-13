@@ -85,6 +85,11 @@ export interface ScheduleEvent {
   location?: string
   /** Person ids called for this event. Empty = whole company / TBD. */
   calledPersonIds: ID[]
+  /** True when the whole cast is called (e.g. a full-company rehearsal). Stored
+      as a flag, not a snapshot of ids, so it stays correct as the cast changes;
+      resolves to current Cast at use time and can combine with specific crew in
+      calledPersonIds. */
+  calledAllCast?: boolean
   /** Scene ids being worked in this event, linking Schedule <-> Scenes. */
   sceneIds?: ID[]
   /** Hour-by-hour call times / running order for the day (any increment). */

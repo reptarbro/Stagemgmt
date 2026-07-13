@@ -76,6 +76,25 @@ export function eventConflict(person: Person, ev: { date: string; callTime?: str
   return null
 }
 
+type CalledRef = Pick<ScheduleEvent, 'calledPersonIds' | 'calledAllCast'>
+/** The people called for an event: the whole cast (plus any specific crew) when
+    calledAllCast is set; otherwise the explicit list, or the whole company when
+    nothing is picked. */
+function calledPeople(event: CalledRef, people: Person[]): Person[] {
+  if (event.calledAllCast) {
+    return people.filter((p) => p.group === 'Cast' || event.calledPersonIds.includes(p.id))
+  }
+  return event.calledPersonIds.length ? people.filter((p) => event.calledPersonIds.includes(p.id)) : people
+}
+/** Short "who's called" summary for chips/labels. */
+function calledSummary(event: CalledRef, people: Person[]): string {
+  if (event.calledAllCast) {
+    const extra = event.calledPersonIds.filter((id) => people.find((p) => p.id === id)?.group !== 'Cast').length
+    return extra ? `all cast + ${extra}` : 'all cast'
+  }
+  return event.calledPersonIds.length ? `${event.calledPersonIds.length} called` : 'whole company'
+}
+
 export function Schedule() {
   const { production, addEvent, updateEvent, deleteEvent } = useStore()
   const [editing, setEditing] = useState<ScheduleEvent | 'new' | null>(null)
@@ -232,11 +251,7 @@ export function Schedule() {
         <CallSheet
           event={callSheetFor}
           production={production}
-          called={
-            callSheetFor.calledPersonIds.length
-              ? production.people.filter((p) => callSheetFor.calledPersonIds.includes(p.id))
-              : production.people
-          }
+          called={calledPeople(callSheetFor, production.people)}
           onClose={() => setCallSheetFor(null)}
         />
       )}
@@ -304,14 +319,12 @@ function EventRow({
 }) {
   const { getAttendance, production } = useStore()
   const att = getAttendance(event.id)
-  const totalCalled = event.calledPersonIds.length || production?.people.length || 0
   const summary = att ? summarize(att) : null
   const [callSheet, setCallSheet] = useState(false)
 
   const people = production?.people ?? []
-  const pool = event.calledPersonIds.length
-    ? people.filter((p) => event.calledPersonIds.includes(p.id))
-    : people
+  const pool = calledPeople(event, people)
+  const totalCalled = pool.length
   const conflicted = pool.filter((p) => eventConflict(p, event))
 
   return (
@@ -339,11 +352,7 @@ function EventRow({
           </div>
         </div>
         <div className="row wrap" style={{ gap: 6 }}>
-          <span className="tag">
-            {event.calledPersonIds.length
-              ? `${event.calledPersonIds.length} called`
-              : 'Whole company'}
-          </span>
+          <span className="tag tcase">{calledSummary(event, people)}</span>
           {summary && (
             <span className="tag" title="Attendance so far">
               {summary.present} present · {summary.late} late · {summary.absent} absent
@@ -550,9 +559,7 @@ function EventDetail({
   const { production } = useStore()
   const people = production?.people ?? []
   const scenes = production?.scenes ?? []
-  const called = event.calledPersonIds.length
-    ? people.filter((p) => event.calledPersonIds.includes(p.id))
-    : people
+  const called = calledPeople(event, people)
   const conflicted = called.filter((p) => eventConflict(p, event))
   const scenesText = sceneLabels(event.sceneIds, scenes)
 
@@ -606,7 +613,7 @@ function EventDetail({
 
       <div className="field-label">
         Who's called{' '}
-        <span className="faint">({event.calledPersonIds.length ? called.length : 'whole company'})</span>
+        <span className="faint">({calledSummary(event, people)})</span>
       </div>
       <p className="small muted" style={{ marginTop: 0 }}>
         {called.length === 0 ? '-' : called.map((p) => p.name).join(', ')}
@@ -908,19 +915,29 @@ function EventForm({
         : [...(s.sceneIds ?? []), id],
     }))
 
+  // Turn "all cast" on/off. On: drop any individually-picked cast members
+  // (they're covered by the flag) so the chips don't double up - mirrors Props.
+  const toggleAllCast = () =>
+    setF((s) => {
+      const on = !s.calledAllCast
+      return {
+        ...s,
+        calledAllCast: on,
+        calledPersonIds: on
+          ? s.calledPersonIds.filter((id) => people.find((p) => p.id === id)?.group !== 'Cast')
+          : s.calledPersonIds,
+      }
+    })
+
   // Live conflict warnings for the people called against the chosen date/times.
-  const pool = f.calledPersonIds.length
-    ? people.filter((p) => f.calledPersonIds.includes(p.id))
-    : people
+  const pool = calledPeople(f, people)
   const warnings = pool
     .map((p) => ({ p, c: eventConflict(p, f) }))
     .filter((w): w is { p: Person; c: Conflict } => !!w.c)
 
   const missing =
     !f.type ||
-    !f.title.trim() ||
     !f.date ||
-    !f.callTime ||
     !f.startTime ||
     !f.endTime ||
     !(f.location ?? '').trim()
@@ -939,7 +956,7 @@ function EventForm({
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Title <ReqStar /></span>
+          <span className="field-label">Title</span>
           <input value={f.title} onChange={set('title')} placeholder="e.g. Act 1 blocking" />
         </label>
       </div>
@@ -949,7 +966,7 @@ function EventForm({
           <input type="date" value={f.date} onChange={set('date')} />
         </label>
         <label className="field">
-          <span className="field-label">Call time <ReqStar /></span>
+          <span className="field-label">Call time</span>
           <input type="time" value={f.callTime} onChange={set('callTime')} />
         </label>
       </div>
@@ -997,9 +1014,7 @@ function EventForm({
 
       <div className="field-label">
         Who's called{' '}
-        <span className="faint">
-          ({f.calledPersonIds.length ? `${f.calledPersonIds.length} selected` : 'none = whole company'})
-        </span>
+        <span className="faint">({calledSummary(f, people)})</span>
       </div>
       {people.length === 0 ? (
         <p className="hint">Add people first to build a call list.</p>
@@ -1014,7 +1029,21 @@ function EventForm({
             marginBottom: 14,
           }}
         >
+          {people.some((p) => p.group === 'Cast') && (
+            <button
+              type="button"
+              className={`btn btn-sm ${f.calledAllCast ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={toggleAllCast}
+              style={{ borderRadius: 999 }}
+              title="Call the whole cast (stays correct as the cast changes)"
+            >
+              {f.calledAllCast ? '✓ ' : ''}👥 All cast
+            </button>
+          )}
           {people.map((p) => {
+            // When "all cast" is on, cast members are covered by the flag - hide
+            // their chips so the picker only shows the extras you can still add.
+            if (f.calledAllCast && p.group === 'Cast') return null
             const on = f.calledPersonIds.includes(p.id)
             const clash = !!eventConflict(p, f)
             return (
@@ -1062,7 +1091,7 @@ function EventForm({
       </label>
       {missing && (
         <p className="hint" style={{ color: 'var(--danger)', marginBottom: 8 }}>
-          Type, title, date, call time, start, end &amp; location are all required.
+          Type, date, start, end &amp; location are all required.
         </p>
       )}
       <div className="modal-actions">
@@ -1089,10 +1118,7 @@ const STATUS_LABEL: Record<AttendanceStatus, string> = {
 
 function AttendanceModal({ event, onClose }: { event: ScheduleEvent; onClose: () => void }) {
   const { production, getAttendance, setAttendance } = useStore()
-  const called =
-    event.calledPersonIds.length > 0
-      ? (production?.people ?? []).filter((p) => event.calledPersonIds.includes(p.id))
-      : (production?.people ?? [])
+  const called = calledPeople(event, production?.people ?? [])
 
   const existing = getAttendance(event.id)
   const [records, setRecords] = useState<Attendance['records']>(existing?.records ?? {})
@@ -1182,10 +1208,7 @@ function SignInSheet({
   onClose: () => void
 }) {
   const { production } = useStore()
-  const called =
-    event.calledPersonIds.length > 0
-      ? (production?.people ?? []).filter((p) => event.calledPersonIds.includes(p.id))
-      : (production?.people ?? [])
+  const called = calledPeople(event, production?.people ?? [])
   const rows = [...called].sort((a, b) => a.name.localeCompare(b.name))
   const scenesText = sceneLabels(event.sceneIds, production?.scenes ?? [])
   const windowText = event.startTime
