@@ -11,9 +11,10 @@ import {
   type ShareRow,
   type SharePayload,
 } from '../lib/cloud/share'
+import { createProductionShare, fetchJoinToken, joinUrl } from '../lib/cloud/collab'
 
 export function ShareModal({ onClose }: { onClose: () => void }) {
-  const { production } = useStore()
+  const { production, updateProduction } = useStore()
   const signedIn = useSignedIn()
   const [inclSchedule, setInclSchedule] = useState(true)
   const [inclCompany, setInclCompany] = useState(true)
@@ -23,9 +24,58 @@ export function ShareModal({ onClose }: { onClose: () => void }) {
   const [copied, setCopied] = useState(false)
   const [shares, setShares] = useState<ShareRow[]>([])
 
+  // Team (co-edit) link state.
+  const [teamLink, setTeamLink] = useState<string | null>(null)
+  const [teamBusy, setTeamBusy] = useState(false)
+  const [teamErr, setTeamErr] = useState<string | null>(null)
+  const [teamCopied, setTeamCopied] = useState(false)
+
   useEffect(() => {
     if (signedIn) listShares().then(setShares).catch(() => {})
   }, [signedIn])
+
+  // If this show is already a shared team book, re-show its join link.
+  useEffect(() => {
+    if (signedIn && production?.shareId) {
+      fetchJoinToken(production.shareId)
+        .then((tok) => tok && setTeamLink(joinUrl(tok)))
+        .catch(() => {})
+    }
+  }, [signedIn, production?.shareId])
+
+  const createTeamLink = async () => {
+    if (!production) return
+    setTeamBusy(true)
+    setTeamErr(null)
+    const res = await createProductionShare(production)
+    setTeamBusy(false)
+    if ('error' in res) {
+      setTeamErr(res.error)
+      return
+    }
+    // Mark the show shared locally so this device starts team-syncing it.
+    updateProduction(production.id, { shareId: res.shareId })
+    setTeamLink(joinUrl(res.token))
+  }
+
+  const copyTeam = () => {
+    if (!teamLink) return
+    navigator.clipboard?.writeText(teamLink).then(() => {
+      setTeamCopied(true)
+      setTimeout(() => setTeamCopied(false), 1400)
+    })
+  }
+
+  const emailTeam = () => {
+    if (!teamLink) return
+    const subject = `${production?.title ?? 'Production'} - join the StandBy book`
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
+      `You've been added to the stage-management book for ${production?.title ?? 'our show'}.\n\n` +
+        `1. Open this link on your device:\n${teamLink}\n\n` +
+        `2. Sign in once (email or Google) to your own StandBy account.\n\n` +
+        `The show then appears in your app, and everyone's edits sync automatically.`,
+    )}`
+  }
 
   const refresh = () => {
     if (signedIn) listShares().then(setShares).catch(() => {})
@@ -138,6 +188,32 @@ export function ShareModal({ onClose }: { onClose: () => void }) {
               </div>
             </>
           )}
+
+          <div className="divider" />
+          <div className="field-label" style={{ marginTop: 0 }}>👥 Co-run with your team</div>
+          <p className="small muted" style={{ marginTop: 0 }}>
+            Everyone you invite edits the <strong>same live show</strong> - co-SMs, ASMs, directors.
+            Each person opens the link, signs in once to their own account, and the show appears in
+            their StandBy. From then on every edit syncs automatically, no exports.
+          </p>
+          {teamLink ? (
+            <div className="card" style={{ padding: '12px 14px', borderColor: 'var(--go)' }}>
+              <div className="field-label" style={{ marginTop: 0 }}>Team link (this show is shared)</div>
+              <div className="small" style={{ wordBreak: 'break-all', fontFamily: 'var(--font-mono, monospace)', marginBottom: 10 }}>{teamLink}</div>
+              <div className="row wrap" style={{ gap: 8 }}>
+                <button className="btn btn-sm btn-primary" onClick={copyTeam}>{teamCopied ? '✓ Copied' : '⧉ Copy link'}</button>
+                <button className="btn btn-sm" onClick={emailTeam}>✉ Email link</button>
+              </div>
+              <p className="hint" style={{ marginTop: 10 }}>
+                Anyone with this link can view and edit the show. Share it only with your team.
+              </p>
+            </div>
+          ) : (
+            <button className="btn btn-primary" onClick={createTeamLink} disabled={teamBusy}>
+              {teamBusy ? 'Creating…' : '👥 Create team link'}
+            </button>
+          )}
+          {teamErr && <p className="hint" style={{ color: 'var(--danger)' }}>{teamErr}</p>}
         </>
       )}
 

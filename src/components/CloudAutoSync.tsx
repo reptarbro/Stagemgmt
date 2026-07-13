@@ -11,6 +11,7 @@ import {
   setSyncedSignature,
 } from '../lib/cloud/sync'
 import { mergeAppData } from '../lib/cloud/merge'
+import { reconcileSharedProduction } from '../lib/cloud/collab'
 import { setSyncStatus, getSyncStatus } from '../lib/cloud/status'
 import type { AppData } from '../lib/types'
 
@@ -39,7 +40,7 @@ function hasRealData(json: string): boolean {
  * case is left to the manual Push/Pull buttons. Manual controls always win.
  */
 export function CloudAutoSync() {
-  const { exportJSON, importJSON, data } = useStore()
+  const { exportJSON, importJSON, syncInProduction, data } = useStore()
   const [signedIn, setSignedIn] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const reconciledFor = useRef<string | null>(null)
@@ -50,8 +51,26 @@ export function CloudAutoSync() {
   // Always-fresh handles so event listeners never read a stale store snapshot.
   const exportRef = useRef(exportJSON)
   const importRef = useRef(importJSON)
+  const syncInRef = useRef(syncInProduction)
+  const dataRef = useRef(data)
   exportRef.current = exportJSON
   importRef.current = importJSON
+  syncInRef.current = syncInProduction
+  dataRef.current = data
+
+  // Reconcile every shared (team) production against its cloud row: pull a
+  // teammate's edits in, push ours up. Merge is convergent, so this can't
+  // clobber concurrent local work. No-op when the show isn't shared.
+  const reconcileShares = async () => {
+    const shared = (dataRef.current.productions ?? []).filter((p) => p.shareId)
+    for (const p of shared) {
+      try {
+        await reconcileSharedProduction(p, (merged) => syncInRef.current(merged))
+      } catch {
+        /* offline or transient; retried on next trigger */
+      }
+    }
+  }
 
   // Reconcile by MERGING, never by asking the user to choose. We union this
   // device's data with the cloud copy (adds from either side survive, newest
@@ -72,6 +91,7 @@ export function CloudAutoSync() {
         if (hasRealData(localJson)) await pushAll(localJson)
         setSyncedSignature(localSig)
         setSyncStatus('synced')
+        await reconcileShares()
         return
       }
 
@@ -93,6 +113,9 @@ export function CloudAutoSync() {
 
       setSyncedSignature(mergedSig)
       setSyncStatus('synced')
+
+      // Then reconcile any team-shared shows against their shared rows.
+      await reconcileShares()
     } catch {
       /* offline or transient; retried on next change / focus / poll / realtime */
     } finally {
@@ -217,6 +240,28 @@ export function CloudAutoSync() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'app_state', filter: `user_id=eq.${userId}` },
         () => void reconcile(),
+      )
+      .subscribe()
+    return () => {
+      void supa().removeChannel(channel)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
+
+  // Realtime for team shares: when any shared_productions row a teammate can see
+  // changes, reconcile the shared shows so their edit lands here in ~1s. RLS
+  // scopes the stream to rows this member belongs to. Best-effort; the poll and
+  // focus reconcile still converge if realtime is off. Requires the
+  // shared_productions table to be in the supabase_realtime publication
+  // (supabase/production_shares.sql).
+  useEffect(() => {
+    if (!CLOUD_ENABLED || !userId) return
+    const channel = supa()
+      .channel(`shared_productions:${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'shared_productions' },
+        () => void reconcileShares(),
       )
       .subscribe()
     return () => {

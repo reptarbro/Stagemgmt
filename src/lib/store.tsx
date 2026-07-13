@@ -20,6 +20,7 @@ import {
   assetKey,
 } from './storage'
 import { makeSampleProduction, makeCabaretSample } from './sample'
+import { mergeProduction } from './cloud/merge'
 import type {
   AppData,
   Asset,
@@ -46,6 +47,11 @@ interface StoreValue {
   updateProduction: (id: string, patch: Partial<Production>) => void
   deleteProduction: (id: string) => void
   setActiveProduction: (id: string) => void
+  /** Merge a whole production into the store (add if new, record-level merge if
+      it exists) WITHOUT restamping updatedAt - used by team sync so a teammate's
+      copy reconciles against the freshest local state and never clobbers a
+      concurrent local edit. */
+  syncInProduction: (incoming: Production, opts?: { activate?: boolean }) => void
   // People
   addPerson: (p: Omit<Person, 'id'>) => void
   updatePerson: (id: string, patch: Partial<Person>) => void
@@ -203,6 +209,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       setActiveProduction: (id) =>
         setData((d) => ({ ...d, activeProductionId: id })),
+
+      syncInProduction: (incoming, opts) =>
+        setData((d) => {
+          const exists = d.productions.some((p) => p.id === incoming.id)
+          const productions = exists
+            ? d.productions.map((p) => (p.id === incoming.id ? mergeProduction(p, incoming) : p))
+            : [...d.productions, incoming]
+          return {
+            ...d,
+            productions,
+            activeProductionId: opts?.activate ? incoming.id : d.activeProductionId,
+          }
+        }),
 
       addPerson: (p) =>
         patchActive((prod) => ({

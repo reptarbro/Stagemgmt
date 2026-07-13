@@ -325,6 +325,10 @@ export interface Production {
   modules?: Partial<Record<string, boolean>>
   /** True for the built-in demo show, so it can be shown as a removable preview. */
   isSample?: boolean
+  /** When set, this show is a shared team book: besides the owner's normal cloud
+      sync, it also reconciles against the shared_productions row with this id, so
+      every teammate who joined the link reads and writes the same copy. */
+  shareId?: string
   createdAt: string
   /** ISO time of the last edit to the production's own fields (title, dates,
       notes…). Record edits carry their own updatedAt. Drives auto-merge. */

@@ -82,12 +82,17 @@ understudy/swing track sheets · integrations with existing tools.
 - [x] `[no-backend]` **Schedule: picking a scene pre-calls its characters** - selecting
   a scene in the event form auto-selects the cast in that scene's breakdown (additive,
   deselect anyone not needed). Skipped when "All cast" is on.
-- [ ] `[needs-backend]` **SM-to-SM handoff / co-editing a production.** View-only links
-  (Share) and full backup export/import already cover "send it to the cast" and "move
-  my show to another device / hand a full copy to a colleague." Still missing: two SMs
-  editing the *same* live production with sync (shared account or per-show collaborator
-  access + merge). Backup import is currently a fork, not a shared book. Ties into
-  backlog #11 (accounts + team sync).
+- [x] `[needs-backend]` **Team co-editing one production (shared book).** Shipped:
+  an owner hits Share -> "Create team link"; each teammate (co-SM, ASM, directors)
+  opens the link, signs in once to their own account, and the show lands in their
+  StandBy. All members then read/write the same cloud copy via a new
+  `shared_productions` row; the existing record-level merge reconciles concurrent
+  edits (realtime ~1s + poll). No exports to juggle. **Owner must run
+  `supabase/production_shares.sql` once.** v1 limitation: large binaries (script
+  PDF, headshots, sign-in photos) are not shared yet - the show data (schedule,
+  people, scenes, props, reports, cues, line notes) all sync.
+- [ ] `[needs-backend]` **Team share v2:** share binaries (script/headshots/sign-in
+  photos) to members; a members list with roles + remove; leave-a-show control.
 
 ### Done
 - [x] **Base-site revision round (from 21 annotated screenshots):** Title Case app-wide ·

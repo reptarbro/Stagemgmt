@@ -94,7 +94,7 @@ function mergeArray<T>(
 }
 
 /** Merge two copies of the same production. */
-function mergeProduction(a: Production, b: Production): Production {
+export function mergeProduction(a: Production, b: Production): Production {
   const deleted = mergeDeleted(a.deleted, b.deleted)
   // Own fields (title, dates, notes, script) come from whichever copy's own
   // edit is newer (production.updatedAt), tiebroken deterministically.
@@ -113,6 +113,9 @@ function mergeProduction(a: Production, b: Production): Production {
     notes: s.notes,
     script: s.script,
     isSample: a.isSample ?? b.isSample,
+    shareId: a.shareId ?? b.shareId,
+    kind: s.kind,
+    modules: s.modules,
     createdAt: minStr(a.createdAt, b.createdAt) ?? a.createdAt ?? b.createdAt,
     updatedAt: maxStr(a.updatedAt, b.updatedAt),
     people: mergeArray(a.people, b.people, id, deleted),

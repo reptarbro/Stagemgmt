@@ -51,6 +51,7 @@ const Settings = lazyRoute(() => import('../modules/Settings'), 'Settings')
 const PrivacyPolicy = lazyRoute(() => import('../modules/Legal'), 'PrivacyPolicy')
 const Terms = lazyRoute(() => import('../modules/Legal'), 'Terms')
 const SharedView = lazyRoute(() => import('../modules/SharedView'), 'SharedView')
+const JoinShare = lazyRoute(() => import('../modules/JoinShare'), 'JoinShare')
 
 /** Small, unobtrusive fallback while a lazily-loaded page chunk arrives. */
 function PageLoading() {
@@ -134,6 +135,7 @@ export function App() {
         <Route path="/terms" element={<Terms />} />
         {/* Chromeless, read-only shared view - opened from a share link, no login. */}
         <Route path="/view/:token" element={<SharedView />} />
+        <Route path="/join/:token" element={<JoinShare />} />
         {/* App pages share the sidebar shell. */}
         <Route element={<Shell />}>
           <Route path="/hub" element={<Hub />} />
