@@ -1,14 +1,15 @@
 import { lazy, Suspense, useState } from 'react'
-import { NavLink, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
+import { NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { getLastBackup, markBackedUp } from '../lib/storage'
 import { daysToOpening, cueToCueActive, CUE_WINDOW_DAYS } from '../lib/dates'
 import { moduleVisible, moduleLabel } from '../lib/productionKind'
+import { NAV, TAB_COLOR } from '../lib/nav'
 import { ScrollToTop } from './ui'
 import { CloudAutoSync } from './CloudAutoSync'
 import { useSignedIn } from '../lib/cloud/auth'
 import { StandbyMark, APP_NAME, APP_TAGLINE } from './Brand'
-import { NavIcon, type IconName } from './icons'
+import { NavIcon } from './icons'
 import { Welcome } from '../modules/Welcome'
 // Route modules are lazy-loaded so the initial bundle is just the shell + the
 // landing page; each module (and heavy deps like the PDF/print path) loads on
@@ -35,34 +36,6 @@ function PageLoading() {
       Loading…
     </div>
   )
-}
-
-const NAV: { to: string; icon: IconName; label: string }[] = [
-  { to: '/hub', icon: 'hub', label: 'Production Hub' },
-  { to: '/people', icon: 'people', label: 'People' },
-  { to: '/schedule', icon: 'schedule', label: 'Schedule' },
-  { to: '/scenes', icon: 'scenes', label: 'Scenes' },
-  { to: '/props', icon: 'props', label: 'Props & Costumes' },
-  { to: '/line-notes', icon: 'notes', label: 'Line Notes' },
-  { to: '/script', icon: 'script', label: 'Script' },
-  { to: '/assets', icon: 'assets', label: 'Assets' },
-  { to: '/reports', icon: 'reports', label: 'Reports' },
-  { to: '/settings', icon: 'settings', label: 'Settings' },
-]
-
-/** Gel color for each index tab's spine — a color-coded binder edge. */
-const TAB_COLOR: Record<string, string> = {
-  '/hub': 'var(--gel-spot)',
-  '/people': 'var(--go)',
-  '/schedule': 'var(--standby)',
-  '/scenes': 'var(--gel-sound)',
-  '/props': 'var(--gel-projection)',
-  '/line-notes': 'var(--gel-fly)',
-  '/script': 'var(--gel-spot)',
-  '/assets': 'var(--gel-deck)',
-  '/cues': 'var(--gel-light)',
-  '/reports': 'var(--info)',
-  '/settings': 'var(--text-dim)',
 }
 
 export function App() {
@@ -104,6 +77,8 @@ export function App() {
 function Shell() {
   const { production, data, setActiveProduction } = useStore()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const onHub = pathname === '/hub'
   const [menuOpen, setMenuOpen] = useState(false)
   const [switcher, setSwitcher] = useState(false)
 
@@ -119,14 +94,11 @@ function Shell() {
 
   // The visible nav — and a couple of labels — depend on the show's kind.
   const kind = production.kind
-  const baseNav: { to: string; icon: IconName; label: string; hint?: string }[] = [
-    ...NAV.slice(0, 8), // Hub … Assets
-    { to: '/cues', icon: 'cues', label: 'Cue-to-Cue', hint: cueHint },
-    ...NAV.slice(8), // Reports, Settings
-  ]
-  const nav = baseNav
-    .filter((n) => moduleVisible(production, n.to))
-    .map((n) => ({ ...n, label: moduleLabel(kind, n.to) }))
+  const nav = NAV.filter((n) => moduleVisible(production, n.to)).map((n) => ({
+    ...n,
+    label: moduleLabel(kind, n.to),
+    hint: n.to === '/cues' ? cueHint : undefined,
+  }))
 
   // Cue-light status for the calling-desk strip: STANDBY (amber) counting down
   // to opening, flipping to GO (green) once tech is live / the show has opened.
@@ -141,8 +113,11 @@ function Shell() {
           : { cls: 'go', txt: 'OPEN · GO' }
 
   return (
-    <div className="app">
+    <div className={`app ${onHub ? 'app-hub' : ''}`}>
       <div className={`scrim ${menuOpen ? 'open' : ''}`} onClick={close} />
+      {/* The Hub is the binder's cover — no rail there; its own folder-tile grid
+          is the launcher. Every other page shows the rail. */}
+      {!onHub && (
       <aside className={`deck-rail ${menuOpen ? 'open' : ''}`}>
         <NavLink to="/" className="brand" onClick={close} style={{ textDecoration: 'none', color: 'inherit' }}>
           <span className="brand-mark" style={{ display: 'flex' }}>
@@ -216,12 +191,20 @@ function Shell() {
           Saved on this device.
         </div>
       </aside>
+      )}
 
       <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div className="deck-head">
-          <button className="icon-btn deck-menu" onClick={() => setMenuOpen((o) => !o)} aria-label="Menu">
-            ☰
-          </button>
+          {onHub ? (
+            <NavLink to="/" className="deck-brand" aria-label="Home">
+              <StandbyMark size={22} />
+              <span className="deck-brand-name">{APP_NAME}</span>
+            </NavLink>
+          ) : (
+            <button className="icon-btn deck-menu" onClick={() => setMenuOpen((o) => !o)} aria-label="Menu">
+              ☰
+            </button>
+          )}
           <div className="deck-title">
             Calling&nbsp;<b>{production.title}</b>
           </div>

@@ -4,6 +4,9 @@ import { useStore } from '../lib/store'
 import { PageHead, Modal } from '../components/ui'
 import { formatDate, formatTime, daysUntil, todayISO } from '../lib/format'
 import { cueToCueActive } from '../lib/dates'
+import { moduleVisible, moduleLabel } from '../lib/productionKind'
+import { NAV, TAB_COLOR } from '../lib/nav'
+import { NavIcon } from '../components/icons'
 import type { Production } from '../lib/types'
 
 export function Hub() {
@@ -78,7 +81,7 @@ export function Hub() {
         </button>
       </div>
 
-      <div className="grid grid-2 mt" style={{ alignItems: 'start' }}>
+      <div className="grid grid-2 mt hub-cols">
         <div className="card">
           <div className="row-between mb">
             <div className="card-title" style={{ margin: 0 }}>
@@ -132,6 +135,33 @@ export function Hub() {
           )}
         </div>
       </div>
+
+      {/* Separator bar, then the binder's folder tabs — the Hub's launcher,
+          standing in for the rail that's hidden on this page. */}
+      <div className="hub-sep">
+        <span>Open a section</span>
+      </div>
+      <nav className="hub-tiles">
+        {NAV.filter((n) => n.to !== '/hub' && moduleVisible(production, n.to)).map((n) => (
+          <button
+            key={n.to}
+            className="hub-tile"
+            style={{ ['--tab' as string]: TAB_COLOR[n.to] ?? 'var(--accent-strong)' } as React.CSSProperties}
+            onClick={() => navigate(n.to)}
+          >
+            <span className="hub-tile-label">{moduleLabel(production.kind, n.to)}</span>
+            <span className="hub-tile-icon">
+              <NavIcon name={n.icon} />
+            </span>
+          </button>
+        ))}
+        <button className="hub-tile hub-tile-switch" onClick={() => navigate('/')}>
+          <span className="hub-tile-label">New / Switch</span>
+          <span className="hub-tile-icon" aria-hidden>
+            ⇄
+          </span>
+        </button>
+      </nav>
 
       {quick === 'cast' && (
         <Modal title="Cast & Crew" onClose={() => setQuick(null)}>

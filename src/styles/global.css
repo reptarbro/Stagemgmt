@@ -192,20 +192,25 @@ p {
 }
 
 /* One index tab. --tab is its gel spine color, set per-module in the shell. */
+.rail-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
 .tab {
   --tab: var(--accent-strong);
   position: relative;
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 9px 12px 9px 15px;
+  gap: 13px;
+  padding: 12px 12px 12px 16px;
   margin-left: 10px;
   border: 1px solid transparent;
   border-right: none;
   border-radius: 9px 0 0 9px;
   color: var(--text-dim);
   font-family: var(--font-mono);
-  font-size: 0.76rem;
+  font-size: 0.85rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
@@ -453,6 +458,117 @@ p {
   color: var(--go);
   border-color: rgba(62, 203, 134, 0.45);
   background: rgba(62, 203, 134, 0.1);
+}
+/* Brand shown in the desk strip on the Hub (which has no rail). */
+.deck-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  color: inherit;
+}
+.deck-brand-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+/* ---------- Hub folder-tile launcher ----------
+   On the Hub, the sections aren't a rail — they're the tabs of the open binder,
+   a grid of color-coded folder tiles standing where the rail would be. */
+.hub-cols {
+  align-items: stretch; /* Next Up & Key Dates line up to equal height */
+}
+.hub-sep {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 34px 0 20px;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.hub-sep::before,
+.hub-sep::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
+}
+.hub-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  gap: 14px;
+}
+.hub-tile {
+  --tab: var(--accent-strong);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 128px;
+  padding: 17px 15px 14px;
+  border: 1px solid var(--border);
+  border-radius: 3px 10px 10px 10px;
+  background: linear-gradient(176deg, var(--bg-elev-2), var(--bg-elev) 64%);
+  box-shadow: inset 0 1px 0 rgba(231, 225, 208, 0.05), 0 14px 32px -22px rgba(0, 0, 0, 0.9);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+/* The folder tab protruding from the top-left corner. */
+.hub-tile::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 13px;
+  width: 40px;
+  height: 8px;
+  background: var(--tab);
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 0 10px -2px var(--tab);
+}
+.hub-tile:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--tab) 60%, var(--border));
+  box-shadow:
+    inset 0 1px 0 rgba(231, 225, 208, 0.06),
+    0 18px 34px -18px rgba(0, 0, 0, 0.95),
+    0 0 0 1px color-mix(in srgb, var(--tab) 28%, transparent);
+}
+.hub-tile-label {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  margin-top: 4px;
+}
+.hub-tile-icon {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  color: var(--tab);
+  font-size: 1.7rem;
+  opacity: 0.92;
+}
+.hub-tile-icon svg {
+  width: 30px;
+  height: 30px;
+}
+.hub-tile-switch {
+  --tab: var(--text-dim);
+  border-style: dashed;
 }
 
 /* ---------- Page header ---------- */
