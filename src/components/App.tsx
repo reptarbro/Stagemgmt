@@ -195,16 +195,16 @@ function Shell() {
 
       <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div className="deck-head">
-          {onHub ? (
-            <NavLink to="/" className="deck-brand" aria-label="Home">
-              <StandbyMark size={22} />
-              <span className="deck-brand-name">{APP_NAME}</span>
-            </NavLink>
-          ) : (
+          {!onHub && (
             <button className="icon-btn deck-menu" onClick={() => setMenuOpen((o) => !o)} aria-label="Menu">
               ☰
             </button>
           )}
+          <NavLink to="/" className="deck-brand" aria-label="Home">
+            <StandbyMark size={22} />
+            <span className="deck-brand-name">{APP_NAME}</span>
+          </NavLink>
+          <span className="deck-div">/</span>
           <div className="deck-title">
             Calling&nbsp;<b>{production.title}</b>
           </div>

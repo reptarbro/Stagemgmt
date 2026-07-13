@@ -407,7 +407,10 @@ p {
   top: 0;
   z-index: 40;
 }
-.deck-menu {
+/* Higher specificity than .icon-btn (which sets display:inline-flex later in
+   the file) so the menu button stays hidden on desktop, where the rail is
+   always visible. It returns only on mobile (media query below). */
+.deck-head .deck-menu {
   display: none;
 }
 .deck-title {
@@ -475,6 +478,17 @@ p {
   font-size: 0.9rem;
   color: var(--text);
 }
+/* Divider between the brand lockup and the "CALLING <show>" title. */
+.deck-div {
+  color: var(--border);
+  flex: none;
+}
+@media (max-width: 560px) {
+  /* On phones the brand wordmark crowds the show title — keep just the mark. */
+  .deck-brand-name {
+    display: none;
+  }
+}
 
 /* ---------- Hub folder-tile launcher ----------
    On the Hub, the sections aren't a rail — they're the tabs of the open binder,
@@ -500,13 +514,17 @@ p {
   flex: 1;
   background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
 }
+/* Centered wrap so a short last row sits balanced in the middle, not ragged
+   against the left with dead space on the right. */
 .hub-tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 14px;
 }
 .hub-tile {
   --tab: var(--accent-strong);
+  flex: 0 0 172px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1487,7 +1505,7 @@ tbody tr:hover {
     width: 264px;
     box-shadow: var(--shadow);
   }
-  .deck-menu {
+  .deck-head .deck-menu {
     display: inline-flex;
   }
   .main {
@@ -1498,6 +1516,9 @@ tbody tr:hover {
   }
   .main-inner::after {
     display: none;
+  }
+  .hub-tile {
+    flex-basis: calc(50% - 7px);
   }
   .form-row,
   .form-row-3 {
