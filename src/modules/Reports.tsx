@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useStore } from '../lib/store'
 import { PageHead, Modal, EmptyState, ConfirmButton, ReqStar } from '../components/ui'
 import { PrintSheet } from '../components/PrintSheet'
-import { formatDate, todayISO } from '../lib/format'
+import { formatDate, formatTime, todayISO } from '../lib/format'
 import { newId } from '../lib/storage'
 import { reportToText } from '../lib/exporters'
 import { downloadReportPDF, reportSubject } from '../lib/reportPdf'
@@ -137,6 +137,73 @@ function ReportEditor({
   const setField = <K extends keyof EditorState>(k: K, v: EditorState[K]) =>
     setF((s) => ({ ...s, [k]: v }))
 
+  // Auto-fill the report from the linked event: scenes worked, running time,
+  // attendance exceptions, and the next call — so the SM isn't retyping what
+  // the schedule already knows. Non-destructive: fills empty fields, appends
+  // (deduped) to ones that already have text.
+  const fillFromEvent = () => {
+    const ev = production?.events.find((e) => e.id === f.eventId)
+    if (!ev || !production) return
+    const sceneLabel = (id: string) => {
+      const s = production.scenes.find((x) => x.id === id)
+      return s ? `${s.number}${s.title ? ` ${s.title}` : ''}` : null
+    }
+    const scenes = (ev.sceneIds ?? []).map(sceneLabel).filter(Boolean).join(', ')
+    const timing = [
+      ev.callTime ? `Call ${formatTime(ev.callTime)}` : '',
+      ev.startTime ? `Ran ${formatTime(ev.startTime)}${ev.endTime ? `–${formatTime(ev.endTime)}` : ''}` : '',
+      ev.location || '',
+    ]
+      .filter(Boolean)
+      .join(' · ')
+    const worked = [scenes ? `Worked: ${scenes}` : '', timing].filter(Boolean).join('\n')
+
+    const att = production.attendance.find((a) => a.eventId === ev.id)
+    const flags = att
+      ? Object.entries(att.records)
+          .filter(([, r]) => r.status !== 'present' && r.status !== 'unmarked')
+          .map(([pid, r]) => {
+            const p = production.people.find((x) => x.id === pid)
+            return p ? `${p.name} — ${r.status}${r.note ? ` (${r.note})` : ''}` : null
+          })
+          .filter((t): t is string => !!t)
+      : []
+
+    const next = [...production.events]
+      .filter((e) => e.id !== ev.id && (e.date > ev.date || (e.date === ev.date && (e.callTime ?? '') > (ev.callTime ?? ''))))
+      .sort((a, b) => a.date.localeCompare(b.date) || (a.callTime ?? '').localeCompare(b.callTime ?? ''))[0]
+    const nextText = next
+      ? `Next: ${next.title || next.type} — ${formatDate(next.date)}${next.callTime ? ` · Call ${formatTime(next.callTime)}` : ''}${next.location ? ` · ${next.location}` : ''}`
+      : ''
+
+    const mergeText = (existing: string | undefined, add: string) => {
+      const cur = existing ?? ''
+      return !add ? cur : !cur ? add : cur.includes(add) ? cur : `${cur}\n${add}`
+    }
+
+    setF((s) => {
+      let sections = s.sections
+      if (flags.length) {
+        const idx = sections.findIndex((sec) => /stage manage|attendance/i.test(sec.title))
+        const fresh = flags
+          .filter((t) => !(idx >= 0 && sections[idx].notes.some((n) => n.text === t)))
+          .map((t) => ({ id: newId(), text: t }))
+        if (fresh.length) {
+          sections =
+            idx >= 0
+              ? sections.map((sec, i) => (i === idx ? { ...sec, notes: [...sec.notes, ...fresh] } : sec))
+              : [...sections, { id: newId(), title: 'Attendance', notes: fresh }]
+        }
+      }
+      return {
+        ...s,
+        workedOn: mergeText(s.workedOn, worked),
+        scheduleNote: mergeText(s.scheduleNote, nextText),
+        sections,
+      }
+    })
+  }
+
   const setSection = (id: string, patch: Partial<ReportSection>) =>
     setF((s) => ({
       ...s,
@@ -197,20 +264,33 @@ function ReportEditor({
       </div>
 
       {eventsOnDate.length > 0 && (
-        <label className="field">
+        <div className="field">
           <span className="field-label">Link to event (optional)</span>
-          <select
-            value={f.eventId ?? ''}
-            onChange={(e) => setField('eventId', e.target.value || undefined)}
-          >
-            <option value="">— none —</option>
-            {eventsOnDate.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.title || e.type}
-              </option>
-            ))}
-          </select>
-        </label>
+          <div className="row" style={{ gap: 8, alignItems: 'stretch' }}>
+            <select
+              style={{ flex: 1 }}
+              value={f.eventId ?? ''}
+              onChange={(e) => setField('eventId', e.target.value || undefined)}
+            >
+              <option value="">— none —</option>
+              {eventsOnDate.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.title || e.type}
+                </option>
+              ))}
+            </select>
+            {f.eventId && (
+              <button type="button" className="btn" style={{ flex: 'none' }} onClick={fillFromEvent}>
+                ⤵ Fill from event
+              </button>
+            )}
+          </div>
+          {f.eventId && (
+            <span className="hint" style={{ marginTop: 4, display: 'block' }}>
+              Pulls scenes worked, running time, attendance exceptions &amp; the next call into this report.
+            </span>
+          )}
+        </div>
       )}
 
       <label className="field">
