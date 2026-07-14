@@ -226,6 +226,55 @@ export function SortTh<K extends string>({
   )
 }
 
+/** A card whose dash-tick section header toggles its body open or closed.
+    Remembers its state per device (keyed by `id`, falling back to the title).
+    Drop-in for `<div className="card"><div className="card-title">…</div>…</div>`. */
+export function CollapsibleCard({
+  title,
+  children,
+  id,
+  defaultOpen = true,
+}: {
+  title: string
+  children: ReactNode
+  /** Stable key for the saved open/closed state. Defaults to the title. */
+  id?: string
+  defaultOpen?: boolean
+}) {
+  const storeKey = `standby.collapse.${id ?? title}`
+  const [open, setOpen] = useState<boolean>(() => {
+    const saved = localStorage.getItem(storeKey)
+    return saved === null ? defaultOpen : saved === '1'
+  })
+  const bodyId = `sect-${(id ?? title).replace(/\W+/g, '-')}`
+  const toggle = () =>
+    setOpen((o) => {
+      const next = !o
+      localStorage.setItem(storeKey, next ? '1' : '0')
+      return next
+    })
+
+  return (
+    <div className="card">
+      <button
+        type="button"
+        className={`collapse-toggle ${open ? 'open' : ''}`}
+        aria-expanded={open}
+        aria-controls={bodyId}
+        onClick={toggle}
+      >
+        <span className="collapse-label">{title}</span>
+        <span className="collapse-chevron" aria-hidden>▸</span>
+      </button>
+      {open && (
+        <div id={bodyId} className="collapse-body">
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function PageHead({
   title,
   subtitle,

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useStore } from '../lib/store'
 import { PRODUCTION_KINDS, KIND_PROFILES, moduleVisible, moduleLabel } from '../lib/productionKind'
 import type { ProductionKind } from '../lib/types'
-import { PageHead, ConfirmButton } from '../components/ui'
+import { PageHead, ConfirmButton, CollapsibleCard } from '../components/ui'
 import { markBackedUp } from '../lib/storage'
 import { slug } from '../lib/exporters'
 import { buildBundleString, applyBackupText } from '../lib/backup'
@@ -116,20 +116,18 @@ export function Settings() {
       )}
 
       {/* Storage overview - across every production. */}
-      <div className="card">
-        <div className="card-title">Storage</div>
+      <CollapsibleCard title="Storage">
         <div className="grid grid-4">
           <Stat value={realProductions.length} label="Productions" />
           <Stat value={totalPeople} label="People (all shows)" />
           <Stat value={totalEvents} label="Events (all shows)" />
           <Stat value={production?.title ?? '-'} label="Current" small />
         </div>
-      </div>
+      </CollapsibleCard>
 
       {/* Per-show type & module visibility. */}
       {production && (
-        <div className="card">
-          <div className="card-title">Show type &amp; modules</div>
+        <CollapsibleCard title="Show type & modules" id="show-type-modules">
           <p className="small muted">
             The type sets the vocabulary and which modules appear for{' '}
             <strong>{production.title}</strong>. Adjust its type, or turn individual modules on and
@@ -168,12 +166,11 @@ export function Settings() {
               </label>
             ))}
           </div>
-        </div>
+        </CollapsibleCard>
       )}
 
       {production && CLOUD_ENABLED && (
-        <div className="card">
-          <div className="card-title">Share &amp; team access</div>
+        <CollapsibleCard title="Share & team access" id="share-team">
           <p className="small muted">
             <strong>Co-run with your team:</strong> invite co-SMs, ASMs, and directors to edit this
             same show live - each signs in once and every change syncs automatically.
@@ -184,11 +181,10 @@ export function Settings() {
           <div className="row wrap" style={{ gap: 10 }}>
             <button className="btn btn-primary" onClick={() => setShowShare(true)}>👥 Share / invite team</button>
           </div>
-        </div>
+        </CollapsibleCard>
       )}
 
-      <div className="card">
-        <div className="card-title">Demo</div>
+      <CollapsibleCard title="Demo">
         <p className="small muted">
           Preview a fully-populated sample show - cast &amp; crew, schedule, scenes, props, line notes,
           cues, and a filed report - to see how everything fits together. It's clearly marked as a sample
@@ -233,10 +229,9 @@ export function Settings() {
             </ConfirmButton>
           )}
         </div>
-      </div>
+      </CollapsibleCard>
 
-      <div className="card">
-        <div className="card-title">Backup &amp; move to another device</div>
+      <CollapsibleCard title="Backup & move to another device" id="backup-move">
         <p className="small muted">
           Your data lives only in this browser. Export a <strong>complete backup</strong> - every
           production plus your uploaded script and sign-in photos, all in one file - then import it on
@@ -262,12 +257,11 @@ export function Settings() {
           Import <strong>replaces</strong> everything currently in this browser - so export here first if
           this device has changes you want to keep.
         </p>
-      </div>
+      </CollapsibleCard>
 
       {CLOUD_ENABLED && <CloudSync />}
 
-      <div className="card">
-        <div className="card-title">Help &amp; feedback</div>
+      <CollapsibleCard title="Help & feedback" id="help-feedback">
         <p className="small muted">
           Using the app on a show? Send a quick note - what worked, what didn't, and what you wish it
           did. It goes straight to us in the app; no email needed.
@@ -290,7 +284,7 @@ export function Settings() {
             {CLOUD_ENABLED ? 'or email instead' : '✉ Send feedback by email'}
           </button>
         </div>
-      </div>
+      </CollapsibleCard>
 
       {production && (
         <div className="card" style={{ borderColor: 'rgba(229,101,79,.35)' }}>
