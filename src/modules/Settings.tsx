@@ -148,11 +148,9 @@ export function Settings() {
             <span className="hint" style={{ marginTop: 4 }}>{KIND_PROFILES[production.kind ?? 'play'].blurb}</span>
           </label>
           <div className="field-label" style={{ marginTop: 14 }}>Modules shown for this show</div>
-          <div
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8, marginTop: 6 }}
-          >
+          <div className="module-grid">
             {moduleToggles.map((m) => (
-              <label key={m.to} className="row" style={{ gap: 8, alignItems: 'center', cursor: 'pointer' }}>
+              <label key={m.to} className="module-toggle">
                 <input
                   type="checkbox"
                   checked={moduleVisible(production, m.to)}

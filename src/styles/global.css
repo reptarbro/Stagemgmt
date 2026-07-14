@@ -787,6 +787,33 @@ p {
   margin-bottom: 0;
 }
 
+/* Module on/off toggles - each a bound row (box + label can't drift apart),
+   in a responsive grid that caps its width so it doesn't sprawl on desktop. */
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+  max-width: 560px;
+}
+.module-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-elev-2, rgba(255, 255, 255, 0.02));
+  cursor: pointer;
+}
+.module-toggle:hover {
+  border-color: var(--accent-strong);
+}
+.module-toggle span {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .grid {
   display: grid;
   gap: 16px;
@@ -1190,9 +1217,13 @@ textarea {
    instead of stretching across the row and shoving the label to the far edge. */
 input[type='checkbox'],
 input[type='radio'] {
-  width: auto;
-  min-width: 0;
-  min-height: 0;
+  /* Explicit box size so no engine (notably iOS Safari, which stretches a
+     width:auto checkbox to fill a flex row and flings the label to the far
+     edge) can resize it. flex:none keeps it from growing or shrinking. */
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
   flex: none;
   margin: 0;
   padding: 0;

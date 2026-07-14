@@ -109,7 +109,10 @@ begin
   if auth.uid() is null then
     raise exception 'must be signed in';
   end if;
-  v_token := encode(gen_random_bytes(12), 'hex');
+  -- 128-bit unguessable token. gen_random_uuid() is a pg_catalog builtin (no
+  -- pgcrypto extension needed, unlike gen_random_bytes), so it resolves under
+  -- the function's search_path = public.
+  v_token := replace(gen_random_uuid()::text, '-', '');
   insert into public.shared_productions(production_id, owner_id, join_token, title, payload)
   values (p_production_id, auth.uid(), v_token, p_title, p_payload)
   returning public.shared_productions.share_id into v_share;
