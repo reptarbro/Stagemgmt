@@ -173,13 +173,17 @@ export function Settings() {
 
       {production && CLOUD_ENABLED && (
         <div className="card">
-          <div className="card-title">Share with your cast</div>
+          <div className="card-title">Share &amp; team access</div>
           <p className="small muted">
-            Create a read-only link anyone can open - no login needed. You choose whether to include
-            the schedule and the company list; line notes, reports, and private contact details are
-            never shared. Revoke anytime.
+            <strong>Co-run with your team:</strong> invite co-SMs, ASMs, and directors to edit this
+            same show live - each signs in once and every change syncs automatically.
+            <br />
+            <strong>Or share view-only:</strong> a read-only link anyone can open with no login
+            (line notes, reports, and private contact details are never shared).
           </p>
-          <button className="btn" onClick={() => setShowShare(true)}>🔗 Share view-only link</button>
+          <div className="row wrap" style={{ gap: 10 }}>
+            <button className="btn btn-primary" onClick={() => setShowShare(true)}>👥 Share / invite team</button>
+          </div>
         </div>
       )}
 
