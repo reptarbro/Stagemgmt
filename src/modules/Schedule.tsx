@@ -422,13 +422,13 @@ function sceneLabels(ids: string[] | undefined, scenes: Scene[]): string {
 
 // Event-type accents, kept within the brand family for a uniform calendar.
 const TYPE_COLOR: Record<EventType, string> = {
-  Rehearsal: '#9fb8a6', // sage
-  'Dress Rehearsal': '#6cc3c0', // teal
-  Performance: '#2fae6b', // emerald
-  Tech: '#d9a441', // amber
-  Meeting: '#b6c98a', // olive
-  Fitting: '#cdbf9a', // sand
-  Other: '#7f8d82', // muted
+  Rehearsal: '#5fbf8f', // green
+  'Dress Rehearsal': '#33bdb8', // teal
+  Performance: '#22b56b', // emerald
+  Tech: '#eaa62f', // amber
+  Meeting: '#a3c95f', // olive
+  Fitting: '#d3b877', // sand
+  Other: '#8fa091', // muted
 }
 
 const MONTHS = [
@@ -521,18 +521,30 @@ function CalendarView({
           return (
             <div key={i} className={`cal-cell ${iso === today ? 'cal-today' : ''}`}>
               <div className="cal-date">{day}</div>
-              {dayEvents.map((e) => (
-                <button
-                  key={e.id}
-                  className="cal-chip"
-                  style={{ borderLeftColor: TYPE_COLOR[e.type], background: `${TYPE_COLOR[e.type]}22` }}
-                  onClick={() => onSelect(e)}
-                  title={`${e.type} · ${e.title || ''}${e.callTime ? ' · Call ' + formatTime(e.callTime) : ''}`}
-                >
-                  {e.callTime && <span style={{ fontWeight: 700 }}>{formatTime(e.callTime).replace(':00', '')} </span>}
-                  <span className="tcase">{e.title || e.type}</span>
-                </button>
-              ))}
+              {dayEvents.map((e) => {
+                const start = e.callTime || e.startTime
+                const windowText = e.startTime
+                  ? `${formatTime(e.startTime)}${e.endTime ? `-${formatTime(e.endTime)}` : ''}`
+                  : ''
+                const sub = [windowText, e.location].filter(Boolean).join(' · ')
+                return (
+                  <button
+                    key={e.id}
+                    className="cal-chip"
+                    style={{ borderLeftColor: TYPE_COLOR[e.type], background: `${TYPE_COLOR[e.type]}2b` }}
+                    onClick={() => onSelect(e)}
+                    title={`${e.type} · ${e.title || ''}${e.callTime ? ' · Call ' + formatTime(e.callTime) : ''}${e.location ? ' · ' + e.location : ''}`}
+                  >
+                    <span className="cal-chip-main">
+                      {start && (
+                        <span className="cal-chip-time">{formatTime(start).replace(':00', '')}</span>
+                      )}
+                      <span className="tcase">{e.title || e.type}</span>
+                    </span>
+                    {sub && <span className="cal-chip-sub">{sub}</span>}
+                  </button>
+                )
+              })}
             </div>
           )
         })}

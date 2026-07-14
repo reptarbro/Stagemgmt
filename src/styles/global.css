@@ -11,9 +11,9 @@
   --text: #f1ece0; /* warm ivory */
   --text-dim: #a8a18e; /* warm grey */
   --text-faint: #6f6a5b;
-  --accent: #57b98a; /* muted green - the pervasive, calm accent */
-  --accent-strong: #3ecb86; /* GO green - primary actions & key highlights */
-  --accent-deep: #2a9a63; /* deep green - gradient partner / pressed */
+  --accent: #45c48d; /* green - the pervasive accent (deepened for sRGB punch) */
+  --accent-strong: #34d488; /* GO green - primary actions & key highlights */
+  --accent-deep: #1f9a5e; /* deep green - gradient partner / pressed */
   --accent-ink: #08160e; /* dark ink for text on green */
   --warn: #e6ab4c; /* amber - standby light / attention */
   --danger: #d9705b;
@@ -22,13 +22,14 @@
   --bone: #e7e1d0; /* marquee rule / structural ink, used sparingly */
   --standby: #e6ab4c; /* cue light: standby (amber) */
   --go: #3ecb86; /* cue light: GO (green) */
-  /* Department "gel" swatches - a real color system, deliberately muted. */
-  --gel-light: #d9a24a;
-  --gel-sound: #57a99b;
-  --gel-fly: #9a8ac9;
-  --gel-spot: #ded4bf;
-  --gel-deck: #66ab80;
-  --gel-projection: #cf7d6a;
+  /* Department "gel" swatches - a real color system, deepened so they read
+     rich on sRGB desktop displays (not just on wide-gamut iPads). */
+  --gel-light: #ebaa2f;
+  --gel-sound: #33b7a6;
+  --gel-fly: #8f74e0;
+  --gel-spot: #e2d8c2;
+  --gel-deck: #40b87d;
+  --gel-projection: #e5715a;
   /* Binder rail sits DARKER than the page, so the content reads as an open
      prompt-book page pulled forward from the closed edge of the book. */
   --rail: #080706;
@@ -1934,7 +1935,7 @@ tbody tr:hover {
   padding: 4px 0;
 }
 .cal-cell {
-  min-height: 92px;
+  min-height: 108px;
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -1958,28 +1959,48 @@ tbody tr:hover {
   font-weight: 600;
 }
 .cal-chip {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   width: 100%;
   text-align: left;
   font-size: 0.68rem;
-  line-height: 1.25;
-  padding: 2px 5px;
+  line-height: 1.22;
+  padding: 3px 6px;
   border: none;
   border-left: 3px solid var(--accent);
   background: var(--bg-elev-2);
   color: var(--text);
   border-radius: 4px;
   cursor: pointer;
+  overflow: hidden;
+}
+/* Title line: bold time then title, wrapping to at most two lines. */
+.cal-chip-main {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cal-chip-time {
+  font-weight: 700;
+  margin-right: 4px;
+}
+/* Sub line: run window + location, one line, dimmed. */
+.cal-chip-sub {
+  color: var(--text-dim);
+  font-size: 0.62rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .cal-chip:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.25);
 }
 @media (max-width: 720px) {
   .cal-cell {
-    min-height: 62px;
+    min-height: 72px;
     padding: 3px;
   }
   .cal-date {
@@ -1987,6 +2008,10 @@ tbody tr:hover {
   }
   .cal-chip {
     font-size: 0.6rem;
+  }
+  /* Save vertical room on phones - drop the location/window sub-line. */
+  .cal-chip-sub {
+    display: none;
   }
 }
 
