@@ -8,6 +8,9 @@ import { NAV, TAB_COLOR } from '../lib/nav'
 import { ScrollToTop } from './ui'
 import { CloudAutoSync } from './CloudAutoSync'
 import { useSignedIn } from '../lib/cloud/auth'
+import { supa } from '../lib/cloud/client'
+import { CLOUD_ENABLED } from '../lib/cloud/config'
+import { PENDING_JOIN_KEY } from '../lib/cloud/collab'
 import { StandbyMark, APP_NAME, APP_TAGLINE } from './Brand'
 import { NavIcon } from './icons'
 import { Welcome } from '../modules/Welcome'
@@ -52,6 +55,34 @@ const PrivacyPolicy = lazyRoute(() => import('../modules/Legal'), 'PrivacyPolicy
 const Terms = lazyRoute(() => import('../modules/Legal'), 'Terms')
 const SharedView = lazyRoute(() => import('../modules/SharedView'), 'SharedView')
 const JoinShare = lazyRoute(() => import('../modules/JoinShare'), 'JoinShare')
+
+/** After a team-link sign-in that redirected to the clean root (so the returning
+    auth token in the URL hash doesn't collide with the router), pick the pending
+    join back up and finish it. Renders nothing. */
+function JoinResume() {
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (!CLOUD_ENABLED) return
+    let alive = true
+    const resume = (signedIn: boolean) => {
+      if (!alive || !signedIn) return
+      const token = localStorage.getItem(PENDING_JOIN_KEY)
+      if (!token) return
+      localStorage.removeItem(PENDING_JOIN_KEY)
+      navigate(`/join/${token}`)
+    }
+    supa()
+      .auth.getUser()
+      .then(({ data }) => resume(!!data.user))
+      .catch(() => {})
+    const { data: sub } = supa().auth.onAuthStateChange((_e, session) => resume(!!session?.user))
+    return () => {
+      alive = false
+      sub.subscription.unsubscribe()
+    }
+  }, [navigate])
+  return null
+}
 
 /** Small, unobtrusive fallback while a lazily-loaded page chunk arrives. */
 function PageLoading() {
@@ -125,6 +156,7 @@ export function App() {
     <>
       <ScrollToTop />
       <CloudAutoSync />
+      <JoinResume />
       <RootErrorBoundary>
       <Suspense fallback={<PageLoading />}>
       <Routes>

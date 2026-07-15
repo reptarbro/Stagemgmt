@@ -4,7 +4,7 @@ import { StandbyMark, APP_NAME } from '../components/Brand'
 import { GoogleG } from '../components/GoogleG'
 import { supa } from '../lib/cloud/client'
 import { CLOUD_ENABLED } from '../lib/cloud/config'
-import { joinProductionShare, joinUrl } from '../lib/cloud/collab'
+import { joinProductionShare, appBaseUrl, PENDING_JOIN_KEY } from '../lib/cloud/collab'
 import { useStore } from '../lib/store'
 
 type Stage = 'checking' | 'signin' | 'sent' | 'joining' | 'done' | 'error'
@@ -38,6 +38,7 @@ export function JoinShare() {
       setStage('error')
       return
     }
+    localStorage.removeItem(PENDING_JOIN_KEY)
     setShowTitle(res.production.title)
     syncInProduction(res.production, { activate: true })
     setStage('done')
@@ -70,13 +71,18 @@ export function JoinShare() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
+  // Sign-in redirects to the CLEAN ROOT, not back to #/join/<token>: the
+  // implicit flow returns the auth token in the URL hash, which would collide
+  // with the hash route and never get consumed (bouncing the user back to
+  // sign-in). We stash the token and JoinResume finishes the join post-auth.
   const sendLink = async () => {
     if (!email.trim() || !token) return
     setBusy(true)
     setMsg(null)
+    localStorage.setItem(PENDING_JOIN_KEY, token)
     const { error } = await supa().auth.signInWithOtp({
       email: email.trim(),
-      options: { shouldCreateUser: true, emailRedirectTo: joinUrl(token) },
+      options: { shouldCreateUser: true, emailRedirectTo: appBaseUrl() },
     })
     setBusy(false)
     if (error) setMsg(error.message)
@@ -86,9 +92,10 @@ export function JoinShare() {
   const signInGoogle = async () => {
     if (!token) return
     setMsg(null)
+    localStorage.setItem(PENDING_JOIN_KEY, token)
     const { error } = await supa().auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: joinUrl(token) },
+      options: { redirectTo: appBaseUrl() },
     })
     if (error) setMsg(error.message)
   }

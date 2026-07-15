@@ -12,6 +12,12 @@ export function appBaseUrl(): string {
   return `${window.location.origin}${window.location.pathname}`
 }
 
+/** localStorage key holding a share token to join after sign-in. Sign-in
+    redirects to the clean root (a hash-route redirect would collide with the
+    returning auth token, which the implicit flow also puts in the URL hash), so
+    the token is stashed here and resumed once a session appears. */
+export const PENDING_JOIN_KEY = 'standby.pendingJoin'
+
 /** The team join link for a token. Opening it (signed in) joins the show. */
 export function joinUrl(token: string): string {
   return `${appBaseUrl()}#/join/${token}`
