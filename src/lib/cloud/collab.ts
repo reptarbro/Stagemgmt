@@ -69,7 +69,8 @@ export async function joinProductionShare(
 ): Promise<{ production: Production } | { error: string }> {
   const { data: sess } = await supa().auth.getSession()
   if (!sess.session?.user) return { error: 'not-signed-in' }
-  const { data, error } = await supa().rpc('join_production_share', { p_token: token })
+  // Trim in case the link picked up stray whitespace from an email/chat client.
+  const { data, error } = await supa().rpc('join_production_share', { p_token: token.trim() })
   if (error) return { error: error.message }
   const row = Array.isArray(data) ? data[0] : data
   if (!row?.payload || !row?.share_id) return { error: 'This link is invalid or has been revoked.' }

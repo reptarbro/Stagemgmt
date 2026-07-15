@@ -130,6 +130,9 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+-- The RETURNS TABLE output names (share_id, ...) are also column names, which
+-- makes the ON CONFLICT target below ambiguous. Resolve bare names to columns.
+#variable_conflict use_column
 declare
   v_share uuid;
 begin
